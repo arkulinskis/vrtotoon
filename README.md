@@ -7,7 +7,7 @@ themed, browser based, no install. Built on [Anvil](https://anvil.works) as nati
 export engines are JavaScript (three.js r158) in `theme/assets/vt-*.js`.
 
 - **App repo:** github.com/arkulinskis/vrtotoon (branch `master`). Anvil pulls `master`.
-- **Live:** not published yet (planned https://vrtotoon.anvil.app)
+- **Live:** https://vrtotoon.anvil.app
 
 ## What it does
 

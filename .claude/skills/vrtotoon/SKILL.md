@@ -14,8 +14,9 @@ README.md lists every feature.
 
 **Where it lives:**
 - Folder `C:\Users\arkvi\Documents\CLAUDE\vrtotoon\` = the git clone of **github.com/arkulinskis/vrtotoon**, branch `master`.
-  "git" layout: the folder *is* the Anvil app. Anvil pulls master; pushing is the deploy. Live: not yet (planned
-  https://vrtotoon.anvil.app; when the user sends the address: apps.json, legal-kit, README, SEO).
+  "git" layout: the folder *is* the Anvil app. Anvil pulls master; pushing is the deploy. Live:
+  https://vrtotoon.anvil.app (published 2026-11-04; no custom domain yet; if one comes: apps.json, legal-kit,
+  README, SEO).
 - Made from `C:\Users\arkvi\Documents\CLAUDE\APP_MAKER\template-forms` (native Anvil Forms, Nov 2026). The 3D/VR engine
   ideas come from Snackpuncher (WebXR with three r158, `renderer.xr`) and ToonyLoony (studio, takes, lip sync).
 
