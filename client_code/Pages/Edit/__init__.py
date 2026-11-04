@@ -565,7 +565,9 @@ class Edit(EditTemplate):
         self.no_takes.visible = not rows
 
     def _take(self, op=None, uid=None, value=None, **event_args):
-        if op == "use":
+        if op == "face":
+            self._face_booth(uid)
+        elif op == "use":
             vt.VT.ed.useTake(self.doc, self.takes, uid)
         elif op == "star":
             if state.call("take_star", self.pid, uid, value) is not None:
@@ -577,6 +579,26 @@ class Edit(EditTemplate):
                 r = state.call("take_delete", self.pid, uid)
                 if r is not None:
                     vt.VT.ed.dropTake(self.doc, self.takes, uid)
+
+    def _face_booth(self, uid):
+        """Act a take's face in front of the webcam (Dialogs/FaceBooth); the film plays it at once."""
+        rows = [r for r in vt.take_rows(self.doc, self.takes) if r["uid"] == uid]
+        if not rows:
+            return
+        if self.stage is not None and self.stage.playing:
+            self.stage.pause()
+        from ...Dialogs.FaceBooth import FaceBooth
+        r = alert(FaceBooth(pid=self.pid, take=rows[0], doc=self.doc, takes=self.takes, can_save=self.can_edit),
+                  buttons=[], role="app-dialog", large=True)
+        if not r:
+            return
+        self._draw_takes()
+        if self.stage is not None:
+            self.stage.refresh("sel")
+        if r.get("removed"):
+            state.toast("Face pass removed: the feelings you set drive the face again.", "ok")
+        elif r.get("saved"):
+            state.toast("Printed! The face plays in the film%s." % (", with your new voice" if r.get("voice") else ""), "ok")
 
     # ------------------------------------------------------------------ Look
     def _draw_look(self):
@@ -750,7 +772,7 @@ class Edit(EditTemplate):
             vt.VT.ed.mergeSel(self.doc, r["sel"])
             names = sorted(set(self._name(t["actor"]) for t in r["takes"]))
             lines = sum(len([c for c in t["clips"] if c["line"]]) for t in r["takes"])
-            state.toast("New from the headset: %s (%s). It's in the cut." % (", ".join(names), state.plural(lines, "line")), "ok")
+            state.toast("New from the headset: %s (%s). It's in the cut. Add the face with your webcam: Takes, Face." % (", ".join(names), state.plural(lines, "line")), "ok")
             self.stage.refresh()
             self._refresh_tab()
         self.link_since = r["now"]

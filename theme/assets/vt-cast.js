@@ -940,9 +940,13 @@
     var blink = p.blink || 0;
     var lid = Math.max(-0.4, Math.min(1, (f.lid || 0) + (1 - (f.lid || 0)) * blink));
     var self = this;
+    // a webcam face (vt-face.js) sets each eye and brow on its own: side +1 (+X) is the character's left = the performer's left
+    var perEye = f.lidL != null;
     F.eyes.forEach(function (e, i) {
-      e.lid.rotation.x = (-40 + lid * 130) * D2R + (e.side * (f.browAsym || 0) * 0) ;
-      var by = (f.browY || 0) + (i === 1 ? (f.browAsym || 0) * 0.5 : 0);
+      var lidE = lid;
+      if (perEye) { var l0 = e.side > 0 ? f.lidL : f.lidR; lidE = Math.max(-0.4, Math.min(1, l0 + (1 - l0) * blink)); }
+      e.lid.rotation.x = (-40 + lidE * 130) * D2R;
+      var by = perEye ? (e.side > 0 ? f.browL : f.browR) : (f.browY || 0) + (i === 1 ? (f.browAsym || 0) * 0.5 : 0);
       e.bpiv.position.y = by * e.eyeR * 0.6;
       e.bpiv.rotation.z = -e.side * (f.browTilt || 0) * D2R * 1.0;
       var ps = f.pupil || 1;
@@ -955,10 +959,12 @@
         var local = e.g.worldToLocal(self.root.localToWorld(gp.clone()));
         gx = Math.atan2(local.x, Math.max(0.05, local.z)); gy = Math.atan2(local.y, Math.max(0.05, local.z)) + gy;
       }
+      gx += (f.gx || 0) * 0.42; gy += (f.gy || 0) * 0.32;  // where the performer's eyes went (webcam), on top of the look
       e.ball.rotation.set(-Math.max(-0.45, Math.min(0.45, gy)), Math.max(-0.5, Math.min(0.5, gx)), 0);
     });
     var M = F.mouth, w = M.w * (0.55 + (m.wide != null ? m.wide : f.wide || 0.5) * 0.9);
     var curve = f.curve || 0;
+    M.g.rotation.z = (f.smirk || 0) * 0.24;  // one corner up (webcam smirk): + lifts the character's left (+X) corner
     if (open > 0.06) {
       M.hole.visible = true;
       M.hole.scale.set(w, Math.max(0.004, open * M.w * 0.95), 0.04 * this.def.build.h);

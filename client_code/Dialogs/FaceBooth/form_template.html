@@ -1,0 +1,35 @@
+<div class="ui face-booth">
+  <h2 class="dlg-h">The face <em>booth</em></h2>
+  <anvil-component type="Label" name="who_label" prop:role='["eyebrow-label"]'></anvil-component>
+  <div class="fb-grid">
+    <div class="fb-box fb-cam">
+      <video class="fb-video" anvil:dom-node="video" autoplay muted playsinline></video>
+      <canvas class="fb-points" anvil:dom-node="overlay"></canvas>
+      <div class="fb-tag"><span class="fb-dot" anvil:dom-node="dot"></span><span anvil:dom-node="found">Camera</span></div>
+    </div>
+    <div class="fb-box fb-toon">
+      <div class="fb-stage" anvil:dom-node="toon"></div>
+      <div class="fb-clock" anvil:dom-node="clock"></div>
+      <div class="fb-prompt" anvil:dom-node="prompt"></div>
+    </div>
+  </div>
+  <anvil-component type="Label" name="status_label" prop:role='["fine-print", "fb-status"]' prop:text="Starting the camera..."></anvil-component>
+  <div class="ui-row fb-buttons">
+    <anvil-component type="Button" name="rec_button" prop:text="Record the face" prop:role='["btn", "btn-primary", "btn-lg", "ic-rec"]' prop:enabled="false"></anvil-component>
+    <anvil-component type="Button" name="play_button" prop:text="Watch it back" prop:role='["btn", "ic-play"]' prop:visible="false"></anvil-component>
+    <anvil-component type="Button" name="neutral_button" prop:text="Neutral face" prop:role='["btn", "btn-ghost", "ic-refresh"]' prop:tooltip="Relax your face and press: expressions are measured from this face" prop:enabled="false"></anvil-component>
+  </div>
+  <div class="fb-options">
+    <anvil-component type="CheckBox" name="voice_check" prop:text="Record my voice again (replaces this take's sound)"></anvil-component>
+    <anvil-component type="CheckBox" name="mouth_check" prop:text="Mouth follows the camera (instead of the voice)"></anvil-component>
+    <anvil-component type="VRtoToon.Components.Slider" name="gain_slider" prop:label="Bigger expressions" prop:value="1.25" prop:min_value="0.6" prop:max_value="2"></anvil-component>
+  </div>
+  <anvil-component type="Label" name="message" prop:role='["msg-error"]' prop:visible="false"></anvil-component>
+  <div class="ui-row end fb-end">
+    <anvil-component type="Button" name="remove_button" prop:text="Remove the face" prop:role='["btn", "btn-ghost", "btn-sm", "ic-trash"]' prop:visible="false"></anvil-component>
+    <span class="fb-spacer"></span>
+    <anvil-component type="Button" name="cancel_button" prop:text="Cancel" prop:role='["btn", "btn-ghost"]'></anvil-component>
+    <anvil-component type="Button" name="keep_button" prop:text="Print it" prop:role='["btn", "btn-primary", "ic-check"]' prop:enabled="false"></anvil-component>
+  </div>
+  <p class="small muted fb-note">The camera picture stays on this computer: only the face movement (11 numbers, 30 times a second) is kept with the take.</p>
+</div>

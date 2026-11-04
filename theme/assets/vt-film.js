@@ -17,7 +17,7 @@
           sel: {"<beat>|<actor>": "<take uid>"}, custom: {<char uid>: def}}
    take = {uid, actor, source: 'vr' | 'desk' | 'voice' | 'builtin', clips: [{beat, off, dur, line}], dur,
            motion: {fps, n, k, f: Float32Array (k floats per frame: 31 now, 23 in takes made before fingers), m: 'mouth string'},
-           audioUrl, buffer} */
+           audioUrl, buffer, faceUrl, face (the webcam face track from the face booth, vt-face.js)} */
 (function () {
   'use strict';
   var VT = window.VT = window.VT || {};
@@ -315,9 +315,15 @@
     else if (t.motion) VT.unpackMotion(t.motion);
     if (t.audioUrl && !t.buffer) jobs.push(VT.loadAudio(t.audioUrl).then(function (b) {
       t.buffer = b;
-      if (b && (!t.motion || !t.motion.m)) { t.motion = t.motion || { fps: 30, n: 0, f: new Float32Array(0) }; t.motion.m = VT.analyzeVoice(b, t.motion.fps || 30); }
+      if (b && (!t.motion || !t.motion.m) && !t.faceUrl) { t.motion = t.motion || { fps: 30, n: 0, f: new Float32Array(0) }; t.motion.m = VT.analyzeVoice(b, t.motion.fps || 30); }
     }));
-    return (t._loading = Promise.all(jobs).then(function () { return t; }));
+    if (t.faceUrl && !t.face && VT.unpackFace) jobs.push(fetch(t.faceUrl).then(function (r) { return r.json(); }).then(function (f) { t.face = VT.unpackFace(f); }).catch(function (e) { console.warn('face load failed', e); }));
+    return (t._loading = Promise.all(jobs).then(function () {
+      // a face pass that re-recorded the voice carries the new lip sync
+      if (t.face && t.face.vm) { t.motion = t.motion || { fps: 30, n: 0, f: new Float32Array(0) }; t.motion.m = t.face.vm; }
+      else if (t.buffer && (!t.motion || !t.motion.m)) { t.motion = t.motion || { fps: 30, n: 0, f: new Float32Array(0) }; t.motion.m = VT.analyzeVoice(t.buffer, t.motion.fps || 30); }
+      return t;
+    }));
   };
   Takes.prototype.loadAll = function (uids) { var self = this; return Promise.all((uids || Object.keys(this.map)).map(function (u) { return self.load(u); })); };
 
@@ -443,9 +449,17 @@
     var c = clipOf(tk, b.id);
     return c ? { take: tk, clip: c, uid: uid } : null;
   };
+  // the webcam face of the clip playing for this actor at t (face booth), or null
+  Film.prototype.camFace = function (aid, t, b) {
+    var s = b && this.source(aid, b);
+    if (!s || !s.take.face || !VT.faceAt) return null;
+    return VT.faceAt(s.take.face, s.clip.off + (t - b.start));
+  };
   Film.prototype.mouth = function (aid, t, b) {
     if (!b || b.kind !== 'line' || b.who !== aid || t < b.start || t > b.end + 0.1) return { open: 0, wide: 0.5, talking: false };
     var s = this.source(aid, b);
+    var cf = s && s.take.face && s.take.face.mouth ? this.camFace(aid, t, b) : null;
+    if (cf) return { open: cf.open, wide: cf.wide, talking: true };  // "mouth follows the camera"
     if (s && s.take.motion && s.take.motion.m) {
       var m = VT.mouthAt(s.take.motion.m, s.take.motion.fps, s.clip.off + (t - b.start));
       if (m) return { open: m.open, wide: m.wide, talking: true };
@@ -490,6 +504,14 @@
     opts = opts || {};
     var pl = this.place(aid, t), b = this.L.beatAt(t), m = this.mouth(aid, t, b);
     var face = VT.faceOf(this.emotion(aid, t));
+    // a face pass from the webcam drives eyes, brows and mouth (fading in over 0.3 s when the clip before had none)
+    var cf = b ? this.camFace(aid, t, b) : null, cw = 0;
+    if (cf) {
+      cw = 1;
+      if (t - b.start < 0.3 && b.i > 0) { var pb = this.L.beats[b.i - 1]; if (!this.camFace(aid, b.start - 0.01, pb)) cw = ease((t - b.start) / 0.3); }
+      face = VT.mixCamFace(face, cf, cw);
+      cw = face.cam || 0;
+    }
     var lt = this.lookTarget(aid, t), lookLocal = null;
     if (lt && this.paths[lt]) {
       var o = this.place(lt, t, true), oa = opts.actors && opts.actors[lt];
@@ -509,7 +531,7 @@
     }
     p.face = face;
     p.mouth = { open: m.open, wide: m.wide };
-    p.blink = VT.blinkAt(t, seed);
+    p.blink = VT.blinkAt(t, seed) * (1 - cw);  // the camera brings real blinks
     p.gaze = lookLocal;
     p.walk = pl.walk;
     p.time = t;

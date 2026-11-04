@@ -1,6 +1,6 @@
 """Premieres: shared films anyone can watch (#premieres, #screen/<key>), reports, and the media endpoint.
 
-/_/api/m/<take key>-m (motion JSON) and -a (voice) serve a take's recordings. The key is random per take and only ever
+/_/api/m/<take key>-m (motion JSON), -a (voice) and -f (the webcam face track) serve a take's recordings. The key is random per take and only ever
 sent to people allowed to see that production (the owner, a paired headset, viewers of a shared or demo film).
 """
 import anvil
@@ -52,10 +52,10 @@ def screen_report(key, reason):
 def media(key, **kw):
     key = str(key or "")
     base, _, kind = key.rpartition("-")
-    t = app_tables.takes.get(key=base) if base and kind in ("m", "a") else None
+    t = app_tables.takes.get(key=base) if base and kind in ("m", "a", "f") else None
     if t is None:
         return anvil.server.HttpResponse(404, "Not found")
-    m = t["motion"] if kind == "m" else t["audio"]
+    m = {"m": t["motion"], "a": t["audio"], "f": t["face"]}[kind]
     if m is None:
         return anvil.server.HttpResponse(404, "Not found")
     return anvil.server.HttpResponse(200, m, headers={"Cache-Control": "private, max-age=604800, immutable",

@@ -325,6 +325,11 @@ db_schema:
         width: 200
       name: is_demo
       type: bool
+    - admin_ui:
+        order: 14
+        width: 200
+      name: face
+      type: media
     indexes: []
     server: full
     title: Takes
@@ -432,7 +437,7 @@ metadata:
 name: VRtoToon
 native_deps:
   head_html: |
-    <script src="_/theme/legal-kit.js?v=a29b3d6df2"></script>
+    <script src="_/theme/legal-kit.js?v=e100613676"></script>
     <!-- seo:start (APP_MAKER/seo: edit seo/apps/vrtotoon.json and run seo.py, not here) -->
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <meta name="keywords" content="vr motion capture cartoon, make cartoons in vr, flipside xr alternative, webxr animation, vr animation studio browser, one person animation multiple characters, quest motion capture, 3d cartoon maker online, export animation to blender, vtuber style puppeteering">
@@ -472,19 +477,20 @@ native_deps:
     <script src="https://prepsto.com/_/theme/widget.js" data-prepsto="nmbrrdm" data-button="false" data-label="Submit feedback" async></script>
     <link rel="stylesheet" href="_/theme/icons.css?v=c408c1671b">
     <link rel="stylesheet" href="_/theme/app.css?v=5dc018e22c">
-    <link rel="stylesheet" href="_/theme/vt.css?v=95efa549ae">
+    <link rel="stylesheet" href="_/theme/vt.css?v=992504c243">
     <script src="_/theme/app-kit.js?v=3240841489"></script>
     <script src="_/theme/three.min.js?v=3bfa54fdd7"></script>
-    <script src="_/theme/vt-cast.js?v=0f6ec7f5fd"></script>
+    <script src="_/theme/vt-cast.js?v=2cf8a8716f"></script>
     <script src="_/theme/vt-sets.js?v=07f964753b"></script>
-    <script src="_/theme/vt-film.js?v=fe704b4faa"></script>
+    <script src="_/theme/vt-film.js?v=bfa5fe6641"></script>
     <script src="_/theme/vt-stage.js?v=2785bb159b"></script>
     <script src="_/theme/vt-timeline.js?v=e75e34b3a3"></script>
     <script src="_/theme/vt-xr.js?v=e1ab1e1e62"></script>
     <script src="_/theme/vt-live.js?v=399965585f"></script>
+    <script src="_/theme/vt-face.js?v=ba4cbf4113"></script>
     <script src="_/theme/vt-export.js?v=0ff5d0f7b1"></script>
-    <script src="_/theme/vt-ui.js?v=c82db9b28a"></script>
-    <script src="_/theme/vt-ed.js?v=c2447d3baf"></script>
+    <script src="_/theme/vt-ui.js?v=73a70350cf"></script>
+    <script src="_/theme/vt-ed.js?v=ba3fe7418e"></script>
 package_name: VRtoToon
 runtime_options:
   client_version: '3'

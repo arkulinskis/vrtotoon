@@ -241,6 +241,68 @@
     await page('#edit/' + pid, () => window.VT_EDITOR && window.VT_EDITOR.pid && $('.ed-stage-wrap canvas'), 'editor again');
     await until(() => window.VT_EDITOR.takes.list().length === 2, 'two takes');
     ok(true, 'editor: the stage take arrived');
+
+    // ---- the face booth: replay the desk-puppet take in front of the webcam (drive.mjs: FAKE_VIDEO = a real face photo)
+    await click('.ed-tabs', 'Takes');
+    await until(() => $$('.take-row').length === 2, 'two take rows');
+    const deskRow = () => $$('.take-row').find((r) => /Desk puppet/.test(r.textContent));
+    ok(deskRow() && !/Redo face/.test(deskRow().textContent), 'face: the desk-puppet take has a Face button');
+    Array.from(deskRow().querySelectorAll('button')).find((b) => b.textContent.trim() === 'Face').click();
+    await until(() => $('.face-booth') && window.VT_FACE, 'face booth');
+    await until(() => window.VT_FACE.stats().found, 'the face tracker finds the face (MediaPipe from jsDelivr)', 120000);
+    let fst = window.VT_FACE.stats();
+    ok(fst.points === 478 && fst.keyPoints >= 10, 'face: the tracker finds 478 points; the booth reads ' + fst.keyPoints + ' key points');
+    await until(() => window.VT_FACE.stats().neutral, 'neutral face taken', 20000);
+    await until(() => /Face found/.test($('.face-booth .fb-tag').textContent), 'camera tag');
+    fst = window.VT_FACE.stats();
+    ok(Math.abs(fst.live.curve - 0.15) < 0.3 && fst.live.lidL < 0.5 && fst.live.lidR < 0.5 && fst.live.open < 0.3, 'face: a relaxed face reads as relaxed (' +
+      ['lidL', 'lidR', 'curve', 'open'].map((k) => k + ' ' + fst.live[k].toFixed(2)).join(', ') + ')');
+    // the 25 key points move the right controls: a smile and a wink made from the real face's points
+    const lm = window.VT_FACE.pts.map((p) => ({ x: p.x, y: p.y, z: p.z })), FP = VT.FACE_POINTS, neu = window.VT_FACE.neutralM;
+    const iod = Math.hypot((lm[FP.lOut].x - lm[FP.rOut].x) * 4 / 3, lm[FP.lOut].y - lm[FP.rOut].y);
+    const sm = lm.map((p) => ({ ...p })); sm[FP.mR].y -= 0.05 * iod; sm[FP.mL].y -= 0.05 * iod; sm[FP.rUp].y = sm[FP.rLo].y;
+    const fo = VT.faceFromMeasures(VT.faceMeasure(sm, 4 / 3), neu, null);
+    ok(fo.curve > 0.7 && fo.lidR > 0.9 && fo.lidL < 0.4, 'face: corners up = smile, one eyelid down = a wink of that eye only');
+    ok(VT_FACE.stats().lines >= 3, 'face: the teleprompter has the take\'s lines');
+    window.VT_TEST = { faceLead: 0.4 };
+    const vchk = $$('.face-booth input[type=checkbox]')[0];
+    if (!vchk.checked) vchk.click();  // record my voice again
+    await click('.face-booth', 'Record the face');
+    await until(() => window.VT_FACE.state === 'rec', 'recording', 15000);
+    await until(() => ($('.face-booth .fb-prompt').textContent || '').length > 3, 'teleprompter line', 10000);
+    ok(true, 'face: recording, the teleprompter shows the line');
+    await until(() => window.VT_FACE.state === 'review', 'the take plays to its end', 90000);
+    fst = window.VT_FACE.stats();
+    say('booth: ' + JSON.stringify({ face: fst.face, voice: fst.voice, state: fst.state, status: $('.face-booth .anvil-role-fb-status').textContent }));
+    ok(fst.face && fst.face.n > 20 && fst.face.vm && fst.voice, 'face: ' + fst.face.n + ' frames of face kept, with the new voice and its lip sync');
+    await click('.face-booth', 'Watch it back');
+    await until(() => window.VT_FACE.state === 'play', 'watching back');
+    await click('.face-booth', 'Stop watching');
+    await until(() => window.VT_FACE.state === 'review', 'stopped watching');
+    await click('.face-booth', 'Print it');
+    await until(() => !$('.face-booth') && /Printed! The face plays/.test(toastText()), 'face saved', 40000);
+    const dtk = window.VT_EDITOR.takes.list().find((x) => x.source === 'desk');
+    ok(dtk.face && dtk.face.n === fst.face.n && /-f$/.test(dtk.faceUrl || ''), 'face: the take carries the face track and its new address');
+    await until(() => deskRow() && /Redo face/.test(deskRow().textContent), 'row redrawn');
+    ok(vis(deskRow().querySelector('.anvil-role-badge-brand')), 'face: the take row shows the Face badge');
+    const film = window.VT_EDITOR.stage.film, fc = dtk.clips[0], fb = film.L.by[fc.beat], tt = fb.start + Math.min(0.3, fb.dur / 2);
+    const cfx = film.camFace(dtk.actor, tt, film.L.beatAt(tt));
+    const pose = film.actorAt(window.VT_EDITOR.stage.actors[dtk.actor], dtk.actor, tt, { actors: window.VT_EDITOR.stage.actors }).pose;
+    ok(cfx && pose.face.lidL != null && pose.face.cam > 0.99 && pose.blink === 0, 'face: the film plays the camera face (eyes, brows, mouth) instead of the set feeling');
+    say('urls: ' + dtk.faceUrl + ' | ' + dtk.motionUrl + ' | ' + dtk.audioUrl);
+    const fres = await fetch(dtk.faceUrl), ftxt = await fres.text();
+    say('face fetch: ' + fres.status + ' ' + ftxt.slice(0, 120));
+    const stored = JSON.parse(ftxt);
+    ok(stored.n === fst.face.n && stored.k === 11 && stored.s.length === stored.n * 11 && stored.vm, 'face: the server serves the same face track back');
+    const au = await fetch(dtk.audioUrl);
+    ok(au.ok && /wav/.test(au.headers.get('content-type') || ''), 'face: the new voice replaced the take\'s sound (WAV, trimmed to the take)');
+    // a fresh editor loads the take's recordings back from the server (motion, voice and face)
+    await page('#home', () => true, 'home');
+    await page('#edit/' + pid, () => window.VT_EDITOR && window.VT_EDITOR.pid && $('.ed-stage-wrap canvas'), 'editor reloaded');
+    await until(() => { const x = window.VT_EDITOR.takes.list().find((y) => y.source === 'desk'); return x && x.face && x.face.n === fst.face.n && x.motion && x.motion.n > 0 && x.buffer; }, 'recordings loaded from the server', 30000);
+    ok(true, 'face: a fresh editor loads the motion, voice and face of the take from the server');
+    window.VT_TEST = {};
+
     await click('.ed-actions', 'Headset');
     const code = await until(() => { const l = $('.anvil-role-door-code-big'); return l && l.textContent.replace(/\s/g, '').length === 4 && l.textContent; }, 'headset code');
     ok(/^[A-Z ]+$/.test(code.trim()), 'headset: a 4-letter stage door code');

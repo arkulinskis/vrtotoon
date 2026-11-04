@@ -196,6 +196,35 @@ r = anvil.server.ENDPOINTS["/m/:key"](key=tk["take"]["audio_key"])
 assert r.status == 200
 assert anvil.server.ENDPOINTS["/m/:key"](key="nothing-a").status == 404
 assert len(ok(call("take_list", pid))["takes"]) == 1
+# the face booth: a face track (11 controls a frame) for a take, optionally with a new voice
+FACE = {"v": 1, "fps": 30, "n": 3, "k": 11, "s": "VVZZVVVVZVV" * 3, "gain": 1.4, "mouth": True}
+old_key = tk["take"]["audio_key"]
+bad(call("take_face", pid, "t_nothere00", json.dumps(FACE)))
+bad(call("take_face", pid, "t_abc123def", "{not json"))
+bad(call("take_face", pid, "t_abc123def", json.dumps(dict(FACE, s="VV"))), "length must be n * k")
+bad(call("take_face", pid, "t_abc123def", json.dumps(dict(FACE, s="!" * 33))), "only the 64 safe characters")
+bad(call("take_face", pid, "t_abc123def", json.dumps(dict(FACE, n=300, s="V" * 3300))), "longer than the 3.2 s take")
+bad(call("take_face", pid, "t_abc123def", json.dumps(FACE), anvil.BlobMedia("text/html", b"<b>", name="x.html")))
+fk = ok(call("take_face", pid, "t_abc123def", json.dumps(dict(FACE, vm="5050"))))["take"]
+assert fk["face_key"] and fk["audio_key"] != old_key, "a new key, so browsers don't play a cached copy"
+r = anvil.server.ENDPOINTS["/m/:key"](key=fk["face_key"])
+assert r.status == 200
+stored = json.loads(T.takes.get(uid="t_abc123def")["face"].get_bytes())
+assert stored["gain"] == 1.4 and stored["mouth"] is True and "vm" not in stored, "lip sync only travels with a new voice"
+wav = anvil.BlobMedia("audio/wav", b"RIFF" + b"0" * 60, name="v.wav")
+fk2 = ok(call("take_face", pid, "t_abc123def", json.dumps(dict(FACE, vm="5050")), wav))["take"]
+assert json.loads(T.takes.get(uid="t_abc123def")["face"].get_bytes())["vm"] == "5050"
+assert T.takes.get(uid="t_abc123def")["audio"].content_type == "audio/wav" and fk2["audio_key"] != fk["audio_key"]
+bad(call("take_face", pid, "t_abc123def", json.dumps(dict(FACE, vm="5x")), wav))
+as_user(bob)
+bad(call("take_face", pid, "t_abc123def", json.dumps(FACE)), "only the owner")
+bad(call("take_face_remove", pid, "t_abc123def"))
+as_user(ana)
+cpf = ok(call("production_copy", pid))["id"]
+assert T.takes.get(production=T.productions.get_by_id(cpf), uid="t_abc123def")["face"] is not None, "a copy keeps the face"
+ok(call("production_delete", cpf))
+assert ok(call("take_face_remove", pid, "t_abc123def"))["take"]["face_key"] == ""
+assert anvil.server.ENDPOINTS["/m/:key"](key=fk2["face_key"]).status == 404
 ok(call("take_star", pid, "t_abc123def", 3))
 bad(call("take_star", pid, "t_abc123def", "lots"))
 as_user(bob)

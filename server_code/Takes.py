@@ -3,6 +3,8 @@
 A take belongs to a production and an actor (cast id) and is cut into clips per beat ({beat, off, dur, line}).
 Motion is stored as JSON media, the voice as audio media; both are served by Screenings.media (/_/api/m/<key>-m|-a),
 under a random key per take. save_take() is shared with the headset link (StageLink), which saves for the owner.
+A face pass (the face booth: the webcam reads the performer's face while the take replays) adds `face`, a small JSON
+track of 11 face controls 30 times a second (vt-face.js), served at -f; it can also replace the take's voice.
 """
 import json
 import re
@@ -18,6 +20,9 @@ from . import Productions
 UID = re.compile(r"^t_[a-z0-9]{6,16}$")
 MAX_MOTION = 2_500_000
 MAX_AUDIO = 12_000_000
+MAX_FACE = 1_500_000
+FACE_K = 11
+FACE_CHARS = set("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_")
 AUDIO_TYPES = ("audio/webm", "audio/ogg", "audio/mp4", "audio/mpeg", "audio/wav", "audio/x-wav", "video/webm")
 
 
@@ -95,6 +100,76 @@ def take_save(pid, meta, motion_json, audio=None):
     if C.rate_limited("take_save", 120, 3600):
         return C.fail("That's a lot of takes in one hour. Take a break and try again soon.")
     return save_take(p, me, meta, motion_json, audio)
+
+
+def clean_face(face_json, dur):
+    """The face booth's track, checked: {v, fps 30, n, k 11, s (k chars per frame), gain, mouth, vm?}. Returns (dict, error)."""
+    if not isinstance(face_json, str) or len(face_json) > MAX_FACE:
+        return None, "That face recording is too long to save."
+    try:
+        f = json.loads(face_json)
+    except ValueError:
+        return None, "That face recording couldn't be read."
+    if not isinstance(f, dict):
+        return None, "That face recording couldn't be read."
+    s, n, k = f.get("s"), f.get("n"), f.get("k")
+    if not isinstance(s, str) or not isinstance(n, int) or k != FACE_K or n < 1 or len(s) != n * k or not set(s) <= FACE_CHARS:
+        return None, "That face recording couldn't be read."
+    if n > (dur + 2) * 30:
+        return None, "That face recording is longer than its take."
+    try:
+        gain = max(0.3, min(2.5, float(f.get("gain") or 1)))
+    except (TypeError, ValueError):
+        gain = 1.0
+    out = {"v": 1, "fps": 30, "n": n, "k": k, "s": s, "gain": round(gain, 2), "mouth": bool(f.get("mouth"))}
+    vm = f.get("vm")
+    if isinstance(vm, str) and vm:
+        if len(vm) % 2 or len(vm) > (dur + 2) * 60 or any(not "0" <= ch <= "9" for ch in vm):
+            return None, "That voice's lip sync couldn't be read."
+        out["vm"] = vm
+    return out, None
+
+
+@anvil.server.callable(require_user=True)
+def take_face(pid, uid, face_json, audio=None):
+    """Keep a face pass for a take (and, if the voice was recorded again with it, the new voice). The take gets a new
+    media key, so browsers fetch the new recordings instead of a cached copy."""
+    me = C.require_user()
+    p = Productions.owned(pid, me)
+    t = p and app_tables.takes.get(production=p, uid=uid)
+    if not t:
+        return C.fail("That take no longer exists, or it isn't yours.")
+    if C.rate_limited("take_face", 120, 3600):
+        return C.fail("That's a lot of face passes in one hour. Take a break and try again soon.")
+    face, err = clean_face(face_json, t["dur"] or 0)
+    if err:
+        return C.fail(err)
+    if audio is not None:
+        ctype = (getattr(audio, "content_type", "") or "").split(";")[0]
+        if ctype not in AUDIO_TYPES:
+            return C.fail("That recording isn't an audio file we can keep.")
+        if (getattr(audio, "length", 0) or len(audio.get_bytes() or b"")) > MAX_AUDIO:
+            return C.fail("That recording is too long to save.")
+    elif face.get("vm"):
+        face.pop("vm")  # lip sync of a new voice only travels with that voice
+    data = json.dumps(face, separators=(",", ":")).encode("utf-8")
+    media = anvil.BlobMedia("application/json", data, name=uid + "-face.json")
+    if audio is not None:
+        t.update(face=media, audio=audio, asset="", key=C.rand_key(24))
+    else:
+        t.update(face=media, key=C.rand_key(24))
+    return C.ok(take=Productions.take_dict(t))
+
+
+@anvil.server.callable(require_user=True)
+def take_face_remove(pid, uid):
+    """Drop a take's face pass (the feelings set in the editor drive the face again). A re-recorded voice stays."""
+    p = Productions.owned(pid)
+    t = p and app_tables.takes.get(production=p, uid=uid)
+    if not t:
+        return C.fail("That take no longer exists, or it isn't yours.")
+    t.update(face=None, key=C.rand_key(24))
+    return C.ok(take=Productions.take_dict(t))
 
 
 @anvil.server.callable(require_user=True)

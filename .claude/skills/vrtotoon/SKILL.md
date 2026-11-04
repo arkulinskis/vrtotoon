@@ -22,7 +22,8 @@ README.md lists every feature.
 **What the user wants:** "Hollywood cinema" theme; browser based; lots of characters (set characters now, built as data so
 they can be modified later); easy editing; the multi-role problem solved; teleprompters in the headset; voice moves the
 mouth; head + hands captured in VR, emotions / positions / walking done on the PC; better PC + VR co-work than Flipside;
-passthrough; export as video and as a 3D format for Blender; looks great before Blender.
+passthrough; export as video and as a 3D format for Blender; looks great before Blender. The user's split (Nov 3 2026):
+blocking/walks on the PC, head + hands + fingers + voice in VR, the FACE from the webcam afterwards (the face booth).
 Design: velvet red #b3182b (dark #e0384b), marquee gold #e8b54a (text gold #b8862a light / #f0c060 dark), cinema black
 #120a0c (hero, stage, screening room in both themes), cream programme paper #f7f1e6 (light bg), dark bg #110a0c.
 Fonts: Bebas Neue (marquee headings; ONE weight: never bold), Playfair Display italic (the flourish, `<em>` in headings),
@@ -39,16 +40,19 @@ Claude deploys. Every page must fit 390 px. Light and dark.
 4. `python -I tools/ui_test.py` (Docker Desktop running) -> **ALL UI TESTS PASSED**: the folder runs in the open-source
    Anvil App Server (container `vrtotoon-dev`, a copy of the folder in a Docker volume, `--auto-migrate`); headless Chrome (SwiftShader WebGL, fake microphone) walks tools/ui/flow.js
    (visitor pages, sign-up, the character editor, new picture, every editor panel, voice booth, a desk-puppet pass with a
-   finger shape on the stage, headset link, the live view (a second window pairs at #door and streams to the editor),
-   .glb export, share, stage door), phone.js (390 px, every page) and admin.js. Server edits need `--restart`.
+   finger shape on the stage, the face booth on that take (the fake webcam shows tools/ui/face-cam.mjpeg, a real face:
+   478 points found, record with a new voice, print, the film plays it, a fresh editor loads it back), headset link, the
+   live view (a second window pairs at #door and streams to the editor), .glb export, share, stage door), phone.js
+   (390 px, every page) and admin.js. Server edits need `--restart`. check.py also runs tools/testing/face_math.js (the
+   key points -> face controls maths on face_points.json, the real face's 478 points).
    `--shots DIR` = screenshots of every page (seed.js makes an account and a picture). Read them.
 5. Commit as arkulinskis with the Co-Authored-By line; `git push origin master`. New tables/columns: Schema Mismatch step.
 
 ## Architecture
 
 ```
-anvil.yaml        head_html loads three.min.js + vt-cast, vt-sets, vt-film, vt-stage, vt-timeline, vt-xr, vt-live, vt-export, vt-ui,
-                  vt-ed (+ app.css, vt.css); tables: productions, takes, characters, stage_links (+ rtc) (+ template tables)
+anvil.yaml        head_html loads three.min.js + vt-cast, vt-sets, vt-film, vt-stage, vt-timeline, vt-xr, vt-live, vt-face, vt-export,
+                  vt-ui, vt-ed (+ app.css, vt.css); tables: productions, takes (+ face), characters, stage_links (+ rtc) (+ template tables)
 client_code/
   vt.py           THE door to window.VT: catalogues, portraits, new_doc_json, doc()/takes() engine objects, row lists (JSON)
                   for panels (VT.ed.*), NULL (a typed "nothing yet" for JS objects: the validator rejects attr-on-None)
@@ -63,10 +67,11 @@ client_code/
                   closed), Slider (range input; change(value, final)), ColorPick (swatches + native picker; change(value))
   Items/          CastCard ProductionCard Chip BeatRow CastRow TakeRow ShotRow KeyButton FilmRow Swatch (+ template ones)
   Dialogs/        NewProduction CharacterSheet CastPicker ImportScript HeadsetLink (Watch live) Export Share VoiceBooth
+                  FaceBooth (webcam face pass for one take: VT.FaceBooth; take_face / take_face_remove)
 server_code/      Productions (lot_home, new/get/save(merge)/copy/share/poster/logline/delete), Takes (save_take shared with
-                  StageLink, list/star/delete), StageLink (link, join, get, poll (+ a pending live-view offer), save_pass,
+                  StageLink, list/star/delete, take_face (face track + optional new voice; re-keys the take) / take_face_remove), StageLink (link, join, get, poll (+ a pending live-view offer), save_pass,
                   status, call, note, rtc_offer / rtc_reply / rtc_answer), Wardrobe (clean_def: face ranges, colours,
-                  role, voice), Screenings (premieres_list, screen_get, screen_report, /_/api/m/<key>-m|-a media endpoint),
+                  role, voice), Screenings (premieres_list, screen_get, screen_report, /_/api/m/<key>-m|-a|-f media endpoint),
                   DemoData + demo_films.py + demo_voice_lengths.py, Admin (+ films), Feedback (+ record), Accounts, common
 theme/assets/     vt-cast.js    characters: VT.CAST (25, ids never change), species builder, face rig (+ def.face sliders), IK
                                 arms, toon hands (thumb + 3 fingers, curls), VT.HAND_SHAPES (8), VT.handQ, legs,
@@ -80,6 +85,10 @@ theme/assets/     vt-cast.js    characters: VT.CAST (25, ids never change), spec
                                 hand tracking: VT.fingerCurls / VT.handFrameXR, controller fingers: VT.touchCurls,
                                 startPreview: the live picture)
                   vt-live.js    VT.LiveViewer (PC) + VT.liveAnswer / liveHangUp / liveActive (headset): WebRTC, no trickle
+                  vt-face.js    the face booth: VT.FACE_CH (11 controls), VT.FACE_POINTS (25 key points of MediaPipe's 478),
+                                faceMeasure / faceFromMeasures (calibrated to the performer's neutral face), pack/unpack/faceAt,
+                                mixCamFace (camera face over a feeling), loadFaceModel (MediaPipe tasks-vision 0.10.14 from
+                                jsDelivr + Google's model), VT.FaceBooth (camera, live mirror, record/stop/play, voice, result)
                   vt-timeline.js VT.Timeline;  vt-export.js video, GLB, Blender kit, WAV, SRT, zip;  vt-ui.js controls, wire;
                   vt-ed.js      VT.ed rows/jobs for Python panels (beats, cast, takes, shots, key, recorder, passMeta ...)
 tools/            make_demo_voices.py (Kokoro TTS -> theme/assets/dv-<film>-<beat>.mp3 + demo_voice_lengths.py)
@@ -101,6 +110,13 @@ tools/            make_demo_voices.py (Kokoro TTS -> theme/assets/dv-<film>-<bea
 - Since Nov 2026 motion has `k` = floats per frame: **31** = the 23 above + finger curls [thumb, index, middle, ring] of
   the left (23-26) and the right hand (27-30). Takes without `k` are the old 23-float format (curls come from the shape
   number). Always read with `m.k || VT.FRAME0`; VT.sampleMotion returns hands as {p, q, g, c}.
+- **Face pass** (Nov 3 2026): take.face = {v 1, fps 30, n, k 11, s (11 chars a frame, 64 steps each over the control's
+  range in VT.FACE_CH), gain, mouth, vm?}, same time base as the motion (take time; clip.off + (t - beat start)). Controls:
+  lidL lidR browL browR browTilt curve open wide smirk gx gy, where L/R = the PERFORMER's left/right, which drives the
+  character's own left (+X, eye side +1). Film.actorAt: `camFace` -> `VT.mixCamFace(feelingFace, cam, w)` (fades in over
+  0.3 s after a clip without a face; procedural blinks off), `face.mouth` makes Film.mouth use the camera's jaw; `vm` (lip
+  sync of a voice re-recorded in the booth) replaces motion.m when the take loads. Actor._face reads lidL/lidR, browL/browR,
+  smirk (mouth rotation.z) and gx/gy (added to the look) when present; feelings without them behave as before.
 - **The rig's arm keys are positions, not anatomy:** 'r' is the arm on +X, which is the character's LEFT (it faces +Z).
   The performer's left hand drives 'r' (vt-xr.js RIG_KEY). A hand's own frame: fingers -Y, palm -Z, thumb towards the
   body's middle; author hand rotations with VT.handQ(fingerDir, palmDir), never Euler angles.
@@ -119,10 +135,14 @@ dialogs = `alert(Form(...), buttons=[], role="app-dialog")`; server calls via `s
   its methods (`doc.addKey("emo", {...})`, `doc.updateBeat(id, {...})`). Never loop over JS arrays in Python per frame.
 - **Saving:** the editor autosaves `doc.json()` 1.5 s after the last change with `synced_at`; the server keeps selections of
   takes created since then (`merge_sel`), so a PC autosave never undoes a headset take.
-- **Media:** takes' motion JSON and audio are served at `/_/api/m/<take key>-m|-a` (random per take); the client builds URLs
-  with `VT.API` (set in startup from `get_api_origin()`). Demo takes have `asset` = a theme file instead.
-- **Test hooks:** `window.VT_EDITOR = {doc, stage, takes, pid}` (Edit), `window.VT_PERFORM` (Stage), `window.VT_TEST =
-  {lineSecs, speed}` (a pass treats each of your lines as N seconds of speech).
+- **Media:** takes' motion JSON, audio and face track are served at `/_/api/m/<take key>-m|-a|-f` (random per take, cached
+  as immutable: take_face gives the take a NEW key so browsers fetch the new face/voice); the client builds URLs with
+  `VT.mediaUrl` from `VT.API` (startup: `get_api_origin()`, which already ends in `/_/api`: mediaUrl strips it before
+  adding `/_/api/m/`; until Nov 3 2026 it doubled it and saved takes never loaded after a reload). Demo takes have
+  `asset` = a theme file instead.
+- **Test hooks:** `window.VT_EDITOR = {doc, stage, takes, pid}` (Edit), `window.VT_PERFORM` (Stage), `window.VT_FACE`
+  (the open face booth: stats(), pts, neutralM), `window.VT_TEST = {lineSecs, speed, faceLead}` (a pass treats each of your
+  lines as N seconds of speech; faceLead = the face booth's count-in seconds).
 - **Validator patterns:** an `anvil:name` on a template's ROOT element is invisible to it (wrap the root in a div); JS objects
   that start empty use `vt.NULL`, not None; avoid `x = call() if a else {literal dict}` (union types): return early instead;
   `anvil.js.new(window.Blob, [...], {...})` instead of calling `window.Blob(...)`.
@@ -142,6 +162,10 @@ dialogs = `alert(Form(...), buttons=[], role="app-dialog")`; server calls via `s
   sign/bulbs/lightCone/particles, `api.anim.push(fn(t))`). Keep the acting area x -3..3, z -2..2 clear.
 - **New shot type / move:** `VT.SHOTS` / `VT.MOVES` + a case in `Film.camera`; the auto-director is `VT.autoDirect`.
 - **New film look:** `VT.GRADES` (sat, con, exp, tint, vig, grain, bw).
+- **New face control (face booth):** append to `VT.FACE_CH` (never reorder: stored tracks are positional; old tracks with a
+  smaller k read REST for the new one), add its REST value, measure it in `faceMeasure` (key points in the head frame,
+  units = outer eye corner distance), map it in `faceFromMeasures`, use it in `mixCamFace` + Actor._face, set
+  `FACE_K` in server_code/Takes.py, extend tools/testing/face_math.js. Tune scales on face_points.json (synthetic moves).
 - **New template:** `VT.TEMPLATES` (script uses the premade ids upper-cased as names) + `TEMPLATE_CAST` in Dialogs/NewProduction.
 - **Demo films:** server_code/demo_films.py (fixed ids), then `python tools/make_demo_voices.py` (Kokoro; needs
   `pip install kokoro soundfile imageio-ffmpeg`), then bump `DemoData.DEMO_SET` so live apps reload them.
@@ -172,10 +196,22 @@ dialogs = `alert(Form(...), buttons=[], role="app-dialog")`; server calls via `s
   page are slow but work. Hand tracking and controller touch sensors can't run headless: VT.fingerCurls / handFrameXR /
   touchCurls are pure functions (test them with synthetic joints) and need a real Quest session to judge.
 
+- **Face booth:** MediaPipe Face Landmarker 0.10.14 (`@mediapipe/tasks-vision`, the same version Subsudo and Reelstuber
+  load) from jsDelivr, model from storage.googleapis.com; GPU delegate with a CPU fallback. Headless Chrome finds the face
+  (SwiftShader, ~170 ms a frame) when drive.mjs gets `FAKE_VIDEO=tools/ui/face-cam.mjpeg` (`--use-file-for-fake-video-capture`;
+  an MJPEG is just JPEG frames back to back). The fake microphone is a beep, enough to test "record my voice again".
+  The booth's dialog awaits nothing long in Python: `booth.begin()` starts the camera + model without handing a promise back.
+- Mirror vs anatomy: the camera preview is mirrored (like a mirror), but YOUR left eye drives the CHARACTER's left eye
+  (which faces you, so it appears on the right of the character box), the same rule as the VR arms.
+- Not checked with a real person on a real webcam yet: the scales in faceFromMeasures (e.g. brow 0.07, smile 0.05, jaw
+  0.32 eye-corner units) come from one photo + synthetic moves; retune there if expressions feel too small or too big.
+
 ## Privacy & Terms (legal kit)
 
 From `C:/Users/arkvi/Documents/CLAUDE/APP_MAKER/legal-kit`: change `apps/vrtotoon.json`, then there
 `python -I build.py vrtotoon && python -I install.py vrtotoon`, then `python tools/assets.py` and deploy.
-The facts cover takes (voice + head/hand movement, private unless a picture is shared), the headset link, the microphone and
-WebXR permissions (passthrough camera never reaches the app). Feedback = Prepsto only ("Submit feedback").
+The facts cover takes (voice + head/hand movement, private unless a picture is shared), face passes (11 numbers a frame;
+the camera picture and face points never leave the device; no face recognition; section "Your face"), the headset link,
+the microphone, camera (face booth only) and WebXR permissions (passthrough camera never reaches the app), and the kit
+provider `mediapipe_face` (jsDelivr + Google). Feedback = Prepsto only ("Submit feedback").
 - Client and server modules share ONE Python package: a server module can't share a name with a client package/module.

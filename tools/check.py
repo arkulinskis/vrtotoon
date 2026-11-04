@@ -86,6 +86,8 @@ def main():
     r = run([sys.executable, str(ROOT / "tools" / "testing" / "test_server.py")], timeout=600)
     step("server tests: " + (r.stdout.strip().splitlines() or ["?"])[-1], r.returncode == 0 and "ALL OK" in r.stdout,
          (r.stdout + r.stderr)[-3000:])
+    r = run(["node", str(ROOT / "tools" / "testing" / "face_math.js")])
+    step("face booth maths: " + (r.stdout.strip().splitlines() or ["?"])[-1], r.returncode == 0 and "ALL FACE MATHS OK" in r.stdout, r.stdout[-1500:] + r.stderr[-800:])
     if "--ui" in sys.argv:
         r = run([sys.executable, "-I", str(ROOT / "tools" / "ui_test.py")], timeout=1800)
         print(r.stdout[-4000:])

@@ -33,7 +33,8 @@
       var used = (t.clips || []).filter(function (c) { return doc.d.sel[c.beat + '|' + t.actor] === t.uid; }).length;
       var lines = (t.clips || []).filter(function (c) { return c.line; }).length;
       return { uid: t.uid, actor: t.actor, name: nameOf(doc, t.actor) || '(gone)', source: t.source || 'vr', clips: (t.clips || []).length, lines: lines,
-        used: used, dur: Math.round((t.dur || 0) * 10) / 10, stars: t.stars || 0, created: t.created || '', builtin: !!(t.audioUrl && t.audioUrl.indexOf('_/theme/') === 0) };
+        used: used, dur: Math.round((t.dur || 0) * 10) / 10, stars: t.stars || 0, created: t.created || '', builtin: !!(t.audioUrl && t.audioUrl.indexOf('_/theme/') === 0),
+        face: !!(t.face || t.faceUrl) };
     }));
   };
   ed.shots = function (doc, takes) {
@@ -113,10 +114,20 @@
   ed.addPass = function (takes, p, savedJson) {
     var saved = savedJson ? JSON.parse(savedJson) : null;
     var t = takes.add({ uid: p.uid, actor: p.actor, source: p.source, clips: (saved && saved.clips) || p.clips, dur: p.dur, motion: p.motion, created: saved && saved.created, stars: 0, temp: false });
-    if (saved) { t.motionUrl = saved.motion_key ? VT.mediaUrl(saved.motion_key) : null; t.audioUrl = saved.audio_key ? VT.mediaUrl(saved.audio_key) : null; }
+    if (saved) { t.motionUrl = saved.motion_key ? VT.mediaUrl(saved.motion_key) : null; t.audioUrl = saved.audio_key ? VT.mediaUrl(saved.audio_key) : null; t.faceUrl = saved.face_key ? VT.mediaUrl(saved.face_key) : null; }
     if (p.buffer) t.buffer = p.buffer;
     else if (p.audio) p.audio.arrayBuffer().then(function (ab) { VT.audioCtx().decodeAudioData(ab, function (b) { t.buffer = b; }, function () {}); });
     return t.uid;
+  };
+  /* after a face pass was saved (or removed): the take's recordings have a new key on the server */
+  ed.takeSaved = function (takes, savedJson) {
+    var saved = JSON.parse(savedJson), t = takes.map[saved.uid];
+    if (!t) return false;
+    t.motionUrl = saved.motion_key ? VT.mediaUrl(saved.motion_key) : null;
+    if (!t.audioUrl || t.audioUrl.indexOf('_/theme/') !== 0 || saved.audio_key) t.audioUrl = saved.audio_key ? VT.mediaUrl(saved.audio_key) : (saved.asset ? '_/theme/' + saved.asset : null);
+    t.faceUrl = saved.face_key ? VT.mediaUrl(saved.face_key) : null;
+    if (!saved.face_key) t.face = null;
+    return true;
   };
   ed.exportVideo = function (stage, o, bar) {
     var job = VT.exportVideo(stage, Object.assign({}, o, { onProgress: function (p) { if (bar) bar.style.width = Math.round(p * 100) + '%'; } }));

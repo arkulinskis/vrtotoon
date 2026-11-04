@@ -7,7 +7,7 @@ SOURCES = {"vr": ("VR", "vr"), "ar": ("Passthrough", "vr"), "desk": ("Desk puppe
 
 
 class TakeRow(TakeRowTemplate):
-    """A recorded take: who, how (VR / desk / voice), how many clips are in the cut, stars, Use, Delete.
+    """A recorded take: who, how (VR / desk / voice), how many clips are in the cut, a face pass, stars, Face, Use, Delete.
     item = a row from VT.ed.takes + 'can_edit'. Actions go to the page as x-take (op, uid, value)."""
 
     def __init__(self, **properties):
@@ -32,6 +32,8 @@ class TakeRow(TakeRowTemplate):
         self.star_button.enabled = can
         self.delete_button.visible = can and not it.get("builtin")
         self.use_button.visible = it["used"] < it["clips"]
+        self.face_badge.visible = bool(it.get("face"))
+        self.face_button.text = "Redo face" if it.get("face") else "Face"
 
     def _send(self, op, value=None):
         self.parent.raise_event("x-take", op=op, uid=self.item["uid"], value=value)
@@ -39,6 +41,10 @@ class TakeRow(TakeRowTemplate):
     @handle("star_button", "click")
     def star_button_click(self, **event_args):
         self._send("star", (self.item["stars"] + 1) % 4)
+
+    @handle("face_button", "click")
+    def face_button_click(self, **event_args):
+        self._send("face")
 
     @handle("use_button", "click")
     def use_button_click(self, **event_args):

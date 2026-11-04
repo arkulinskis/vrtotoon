@@ -10,13 +10,14 @@
 
   VT.docFrom = function (data) { return new VT.Doc(typeof data === 'string' ? JSON.parse(data || '{}') : data); };
   VT.API = '';
-  VT.mediaUrl = function (key) { return key ? VT.API + '/_/api/m/' + encodeURIComponent(key) : ''; };
-  /* takes from the server: [{uid, actor, source, clips, dur, motion_key, audio_key, asset, stars, created}] */
+  // VT.API = anvil.server.get_api_origin(), which already ends in /_/api (on Anvil and the App Server): don't double it
+  VT.mediaUrl = function (key) { return key ? String(VT.API || '').replace(/\/+$/, '').replace(/\/_\/api$/, '') + '/_/api/m/' + encodeURIComponent(key) : ''; };
+  /* takes from the server: [{uid, actor, source, clips, dur, motion_key, audio_key, face_key, asset, stars, created}] */
   VT.takesFrom = function (list, takes) {
     takes = takes || new VT.Takes();
     (list || []).forEach(function (t) {
       takes.add({ uid: t.uid, actor: t.actor, source: t.source, clips: t.clips || [], dur: t.dur, stars: t.stars || 0, created: t.created,
-        motionUrl: t.motion_key ? VT.mediaUrl(t.motion_key) : null,
+        motionUrl: t.motion_key ? VT.mediaUrl(t.motion_key) : null, faceUrl: t.face_key ? VT.mediaUrl(t.face_key) : null,
         audioUrl: t.asset ? '_/theme/' + t.asset : (t.audio_key ? VT.mediaUrl(t.audio_key) : null) });
     });
     return takes;

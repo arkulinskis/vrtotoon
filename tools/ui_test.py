@@ -92,6 +92,7 @@ def drive(script, window, out, shots=(), seed=False):
     f.parent.mkdir(parents=True, exist_ok=True)
     f.write_text(json.dumps(steps), encoding="utf-8")
     env = dict(__import__("os").environ, WINDOW="1280,1000")
+    env["FAKE_VIDEO"] = str(ROOT / "tools" / "ui" / "face-cam.mjpeg")  # the fake webcam shows a real face (the face booth)
     if window != "1280,1000":
         env["MOBILE"] = window
     r = subprocess.run(["node", str(ROOT / "tools" / "live" / "drive.mjs"), URL + "/#landing", str(f), str(out)],

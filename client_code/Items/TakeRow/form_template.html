@@ -5,11 +5,13 @@
       <anvil-component type="Label" name="who" prop:role='["strong"]' bind:text="self.item['name']"></anvil-component>
       <anvil-component type="Label" name="src_badge" prop:role='["badge"]'></anvil-component>
       <anvil-component type="Label" name="used_badge" prop:text="In the cut" prop:role='["badge", "badge-good"]'></anvil-component>
+      <anvil-component type="Label" name="face_badge" prop:text="Face" prop:role='["badge", "badge-brand"]' prop:tooltip="Has a face pass from the webcam"></anvil-component>
     </div>
     <anvil-component type="Label" name="meta" prop:role='["fine-print"]'></anvil-component>
   </div>
   <div class="ui-row take-tools">
     <anvil-component type="Button" name="star_button" prop:role='["btn", "btn-sm", "btn-ghost", "take-stars"]' prop:tooltip="Circle the take (0 to 3 stars)"></anvil-component>
+    <anvil-component type="Button" name="face_button" prop:text="Face" prop:role='["btn", "btn-sm", "ic-smile"]' prop:tooltip="Act this take's face in front of your webcam"></anvil-component>
     <anvil-component type="Button" name="use_button" prop:text="Use" prop:role='["btn", "btn-sm"]' prop:tooltip="Use this take for all its lines"></anvil-component>
     <anvil-component type="Button" name="delete_button" prop:text="Delete" prop:role='["btn", "btn-sm", "btn-icon", "btn-ghost", "ic-trash"]'></anvil-component>
   </div>

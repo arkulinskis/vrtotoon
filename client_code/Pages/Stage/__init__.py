@@ -142,7 +142,7 @@ class Stage(StageTemplate):
         self.rev = r.get("rev") or self.rev
         vt.VT.ed.addPass(self.takes, p, json.dumps(r["take"]))
         lines = len([c for c in r["take"]["clips"] if c["line"]])
-        state.toast("Printed! %s and %s in the cut." % (state.plural(lines, "line"), state.plural(len(r["take"]["clips"]) - lines, "reaction")), "ok")
+        state.toast("Printed! %s and %s in the cut. Act the face later with your webcam: editor, Takes, Face." % (state.plural(lines, "line"), state.plural(len(r["take"]["clips"]) - lines, "reaction")), "ok")
         self.state_label.text = "Saved. Ready for the next take."
         self._pickers()
 

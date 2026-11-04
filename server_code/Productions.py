@@ -83,6 +83,7 @@ def take_dict(t):
     k = t["key"] or ""
     return {"uid": t["uid"], "actor": t["actor"], "source": t["source"] or "vr", "clips": t["clips"] or [], "dur": t["dur"] or 0,
             "motion_key": (k + "-m") if t["motion"] is not None else "", "audio_key": (k + "-a") if t["audio"] is not None else "",
+            "face_key": (k + "-f") if t["face"] is not None else "",
             "asset": t["asset"] or "", "stars": t["stars"] or 0, "created": C.iso(t["created"])}
 
 
@@ -223,7 +224,7 @@ def production_copy(pid):
                                        is_demo=False)
     for t in app_tables.takes.search(production=p):
         app_tables.takes.add_row(production=q, owner=me, uid=t["uid"], actor=t["actor"], source=t["source"], clips=t["clips"], dur=t["dur"],
-                                 motion=t["motion"], audio=t["audio"], asset=t["asset"], key=C.rand_key(24), stars=t["stars"] or 0,
+                                 motion=t["motion"], audio=t["audio"], face=t["face"], asset=t["asset"], key=C.rand_key(24), stars=t["stars"] or 0,
                                  created=t["created"] or C.now(), is_demo=False)
     return C.ok(id=q.get_id())
 
