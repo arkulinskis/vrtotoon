@@ -1,0 +1,22 @@
+<anvil-form layout="VRtoToon.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="ui-wrap page-premieres">
+      <div class="prem-head">
+        <div class="eyebrow">Tonight on the red carpet</div>
+        <h1>Premieres</h1>
+        <p class="muted">Pictures made with VRtoToon, shared by their makers. Every one is played live in 3D, right in your browser.</p>
+      </div>
+      <anvil-component type="RepeatingPanel" name="film_panel" prop:item_template="VRtoToon.Items.ProductionCard" prop:role='["poster-grid"]'></anvil-component>
+      <div class="ui-empty" anvil:name="empty">
+        <i class="ic ic-ticket"></i>
+        <h3>The theatre is dark tonight</h3>
+        <p>No shared pictures yet. Make one and share its screening link: it shows up here.</p>
+      </div>
+      <div class="prem-cta">
+        <h2>Want your name in lights?</h2>
+        <p class="muted">Share any of your pictures from the editor (Share button) and it opens here.</p>
+        <a class="ui-btn primary" href="#home" anvil:name="cta_link"><i class="ic ic-clapper"></i>Make a picture</a>
+      </div>
+    </div>
+  </anvil-block>
+</anvil-form>

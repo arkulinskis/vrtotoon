@@ -1,0 +1,29 @@
+---
+custom_component: true
+properties:
+  - name: char
+    type: object
+    description: A premade character id ("max") or a character definition (dict)
+    default_binding_prop: true
+  - name: emo
+    type: string
+    default_value: happy
+    description: Emotion on the face (happy, sad, angry, surprised ...)
+  - name: size
+    type: number
+    default_value: 256
+    description: Picture size in pixels (square)
+  - name: full
+    type: boolean
+    default_value: false
+    description: Whole body instead of head and shoulders
+events:
+  - name: click
+    default_event: true
+toolbox_item:
+  title: Character portrait
+  group: VRtoToon
+help_text: |
+  A rendered picture of a toon character (drawn once by the 3D engine, then cached).
+---
+<span class="vt-portrait-box" anvil:on-dom:click="self.box_click"><img class="vt-portrait" anvil:name="img" alt="" loading="lazy"></span>

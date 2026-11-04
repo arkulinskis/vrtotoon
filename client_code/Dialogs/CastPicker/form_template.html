@@ -1,0 +1,8 @@
+<div class="ui cast-picker">
+  <anvil-component type="Label" name="title_label" prop:role='["dlg-title"]'></anvil-component>
+  <anvil-component type="RepeatingPanel" name="filter_panel" prop:item_template="VRtoToon.Items.Chip" prop:role='["chip-row", "chip-wrap"]'></anvil-component>
+  <anvil-component type="RepeatingPanel" name="cast_panel" prop:item_template="VRtoToon.Items.CastCard" prop:role='["cast-grid", "cast-pick"]'></anvil-component>
+  <div class="ui-row end">
+    <anvil-component type="Button" name="cancel_button" prop:text="Cancel" prop:role='["btn", "btn-ghost"]'></anvil-component>
+  </div>
+</div>

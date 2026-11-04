@@ -1,0 +1,31 @@
+<div class="ui char-sheet">
+  <div class="cs-grid">
+    <div class="cs-stage">
+      <anvil-component type="VRtoToon.Components.Turntable" name="turntable"></anvil-component>
+      <span class="cs-hint">Drag to turn</span>
+    </div>
+    <div class="cs-side">
+      <anvil-component type="Label" name="role_label" prop:role='["eyebrow-label"]'></anvil-component>
+      <anvil-component type="Label" name="name_label" prop:role='["dlg-title"]'></anvil-component>
+      <anvil-component type="Label" name="tag_label" prop:role='["fine-print"]'></anvil-component>
+      <div class="cs-block">
+        <b class="small">Screen test: feelings</b>
+        <anvil-component type="RepeatingPanel" name="emo_panel" prop:item_template="VRtoToon.Items.Chip" prop:role='["chip-row", "chip-wrap"]'></anvil-component>
+      </div>
+      <div class="cs-block">
+        <b class="small">Gestures</b>
+        <anvil-component type="RepeatingPanel" name="gest_panel" prop:item_template="VRtoToon.Items.Chip" prop:role='["chip-row", "chip-wrap"]'></anvil-component>
+      </div>
+      <div class="ui-row cs-actions">
+        <anvil-component type="Button" name="talk_button" prop:text="Say a line" prop:role='["btn", "btn-sm", "ic-chat"]'></anvil-component>
+        <anvil-component type="Button" name="variant_button" prop:text="Make a variant" prop:role='["btn", "btn-sm", "ic-brush"]'></anvil-component>
+        <anvil-component type="Button" name="delete_button" prop:text="Delete" prop:role='["btn", "btn-sm", "btn-danger", "ic-trash"]'></anvil-component>
+      </div>
+      <div class="ui-row end cs-foot">
+        <anvil-component type="Button" name="close_button" prop:text="Close" prop:role='["btn", "btn-ghost"]'></anvil-component>
+        <anvil-component type="Button" name="star_button" prop:text="Star in a new picture" prop:role='["btn", "btn-primary", "ic-clapper"]'></anvil-component>
+      </div>
+    </div>
+  </div>
+  <anvil-component type="Timer" name="talk_timer" prop:interval="0"></anvil-component>
+</div>

@@ -1,0 +1,34 @@
+---
+custom_component: true
+properties:
+  - name: production
+    type: object
+    description: A production from the server ({data (JSON text), takes, ...})
+    default_binding_prop: true
+  - name: mode
+    type: string
+    default_value: film
+    description: '"film" (the player) or "hero" (plays muted in a loop, no controls)'
+  - name: autoplay
+    type: boolean
+    default_value: false
+  - name: muted
+    type: boolean
+    default_value: false
+  - name: controls
+    type: boolean
+    default_value: true
+  - name: subs
+    type: boolean
+    default_value: true
+    description: Subtitles on at the start
+events:
+  - name: ended
+    description: The film reached its end
+toolbox_item:
+  title: Film player
+  group: VRtoToon
+help_text: |
+  Plays a production in 3D (theme/assets/vt-stage.js): the grade, the letterbox, titles, subtitles and the full sound mix.
+---
+<div class="vt-player"><div class="vt-player-mount" anvil:dom-node="mount"></div></div>

@@ -1,0 +1,16 @@
+<div class="ui voice-booth">
+  <h2 class="dlg-h">The voice booth</h2>
+  <anvil-component type="Label" name="who_label" prop:role='["eyebrow-label"]'></anvil-component>
+  <anvil-component type="Label" name="line_label" prop:role='["booth-line"]'></anvil-component>
+  <anvil-component type="Label" name="status_label" prop:role='["fine-print"]' prop:text="Press Record, say the line, press Stop. The silence around it is trimmed."></anvil-component>
+  <div class="booth-light" anvil:name="light"><i class="ic ic-rec"></i><span>On air</span></div>
+  <div class="ui-row booth-buttons">
+    <anvil-component type="Button" name="rec_button" prop:text="Record" prop:role='["btn", "btn-primary", "btn-lg", "ic-mic"]'></anvil-component>
+    <anvil-component type="Button" name="play_button" prop:text="Listen" prop:role='["btn", "ic-play"]' prop:visible="false"></anvil-component>
+  </div>
+  <anvil-component type="Label" name="message" prop:role='["msg-error"]' prop:visible="false"></anvil-component>
+  <div class="ui-row end">
+    <anvil-component type="Button" name="cancel_button" prop:text="Cancel" prop:role='["btn", "btn-ghost"]'></anvil-component>
+    <anvil-component type="Button" name="keep_button" prop:text="Print it" prop:role='["btn", "btn-primary", "ic-check"]' prop:enabled="false"></anvil-component>
+  </div>
+</div>

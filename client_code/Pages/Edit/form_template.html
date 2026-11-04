@@ -1,0 +1,154 @@
+<anvil-form layout="VRtoToon.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="page-edit">
+      <div class="ed-missing ui-wrap" anvil:name="missing">
+        <div class="ui-empty"><i class="ic ic-lock"></i><h3>This picture can't be opened</h3>
+          <anvil-component type="Label" name="missing_label"></anvil-component>
+          <p><a href="#home">Back to the Lot</a></p></div>
+      </div>
+      <div class="ed" anvil:name="editor">
+        <div class="ed-top">
+          <a class="ui-btn ghost sm ed-back" href="#home"><i class="ic ic-back"></i><span>Lot</span></a>
+          <anvil-component type="TextBox" name="title_box" prop:role='["ed-title"]' prop:placeholder="Untitled picture"></anvil-component>
+          <anvil-component type="Label" name="status_label" prop:role='["ed-status"]'></anvil-component>
+          <span class="ui-spacer"></span>
+          <div class="ui-row ed-actions">
+            <anvil-component type="Button" name="undo_button" prop:text="Undo" prop:role='["btn", "btn-sm", "btn-icon", "ic-undo"]' prop:tooltip="Undo (Ctrl+Z)"></anvil-component>
+            <anvil-component type="Button" name="redo_button" prop:text="Redo" prop:role='["btn", "btn-sm", "btn-icon", "ic-redo"]' prop:tooltip="Redo"></anvil-component>
+            <anvil-component type="Button" name="headset_button" prop:text="Headset" prop:role='["btn", "btn-sm", "ic-vr"]' prop:tooltip="Pair a VR headset with this picture"></anvil-component>
+            <anvil-component type="Button" name="share_button" prop:text="Share" prop:role='["btn", "btn-sm", "ic-share"]'></anvil-component>
+            <anvil-component type="Button" name="export_button" prop:text="Export" prop:role='["btn", "btn-sm", "btn-primary", "ic-download"]'></anvil-component>
+          </div>
+        </div>
+        <div class="ed-banner" anvil:name="sandbox_banner">
+          <i class="ic ic-info"></i>
+          <anvil-component type="Label" name="sandbox_label" prop:text="You're in a sandbox: play with everything, but changes aren't saved."></anvil-component>
+          <anvil-component type="Button" name="copy_button" prop:text="Make my own copy" prop:role='["btn", "btn-sm", "btn-primary", "ic-copy"]'></anvil-component>
+        </div>
+        <div class="ed-main">
+          <div class="ed-left">
+            <div class="ed-stage-wrap">
+              <anvil-component type="VRtoToon.Components.StageView" name="stage_view"></anvil-component>
+              <div class="ed-viewbar">
+                <anvil-component type="Button" name="play_button" prop:text="Play" prop:role='["btn", "btn-sm", "btn-solid-dark", "ic-play"]'></anvil-component>
+                <anvil-component type="Button" name="view_button" prop:text="Director's view" prop:role='["btn", "btn-sm", "btn-glass", "ic-eye"]' prop:tooltip="Switch between the film camera and a free view of the set"></anvil-component>
+              </div>
+            </div>
+            <anvil-component type="Label" name="hint" prop:role='["ed-hint"]'></anvil-component>
+          <div class="ed-tlbar">
+            <anvil-component type="Button" name="tl_fit_button" prop:text="Fit" prop:role='["btn", "btn-sm", "btn-ghost", "ic-grid"]' prop:tooltip="Fit the whole film"></anvil-component>
+            <anvil-component type="Button" name="tl_in_button" prop:text="Zoom in" prop:role='["btn", "btn-sm", "btn-icon", "btn-ghost", "ic-plus"]'></anvil-component>
+            <anvil-component type="Button" name="tl_out_button" prop:text="Zoom out" prop:role='["btn", "btn-sm", "btn-icon", "btn-ghost", "ic-minus"]'></anvil-component>
+            <span class="ui-spacer"></span>
+            <span class="small muted ed-legend">&#9670; walk &middot; faces = feelings &middot; hands = gestures &middot; &#9679; = recorded &middot; stripes = still estimated</span>
+          </div>
+          <anvil-component type="VRtoToon.Components.TimelineView" name="timeline_view"></anvil-component>
+          </div>
+          <div class="ed-panel">
+            <nav class="ed-tabs" aria-label="Editor panels">
+              <anvil-component type="Button" name="tab_script" prop:text="Script" prop:role='["tab"]'></anvil-component>
+              <anvil-component type="Button" name="tab_cast" prop:text="Cast" prop:role='["tab"]'></anvil-component>
+              <anvil-component type="Button" name="tab_direct" prop:text="Direct" prop:role='["tab"]'></anvil-component>
+              <anvil-component type="Button" name="tab_camera" prop:text="Camera" prop:role='["tab"]'></anvil-component>
+              <anvil-component type="Button" name="tab_takes" prop:text="Takes" prop:role='["tab"]'></anvil-component>
+              <anvil-component type="Button" name="tab_look" prop:text="Look" prop:role='["tab"]'></anvil-component>
+            </nav>
+            <div class="ed-part" anvil:name="part_script">
+              <anvil-component type="Label" name="script_stats" prop:role='["fine-print", "ed-stats"]'></anvil-component>
+              <anvil-component type="RepeatingPanel" name="beat_panel" prop:item_template="VRtoToon.Items.BeatRow" prop:role='["beat-list"]'></anvil-component>
+              <div class="ui-row ed-part-tools">
+                <anvil-component type="Button" name="add_line_button" prop:text="Add a line" prop:role='["btn", "btn-sm", "ic-plus"]'></anvil-component>
+                <anvil-component type="Button" name="add_action_button" prop:text="Add an action beat" prop:role='["btn", "btn-sm", "ic-walk"]'></anvil-component>
+                <anvil-component type="Button" name="import_button" prop:text="Paste a script" prop:role='["btn", "btn-sm", "btn-ghost", "ic-book"]'></anvil-component>
+              </div>
+            </div>
+            <div class="ed-part" anvil:name="part_cast">
+              <anvil-component type="RepeatingPanel" name="cast_panel" prop:item_template="VRtoToon.Items.CastRow" prop:role='["cast-list"]'></anvil-component>
+              <div class="ui-row ed-part-tools">
+                <anvil-component type="Button" name="add_cast_button" prop:text="Add to the cast" prop:role='["btn", "btn-sm", "ic-plus"]'></anvil-component>
+              </div>
+              <p class="fine-print muted small">Perform opens the stage for that role: in VR, in passthrough, or as a desk puppet with the mouse.</p>
+            </div>
+            <div class="ed-part" anvil:name="part_direct">
+              <div class="ed-sel" anvil:name="sel_box">
+                <div class="ui-row between"><anvil-component type="Label" name="sel_title" prop:role='["strong"]'></anvil-component>
+                  <anvil-component type="Button" name="sel_delete_button" prop:text="Delete" prop:role='["btn", "btn-sm", "btn-danger", "ic-trash"]'></anvil-component></div>
+                <div class="ed-sel-fields">
+                  <anvil-component type="DropDown" name="sel_emo_dd"></anvil-component>
+                  <anvil-component type="DropDown" name="sel_act_dd"></anvil-component>
+                  <anvil-component type="DropDown" name="sel_style_dd"></anvil-component>
+                  <anvil-component type="DropDown" name="sel_face_dd"></anvil-component>
+                  <anvil-component type="DropDown" name="sel_look_dd"></anvil-component>
+                  <anvil-component type="DropDown" name="sel_sfx_dd"></anvil-component>
+                  <anvil-component type="DropDown" name="sel_shot_dd"></anvil-component>
+                  <anvil-component type="DropDown" name="sel_a_dd"></anvil-component>
+                  <anvil-component type="DropDown" name="sel_move_dd"></anvil-component>
+                </div>
+              </div>
+              <div class="ed-who">
+                <anvil-component type="DropDown" name="actor_dd" prop:role='["ed-actor"]'></anvil-component>
+                <anvil-component type="Label" name="at_label" prop:role='["fine-print"]'></anvil-component>
+              </div>
+              <div class="ed-block"><b class="small">Feeling, from the playhead</b>
+                <anvil-component type="RepeatingPanel" name="emo_panel" prop:item_template="VRtoToon.Items.Chip" prop:role='["chip-row", "chip-wrap", "chip-small"]'></anvil-component></div>
+              <div class="ed-block"><b class="small">Gesture at the playhead</b>
+                <anvil-component type="RepeatingPanel" name="gest_panel" prop:item_template="VRtoToon.Items.Chip" prop:role='["chip-row", "chip-wrap", "chip-small"]'></anvil-component></div>
+              <div class="ed-block"><b class="small">Walks: drag the character on the stage</b>
+                <div class="ed-grid2">
+                  <label class="ui-field"><span>How</span><anvil-component type="DropDown" name="style_dd"></anvil-component></label>
+                  <label class="ui-field"><span>Then face</span><anvil-component type="DropDown" name="face_dd"></anvil-component></label>
+                </div>
+                <p class="small muted ed-tip">Before the first line, dragging moves the starting mark. After it, the character walks there from the playhead.</p>
+              </div>
+              <div class="ed-block"><b class="small">Looks at, from the playhead</b>
+                <div class="ui-row"><anvil-component type="DropDown" name="look_dd"></anvil-component>
+                  <anvil-component type="Button" name="look_button" prop:text="Set" prop:role='["btn", "btn-sm", "ic-eye"]'></anvil-component></div>
+              </div>
+              <div class="ui-row ed-part-tools">
+                <anvil-component type="Link" name="perform_link" prop:text="Perform this role" prop:role='["btn", "btn-sm", "btn-primary", "ic-vr"]'></anvil-component>
+              </div>
+            </div>
+            <div class="ed-part" anvil:name="part_camera">
+              <p class="small muted">Each shot cuts in at its time and lasts until the next one. The auto-director reads the script: wides to open, close-ups on big feelings, over-the-shoulder exchanges, reaction shots.</p>
+              <div class="ui-row ed-part-tools">
+                <anvil-component type="Button" name="auto_button" prop:text="Auto-direct" prop:role='["btn", "btn-sm", "btn-primary", "ic-wand"]'></anvil-component>
+                <anvil-component type="Button" name="add_shot_button" prop:text="Shot at the playhead" prop:role='["btn", "btn-sm", "ic-camera"]'></anvil-component>
+              </div>
+              <anvil-component type="RepeatingPanel" name="shot_panel" prop:item_template="VRtoToon.Items.ShotRow" prop:role='["shot-list"]'></anvil-component>
+              <div class="ed-block"><b class="small">Sound effect at the playhead</b>
+                <div class="ui-row"><anvil-component type="DropDown" name="sfx_dd"></anvil-component>
+                  <anvil-component type="Button" name="sfx_button" prop:text="Add" prop:role='["btn", "btn-sm", "ic-volume"]'></anvil-component></div></div>
+            </div>
+            <div class="ed-part" anvil:name="part_takes">
+              <p class="small muted">Every pass you keep. The ones "in the cut" are playing. Use swaps a whole take back in; pick single lines from the stage.</p>
+              <anvil-component type="RepeatingPanel" name="take_panel" prop:item_template="VRtoToon.Items.TakeRow" prop:role='["take-list"]'></anvil-component>
+              <div class="ui-empty" anvil:name="no_takes"><i class="ic ic-mic"></i><h3>Nothing recorded yet</h3><p>Perform a role from the Cast tab, or use Record line in the Script tab.</p></div>
+            </div>
+            <div class="ed-part" anvil:name="part_look">
+              <div class="ed-grid2">
+                <label class="ui-field"><span>Set</span><anvil-component type="DropDown" name="set_dd"></anvil-component></label>
+                <label class="ui-field"><span>Film look</span><anvil-component type="DropDown" name="grade_dd"></anvil-component></label>
+                <label class="ui-field"><span>Frame</span><anvil-component type="DropDown" name="aspect_dd"></anvil-component></label>
+                <label class="ui-field"><span>Score</span><anvil-component type="DropDown" name="music_dd"></anvil-component></label>
+                <label class="ui-field"><span>Score volume</span><anvil-component type="DropDown" name="vol_dd"></anvil-component></label>
+              </div>
+              <anvil-component type="Label" name="set_blurb" prop:role='["fine-print"]'></anvil-component>
+              <div class="ui-row ed-checks">
+                <anvil-component type="CheckBox" name="subs_check" prop:text="Subtitles"></anvil-component>
+                <anvil-component type="CheckBox" name="titles_check" prop:text="Opening title and THE END"></anvil-component>
+              </div>
+              <label class="ui-field"><span>Logline <em>(one sentence for the poster)</em></span>
+                <anvil-component type="TextBox" name="logline_box" prop:placeholder="A cowboy and a villain settle it the civilised way."></anvil-component></label>
+              <div class="ui-row ed-part-tools">
+                <anvil-component type="Button" name="poster_button" prop:text="Use this frame as the poster" prop:role='["btn", "btn-sm", "ic-image"]'></anvil-component>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <anvil-component type="Timer" name="save_timer" prop:interval="0"></anvil-component>
+      <anvil-component type="Timer" name="link_timer" prop:interval="0"></anvil-component>
+    </div>
+  </anvil-block>
+</anvil-form>

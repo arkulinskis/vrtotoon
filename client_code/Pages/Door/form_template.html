@@ -1,0 +1,22 @@
+<anvil-form layout="VRtoToon.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="page-door">
+      <div class="door">
+        <div class="door-sign"><img src="_/theme/icon.svg" alt="" width="54" height="54"><span>Stage door</span></div>
+        <p class="door-lead">On your computer, open a picture and press <b>Headset</b>. Type the four letters it shows.</p>
+        <div class="door-slots" anvil:name="slots">
+          <anvil-component type="Label" name="s1" prop:role='["door-slot"]'></anvil-component>
+          <anvil-component type="Label" name="s2" prop:role='["door-slot"]'></anvil-component>
+          <anvil-component type="Label" name="s3" prop:role='["door-slot"]'></anvil-component>
+          <anvil-component type="Label" name="s4" prop:role='["door-slot"]'></anvil-component>
+        </div>
+        <anvil-component type="Label" name="message" prop:role='["msg-error"]' prop:visible="false"></anvil-component>
+        <anvil-component type="RepeatingPanel" name="keys_panel" prop:item_template="VRtoToon.Items.KeyButton" prop:role='["door-keys"]'></anvil-component>
+        <div class="door-foot">
+          <a href="#home" anvil:name="lot_link">The Lot</a>
+          <span class="muted small">Signed in on this headset? Open your picture from the Lot and press Perform: no code needed.</span>
+        </div>
+      </div>
+    </div>
+  </anvil-block>
+</anvil-form>

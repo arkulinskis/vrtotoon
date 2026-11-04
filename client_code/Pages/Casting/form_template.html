@@ -1,0 +1,21 @@
+<anvil-form layout="VRtoToon.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="ui-wrap page-casting">
+      <div class="ui-page-head">
+        <div>
+          <div class="eyebrow">Central casting</div>
+          <h1>The cast list</h1>
+          <p class="muted">Twenty-five toon actors, all ready to perform. Tap one for a screen test: emotions, gestures, a quick line.</p>
+        </div>
+      </div>
+      <anvil-component type="RepeatingPanel" name="filter_panel" prop:item_template="VRtoToon.Items.Chip" prop:role='["chip-row"]'></anvil-component>
+      <anvil-component type="Label" name="section_title" prop:role='["sec-title", "cast-section"]'></anvil-component>
+      <anvil-component type="RepeatingPanel" name="cast_panel" prop:item_template="VRtoToon.Items.CastCard" prop:role='["cast-grid"]'></anvil-component>
+      <div class="ui-empty" anvil:name="empty">
+        <i class="ic ic-users"></i>
+        <h3>Your wardrobe is empty</h3>
+        <p>Open any character and press "Make a variant": new colours, a hat, a different height. Variants can join any cast.</p>
+      </div>
+    </div>
+  </anvil-block>
+</anvil-form>

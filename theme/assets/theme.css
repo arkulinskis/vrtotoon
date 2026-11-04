@@ -1,0 +1,33 @@
+/* theme.css: Anvil puts this file in the page itself, so it applies before the app has loaded.
+   It styles Anvil's loading spinner (shown while the app starts and during server calls) as the app icon
+   (the tile shows theme/assets/icon.svg). Keep the colours in step with app.css.
+   Anvil substitutes its theme-colour tokens (percent sign, "color:", a name, percent sign) in this file,
+   so never write that pattern here. */
+html, body { background: #f7f1e6; }
+@media (prefers-color-scheme: dark) { html:not([data-theme="light"]), html:not([data-theme="light"]) body { background: #110a0c; } }
+html[data-theme="dark"], html[data-theme="dark"] body { background: #110a0c; }
+
+html .anvil-spinner, #loadingSpinner {
+  --anvil-spinner-size: 88px;
+  width: 88px !important; height: 88px !important; top: calc(50% - 44px); left: calc(50% - 44px);
+  border-radius: 26px !important; background: #1d1416 !important; background-image: none !important; color: transparent;
+  box-shadow: 0 10px 34px rgba(28, 18, 20, .35), 0 0 0 2px #e8b54a !important;
+  animation: app-breathe 1.4s ease-in-out infinite;
+}
+html .anvil-spinner .anvil-spinner-svg, #loadingSpinner > svg, #loadingSpinner > img { display: none !important; }
+html .anvil-spinner::after, #loadingSpinner::after {
+  content: ""; position: absolute; inset: 14px; border-radius: 16px;
+  background: url("_/theme/icon.svg") center / contain no-repeat;
+}
+/* loader:start flip brand=#b3182b (made by APP_MAKER/tools/loaders.py; rerun it instead of editing) */
+html .anvil-spinner, #loadingSpinner { animation: app-flip 1.8s cubic-bezier(.6, 0, .3, 1) infinite; }
+html .anvil-spinner::before, #loadingSpinner::before {
+  content: none;
+}
+@keyframes app-flip { 0%, 25% { transform: perspective(400px) rotateY(0); } 75%, 100% { transform: perspective(400px) rotateY(360deg); } }
+@keyframes app-breathe { 50% { transform: scale(.94); } }
+/* loader:end */
+@media (prefers-reduced-motion: reduce) {
+  html .anvil-spinner, #loadingSpinner { animation: none; }
+  html .anvil-spinner::before, #loadingSpinner::before { animation-duration: 3s; }
+}

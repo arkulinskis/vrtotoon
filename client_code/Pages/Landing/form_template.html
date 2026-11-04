@@ -1,0 +1,132 @@
+<anvil-form layout="VRtoToon.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="page-landing">
+      <section class="lp-hero">
+        <div class="lp-marquee">
+          <div class="lp-bulbs" aria-hidden="true"></div>
+          <div class="lp-screen">
+            <anvil-component type="VRtoToon.Components.FilmPlayer" name="hero_player" prop:mode="hero" prop:autoplay="true" prop:muted="true" prop:controls="false"></anvil-component>
+            <div class="lp-screen-shade" aria-hidden="true"></div>
+            <div class="lp-hero-copy">
+              <div class="eyebrow">Now showing: a picture by you</div>
+              <h1>One actor. <em>Every role.</em></h1>
+              <p class="lp-lead">Put on a VR headset and become a cartoon: your head, your hands and your voice drive a 3D toon. Then play the next character, and the next. Direct it all on your computer and premiere a finished film.</p>
+              <div class="lp-cta" anvil:name="guest_cta">
+                <a class="ui-btn primary lg" href="#auth/signup">Start your picture <i class="ic ic-arrow"></i></a>
+                <a class="ui-btn lg glass" href="#screen/demo-bigbreak"><i class="ic ic-play"></i>Watch with sound</a>
+              </div>
+              <div class="lp-cta" anvil:name="member_cta">
+                <a class="ui-btn primary lg" href="#home">Back to the Lot <i class="ic ic-arrow"></i></a>
+                <a class="ui-btn lg glass" href="#screen/demo-bigbreak"><i class="ic ic-play"></i>Watch with sound</a>
+              </div>
+              <div class="lp-proof">
+                <span><i class="ic ic-check"></i>Runs in the browser, headset or not</span>
+                <span><i class="ic ic-check"></i>25 characters, 10 sets</span>
+                <span><i class="ic ic-check"></i>Video and Blender export</span>
+              </div>
+            </div>
+          </div>
+          <div class="lp-sign" aria-hidden="true"><span>The Big Break</span><small>A demo picture, made entirely in VRtoToon</small></div>
+        </div>
+      </section>
+
+      <section class="lp-section lp-relay" id="relay">
+        <div class="ui-wrap">
+          <div class="lp-head"><div class="eyebrow">The hard part, solved</div><h2>Play every character <em>yourself</em></h2>
+            <p>Most motion-capture tools assume one actor per character. VRtoToon is built for the one-person studio: you record role after role, and the film keeps everyone in time.</p></div>
+          <div class="relay">
+            <div class="relay-step"><div class="relay-n">Take 1</div><anvil-component type="VRtoToon.Components.Portrait" name="relay1" prop:char="max" prop:emo="happy" prop:size="200"></anvil-component>
+              <h3>You are Max</h3><p>The teleprompter shows your lines. The other parts read along on it, timed like real dialogue, so you can react.</p></div>
+            <div class="relay-arrow" aria-hidden="true"></div>
+            <div class="relay-step"><div class="relay-n">Take 2</div><anvil-component type="VRtoToon.Components.Portrait" name="relay2" prop:char="rosie" prop:emo="smug" prop:size="200"></anvil-component>
+              <h3>Now you are Rosie</h3><p>Max is already there, acting and talking. You answer him, line for line. The teleprompter moves on when you stop talking.</p></div>
+            <div class="relay-arrow" aria-hidden="true"></div>
+            <div class="relay-step"><div class="relay-n">Take 3</div><anvil-component type="VRtoToon.Components.Portrait" name="relay3" prop:char="biscuit" prop:emo="laugh" prop:size="200"></anvil-component>
+              <h3>Even the dog</h3><p>Retake one line and everything after it slides to make room, like a film editor would. Nobody falls out of sync.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="lp-section" id="how">
+        <div class="ui-wrap">
+          <div class="lp-head"><div class="eyebrow">From script to screen</div><h2>How a picture gets made</h2></div>
+          <div class="lp-steps">
+            <div class="lp-step"><i class="ic ic-users"></i><h3>Cast it</h3><p>Pick from 25 toon actors (heroes, sidekicks, villains, critters) or dress your own variant in the wardrobe. Paste a script: names become your cast.</p></div>
+            <div class="lp-step"><i class="ic ic-vr"></i><h3>Perform in VR</h3><p>Your head and hands become the character's, your voice moves its mouth. Teleprompter ahead, the director's monitor beside you. Passthrough works too.</p></div>
+            <div class="lp-step"><i class="ic ic-clapper"></i><h3>Direct on your computer</h3><p>Drag characters to make them walk, tap emotions and gestures onto the timeline, let the auto-director cut close-ups, two-shots and reactions.</p></div>
+            <div class="lp-step"><i class="ic ic-ticket"></i><h3>Premiere it</h3><p>Pick a film look, share a screening link, export a video, or take the whole scene to Blender for the final polish.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="lp-section lp-cowork">
+        <div class="ui-wrap lp-split">
+          <div>
+            <div class="eyebrow">Headset and computer, side by side</div>
+            <h2>The director's chair talks to the stage</h2>
+            <p class="muted">Open the stage door on your headset, type the four letters from your computer, and you're in, no sign-in on the headset. From the computer, call the next take ("Rosie, lines 3 to 5"), send a note to the performer's teleprompter, and watch kept takes drop into the timeline as they're printed.</p>
+            <ul class="lp-list">
+              <li><i class="ic ic-check"></i>A 4-letter code pairs the headset in seconds</li>
+              <li><i class="ic ic-check"></i>Director's calls and notes appear in the headset</li>
+              <li><i class="ic ic-check"></i>New takes arrive on the computer while you work</li>
+              <li><i class="ic ic-check"></i>Alone? Do both: perform, take the headset off, direct</li>
+            </ul>
+          </div>
+          <div class="lp-door" aria-hidden="true">
+            <div class="door-card"><span class="door-label">Stage door code</span><div class="door-code"><b>R</b><b>K</b><b>M</b><b>T</b></div><span class="door-note">Type it on your headset at vrtotoon / Headset</span></div>
+            <div class="door-call"><i class="ic ic-clapper"></i><div><b>Director's call</b><span>ROSIE, lines 3 to 5</span></div></div>
+            <div class="door-call note"><i class="ic ic-chat"></i><div><b>Note on the teleprompter</b><span>"Bigger! You just saw a dog on set."</span></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="lp-section">
+        <div class="ui-wrap">
+          <div class="lp-head"><div class="eyebrow">In the box</div><h2>A studio lot in your browser</h2></div>
+          <div class="ui-grid lp-feats">
+            <div class="ui-card lp-feature"><i class="ic ic-mask"></i><h3>Faces that act</h3><p>Twelve emotions, blinking, eyes that find whoever is talking. Lip sync comes straight from your voice.</p></div>
+            <div class="ui-card lp-feature"><i class="ic ic-walk"></i><h3>Blocking by dragging</h3><p>Drag a character across the stage: they walk, run, sneak or glide there, and turn to face their partner.</p></div>
+            <div class="ui-card lp-feature"><i class="ic ic-camera"></i><h3>An auto-director</h3><p>Wide openers, close-ups on big feelings, over-the-shoulder exchanges, reaction shots. Change any shot by hand.</p></div>
+            <div class="ui-card lp-feature"><i class="ic ic-sparkle"></i><h3>Film looks</h3><p>Technicolor, noir, golden hour, neon, sepia. CinemaScope or vertical for Reels and Shorts.</p></div>
+            <div class="ui-card lp-feature"><i class="ic ic-film"></i><h3>Ten Hollywood sets</h3><p>Sound stage, diner, western street, rainy noir alley, starship, haunted manor, red carpet and more.</p></div>
+            <div class="ui-card lp-feature"><i class="ic ic-mic"></i><h3>No headset? No problem</h3><p>Perform with the mouse as a desk puppet, or record lines in the voice booth. A headset makes it better, not possible.</p></div>
+            <div class="ui-card lp-feature"><i class="ic ic-box"></i><h3>Blender kit</h3><p>Every character as an animated rig, the set, the camera cuts and lens changes, the dialogue and an import script.</p></div>
+            <div class="ui-card lp-feature"><i class="ic ic-music"></i><h3>Score and sound effects</h3><p>Music cues and effects made in code (no licences to worry about), from a rimshot to thunder.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="lp-section lp-castwall">
+        <div class="ui-wrap">
+          <div class="lp-head"><div class="eyebrow">Central casting</div><h2>Twenty-five actors, always available</h2><p>Every one built to perform: they all lip-sync, emote and take direction. Make variants in the wardrobe.</p></div>
+          <anvil-component type="RepeatingPanel" name="cast_panel" prop:item_template="VRtoToon.Items.CastCard" prop:role='["cast-grid", "cast-mini"]'></anvil-component>
+          <div class="lp-more"><a class="ui-btn lg" href="#casting"><i class="ic ic-users"></i>Meet the whole cast</a></div>
+        </div>
+      </section>
+
+      <section class="lp-section">
+        <div class="ui-wrap">
+          <div class="lp-head"><h2>Questions</h2></div>
+          <div class="lp-faq">
+            <details><summary>Which headsets work?</summary><p>Any headset with a WebXR browser: Meta Quest 2, 3, 3S and Pro (in the Meta Quest Browser), Pico, and others. Nothing to install: open the site in the headset's browser. Passthrough works where the headset supports it.</p></details>
+            <details><summary>I don't have a headset. Can I still make films?</summary><p>Yes. The desk puppet lets you perform with the mouse and keyboard (your microphone still drives the mouth), and the voice booth records single lines. Characters without a recording still act, gesture and lip-flap to their lines.</p></details>
+            <details><summary>How does one person play several characters?</summary><p>Record one role at a time. While you play a character, everyone you already recorded plays back around you, and anyone not yet recorded reads their lines on your teleprompter. Each line is its own clip, so a retake only moves what comes after it.</p></details>
+            <details><summary>Can I change the characters?</summary><p>Today you can make variants in the wardrobe: colours, hair, hats, accessories, height and build. Characters are made of data, so more ways to change them are on the way.</p></details>
+            <details><summary>What do I get when I export?</summary><p>A video (MP4 or WebM, up to 1080p, widescreen, CinemaScope, square or vertical), subtitles, a dialogue WAV, and a Blender kit: the scene as glTF with animated characters, the set, the cameras and an import script that sets everything up.</p></details>
+            <details><summary>Who owns what I make?</summary><p>You do. The characters, sets, music and effects are made in code by VRtoToon, so you can publish your films anywhere. Your recordings stay private unless you share a screening link.</p></details>
+            <details><summary>Is it free?</summary><p>Yes, VRtoToon is free to use while it grows. Exports happen in your own browser, so they cost nothing to make.</p></details>
+          </div>
+        </div>
+      </section>
+
+      <section class="lp-section">
+        <div class="ui-wrap">
+          <div class="lp-band">
+            <div><h2>Lights. Camera. <em>You.</em></h2><p>Your first scene takes about ten minutes. The red carpet is waiting.</p></div>
+            <a class="ui-btn lg primary" href="#auth/signup" anvil:name="band_link">Start your picture</a>
+          </div>
+        </div>
+      </section>
+    </div>
+  </anvil-block>
+</anvil-form>

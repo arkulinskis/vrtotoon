@@ -1,0 +1,15 @@
+<div class="ui share-dlg">
+  <h2 class="dlg-h">Premiere it</h2>
+  <p class="muted small">A shared picture gets a screening link anyone can watch (no account needed) and a seat in Premieres. Unshare it any time.</p>
+  <anvil-component type="CheckBox" name="share_check" prop:text="Share this picture"></anvil-component>
+  <div class="share-link" anvil:name="link_box">
+    <anvil-component type="TextBox" name="link_box_text" prop:enabled="false"></anvil-component>
+    <anvil-component type="Button" name="copy_button" prop:text="Copy" prop:role='["btn", "ic-copy"]'></anvil-component>
+    <anvil-component type="Link" name="open_link" prop:text="Open the screening room" prop:role='["btn", "btn-ghost", "ic-play"]'></anvil-component>
+  </div>
+  <anvil-component type="Label" name="poster_note" prop:role='["fine-print"]'></anvil-component>
+  <div class="ui-row end">
+    <anvil-component type="Button" name="poster_button" prop:text="Use the current frame as the poster" prop:role='["btn", "btn-ghost", "ic-image"]'></anvil-component>
+    <anvil-component type="Button" name="close_button" prop:text="Done" prop:role='["btn", "btn-primary"]'></anvil-component>
+  </div>
+</div>

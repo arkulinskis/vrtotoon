@@ -1,0 +1,27 @@
+<div class="ui new-prod">
+  <h2 class="dlg-h">A new picture</h2>
+  <div class="ui-stack">
+    <label class="ui-field"><span>Title</span>
+      <anvil-component type="TextBox" name="title_box" prop:placeholder="The Great Pie Heist"></anvil-component>
+    </label>
+    <div class="ui-grid two">
+      <label class="ui-field"><span>Start from</span>
+        <anvil-component type="DropDown" name="template_dd"></anvil-component>
+      </label>
+      <label class="ui-field"><span>Set</span>
+        <anvil-component type="DropDown" name="set_dd"></anvil-component>
+      </label>
+    </div>
+    <anvil-component type="Label" name="set_blurb" prop:role='["fine-print"]'></anvil-component>
+    <div class="np-cast">
+      <anvil-component type="Label" name="cast_title" prop:text="Starring" prop:role='["strong"]'></anvil-component>
+      <anvil-component type="RepeatingPanel" name="cast_panel" prop:item_template="VRtoToon.Items.CastCard" prop:role='["cast-grid", "cast-tiny"]'></anvil-component>
+      <anvil-component type="Label" name="cast_hint" prop:role='["fine-print"]' prop:text="Change anyone later in the editor's Cast tab, or paste your own script there."></anvil-component>
+    </div>
+    <anvil-component type="Label" name="message" prop:role='["msg-error"]' prop:visible="false"></anvil-component>
+    <div class="ui-row end">
+      <anvil-component type="Button" name="cancel_button" prop:text="Cancel" prop:role='["btn", "btn-ghost"]'></anvil-component>
+      <anvil-component type="Button" name="create_button" prop:text="Roll camera" prop:role='["btn", "btn-primary", "ic-clapper"]'></anvil-component>
+    </div>
+  </div>
+</div>

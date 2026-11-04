@@ -1,0 +1,17 @@
+<div class="ui-item ad-film" anvil:name="row">
+  <div class="grow">
+    <div class="ui-row">
+      <anvil-component type="Link" name="title_link" prop:role='["strong"]' bind:text="self.item['title']"></anvil-component>
+      <anvil-component type="Label" name="shared_badge" prop:text="Shared" prop:role='["badge", "badge-good"]' bind:visible="self.item['shared']"></anvil-component>
+      <anvil-component type="Label" name="featured_badge" prop:text="Featured" prop:role='["badge", "badge-brand"]' bind:visible="self.item['featured']"></anvil-component>
+      <anvil-component type="Label" name="demo_badge" prop:text="Demo" prop:role='["badge"]' bind:visible="self.item['demo']"></anvil-component>
+      <anvil-component type="Label" name="reports_badge" prop:role='["badge", "badge-bad"]'></anvil-component>
+    </div>
+    <anvil-component type="Label" name="meta" prop:role='["fine-print"]'></anvil-component>
+  </div>
+  <div class="ui-row">
+    <anvil-component type="Button" name="feature_button" prop:role='["btn", "btn-sm", "ic-star"]'></anvil-component>
+    <anvil-component type="Button" name="unshare_button" prop:text="Unshare" prop:role='["btn", "btn-sm", "btn-danger", "ic-x"]'></anvil-component>
+    <anvil-component type="Button" name="clear_button" prop:text="Clear reports" prop:role='["btn", "btn-sm", "ic-check"]'></anvil-component>
+  </div>
+</div>

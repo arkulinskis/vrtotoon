@@ -1,0 +1,35 @@
+<anvil-form layout="VRtoToon.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="page-screen">
+      <div class="screen-room">
+        <div class="screen-curtain l" aria-hidden="true"></div>
+        <div class="screen-curtain r" aria-hidden="true"></div>
+        <div class="screen-frame">
+          <anvil-component type="VRtoToon.Components.FilmPlayer" name="player" prop:mode="film"></anvil-component>
+        </div>
+      </div>
+      <div class="ui-wrap screen-info">
+        <div anvil:name="info">
+          <div class="eyebrow">Now showing</div>
+          <anvil-component type="Label" name="title_label" prop:role='["page-title"]'></anvil-component>
+          <anvil-component type="Label" name="logline" prop:role='["screen-logline"]'></anvil-component>
+          <anvil-component type="Label" name="credits" prop:role='["fine-print"]'></anvil-component>
+          <anvil-component type="RepeatingPanel" name="cast_panel" prop:item_template="VRtoToon.Items.CastCard" prop:role='["cast-grid", "cast-tiny"]'></anvil-component>
+          <div class="ui-row screen-actions">
+            <anvil-component type="Button" name="copy_button" prop:text="Copy the link" prop:role='["btn", "ic-link"]'></anvil-component>
+            <anvil-component type="Button" name="remix_button" prop:text="Open in the studio" prop:role='["btn", "ic-clapper"]'></anvil-component>
+            <a class="ui-btn primary" href="#auth/signup" anvil:name="make_link"><i class="ic ic-vr"></i>Make your own</a>
+            <span class="ui-spacer"></span>
+            <anvil-component type="Link" name="report_link" prop:text="Report this film" prop:role='["fine-print", "report-link"]'></anvil-component>
+          </div>
+        </div>
+        <div class="ui-empty" anvil:name="missing">
+          <i class="ic ic-ticket"></i>
+          <h3>This picture isn't showing</h3>
+          <anvil-component type="Label" name="missing_label"></anvil-component>
+          <p><a href="#premieres">See what's playing</a></p>
+        </div>
+      </div>
+    </div>
+  </anvil-block>
+</anvil-form>

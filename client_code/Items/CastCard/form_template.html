@@ -1,0 +1,8 @@
+<div class="cast-card-wrap"><article class="cast-card" anvil:name="card" anvil:on-dom:click="self.card_click">
+  <div class="cast-pic"><anvil-component type="VRtoToon.Components.Portrait" name="portrait" prop:size="256"></anvil-component></div>
+  <div class="cast-meta">
+    <anvil-component type="Label" name="name_label" prop:role='["cast-name"]' bind:text="self.item['name']"></anvil-component>
+    <anvil-component type="Label" name="tag_label" prop:role='["cast-tag"]' bind:text="self.item.get('tag') or ''"></anvil-component>
+  </div>
+  <anvil-component type="Label" name="badge" prop:text="Wardrobe" prop:role='["badge", "badge-brand", "cast-badge"]' bind:visible="bool(self.item.get('custom'))"></anvil-component>
+</article></div>

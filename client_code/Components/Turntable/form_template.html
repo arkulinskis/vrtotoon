@@ -1,0 +1,17 @@
+---
+custom_component: true
+properties:
+  - name: char
+    type: object
+    description: A premade character id or a character definition (dict)
+    default_binding_prop: true
+  - name: emo
+    type: string
+    default_value: happy
+toolbox_item:
+  title: Character turntable
+  group: VRtoToon
+help_text: |
+  One character on a red podium, alive (breathing, blinking), turning when dragged. Methods: gesture(id), talk(on).
+---
+<div class="vt-turntable"><div class="vt-turntable-mount" anvil:dom-node="mount"></div></div>

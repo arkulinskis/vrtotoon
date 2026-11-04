@@ -1,0 +1,60 @@
+<anvil-form layout="VRtoToon.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="ui-wrap page-lot">
+      <div class="lot-head">
+        <div>
+          <div class="eyebrow">The Lot</div>
+          <anvil-component type="Label" name="hello" prop:role='["page-title"]' prop:text="Welcome back"></anvil-component>
+          <anvil-component type="Label" name="count" prop:role='["fine-print"]'></anvil-component>
+        </div>
+        <div class="ui-row">
+          <anvil-component type="Button" name="new_button" prop:text="New picture" prop:role='["btn", "btn-primary", "btn-lg", "ic-clapper"]'></anvil-component>
+        </div>
+      </div>
+
+      <anvil-component type="RepeatingPanel" name="prod_panel" prop:item_template="VRtoToon.Items.ProductionCard" prop:role='["poster-grid"]'></anvil-component>
+      <div class="lot-empty" anvil:name="empty">
+        <div class="lot-empty-copy">
+          <h2>Your first picture starts here</h2>
+          <p class="muted">Start from a template (a meet-cute, a showdown, a mystery...) or open one of the demo pictures below in the studio and take it apart.</p>
+          <anvil-component type="Button" name="empty_button" prop:text="Start a picture" prop:role='["btn", "btn-primary", "ic-clapper"]'></anvil-component>
+        </div>
+      </div>
+
+      <div class="lot-tiles">
+        <div class="ui-card lot-tile lot-headset">
+          <i class="ic ic-vr"></i>
+          <div>
+            <h3>Recording in a headset?</h3>
+            <p class="muted">On the headset, open this site and press <b>Headset</b> (or go to the stage door). In the editor on your computer press <b>Headset</b> for a 4-letter code. Type it, and the headset is your stage.</p>
+            <a class="ui-btn sm" href="#door"><i class="ic ic-keyboard"></i>Open the stage door here</a>
+          </div>
+        </div>
+        <div class="ui-card lot-tile">
+          <i class="ic ic-users"></i>
+          <div>
+            <h3>Casting &amp; wardrobe</h3>
+            <anvil-component type="Label" name="wardrobe_line" prop:role='["fine-print"]'></anvil-component>
+            <a class="ui-btn sm" href="#casting"><i class="ic ic-users"></i>Go to casting</a>
+          </div>
+        </div>
+        <div class="ui-card lot-tile">
+          <i class="ic ic-mic"></i>
+          <div>
+            <h3>No headset today</h3>
+            <p class="muted">Open the stage and perform as a desk puppet (mouse = your hand, A/D/W/S = your head), or record lines one by one in the editor's voice booth.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="lot-section" anvil:name="demo_box">
+        <div class="ui-row between"><h2>Take a demo apart</h2><span class="muted small">Opens in the studio as a sandbox. Make a copy to keep your changes.</span></div>
+        <anvil-component type="RepeatingPanel" name="demo_panel" prop:item_template="VRtoToon.Items.ProductionCard" prop:role='["poster-grid", "poster-small"]'></anvil-component>
+      </div>
+      <div class="lot-section" anvil:name="prem_box">
+        <div class="ui-row between"><h2>Now playing</h2><a href="#premieres">All premieres <i class="ic ic-arrow"></i></a></div>
+        <anvil-component type="RepeatingPanel" name="prem_panel" prop:item_template="VRtoToon.Items.ProductionCard" prop:role='["poster-grid", "poster-small"]'></anvil-component>
+      </div>
+    </div>
+  </anvil-block>
+</anvil-form>

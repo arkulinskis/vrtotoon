@@ -1,0 +1,24 @@
+---
+custom_component: true
+events:
+  - name: select
+    description: An actor was clicked on the stage (actor = cast id, or None)
+    parameters:
+      - name: actor
+  - name: place
+    description: An actor was dragged to a spot on the floor
+    parameters:
+      - name: actor
+      - name: x
+      - name: z
+  - name: time
+    description: The playhead moved (throttled)
+    parameters:
+      - name: t
+toolbox_item:
+  title: Editor stage
+  group: VRtoToon
+help_text: |
+  The director's 3D view (film camera or free director's view). Call load(doc, takes) with engine objects from vt.py.
+---
+<div class="vt-edstage"><div class="vt-edstage-mount" anvil:dom-node="mount"></div></div>

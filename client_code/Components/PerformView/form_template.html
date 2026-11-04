@@ -1,0 +1,18 @@
+---
+custom_component: true
+events:
+  - name: state
+    description: The performance changed (a dict - state, role, head, line, count, time, clips ...)
+    parameters:
+      - name: info
+  - name: kept
+    description: The performer kept a pass (pass = the JS pass object, ready to upload)
+    parameters:
+      - name: take
+toolbox_item:
+  title: Performance stage
+  group: VRtoToon
+help_text: |
+  Records one role (theme/assets/vt-xr.js): VR, passthrough or the desk puppet. load(doc, takes, actor, first, last).
+---
+<div class="vt-perform"><div class="vt-perform-mount" anvil:dom-node="mount"></div></div>

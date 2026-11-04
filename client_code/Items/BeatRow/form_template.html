@@ -1,0 +1,18 @@
+<div class="beat-wrap"><div class="beat-row" anvil:name="row">
+  <div class="beat-top">
+    <span class="beat-n" anvil:name="num_box"><anvil-component type="Label" name="num" bind:text="str(self.item['n'])"></anvil-component></span>
+    <anvil-component type="DropDown" name="who_dd" prop:role='["beat-who"]'></anvil-component>
+    <anvil-component type="DropDown" name="emo_dd" prop:role='["beat-emo"]'></anvil-component>
+    <span class="ui-spacer"></span>
+    <anvil-component type="Label" name="meta" prop:role='["beat-meta"]'></anvil-component>
+  </div>
+  <anvil-component type="TextArea" name="text_box" prop:role='["beat-text"]' prop:height="54" bind:text="self.item['text']"></anvil-component>
+  <div class="beat-tools">
+    <anvil-component type="DropDown" name="gap_dd" prop:role='["beat-gap"]'></anvil-component>
+    <span class="ui-spacer"></span>
+    <anvil-component type="Button" name="booth_button" prop:text="Record line" prop:role='["btn", "btn-sm", "ic-mic"]' prop:tooltip="Record this line with your microphone (voice booth)"></anvil-component>
+    <anvil-component type="Button" name="up_button" prop:text="Move up" prop:role='["btn", "btn-sm", "btn-icon", "btn-ghost", "ic-up"]'></anvil-component>
+    <anvil-component type="Button" name="down_button" prop:text="Move down" prop:role='["btn", "btn-sm", "btn-icon", "btn-ghost", "ic-down"]'></anvil-component>
+    <anvil-component type="Button" name="delete_button" prop:text="Delete" prop:role='["btn", "btn-sm", "btn-icon", "btn-ghost", "ic-trash"]'></anvil-component>
+  </div>
+</div></div>

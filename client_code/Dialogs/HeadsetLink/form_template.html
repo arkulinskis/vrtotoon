@@ -1,0 +1,30 @@
+<div class="ui headset-link">
+  <h2 class="dlg-h">Your headset is the stage</h2>
+  <div class="hl-grid">
+    <div class="hl-code-box">
+      <span class="small muted">On the headset, open this site, press <b>Headset</b> (the stage door) and type:</span>
+      <anvil-component type="Label" name="code_label" prop:role='["door-code-big"]'></anvil-component>
+      <anvil-component type="Label" name="url_label" prop:role='["fine-print"]'></anvil-component>
+      <div class="hl-status" anvil:name="status_box"><i class="hl-dot" anvil:name="dot"></i><anvil-component type="Label" name="status_label"></anvil-component></div>
+      <span class="small muted">The code works for 12 hours. No sign-in needed on the headset.</span>
+    </div>
+    <div class="hl-call">
+      <b>Call the next take</b>
+      <label class="ui-field"><span>Who</span><anvil-component type="DropDown" name="actor_dd"></anvil-component></label>
+      <div class="ui-grid two">
+        <label class="ui-field"><span>From</span><anvil-component type="DropDown" name="from_dd"></anvil-component></label>
+        <label class="ui-field"><span>To</span><anvil-component type="DropDown" name="to_dd"></anvil-component></label>
+      </div>
+      <anvil-component type="Button" name="call_button" prop:text="Send to the headset" prop:role='["btn", "btn-primary", "ic-clapper"]'></anvil-component>
+      <b class="hl-note-title">A note on the teleprompter</b>
+      <div class="ui-row hl-note">
+        <anvil-component type="TextBox" name="note_box" prop:placeholder="Bigger! You just saw a dog on set."></anvil-component>
+        <anvil-component type="Button" name="note_button" prop:text="Send" prop:role='["btn", "ic-chat"]'></anvil-component>
+      </div>
+    </div>
+  </div>
+  <div class="ui-row end">
+    <anvil-component type="Button" name="close_button" prop:text="Done" prop:role='["btn"]'></anvil-component>
+  </div>
+  <anvil-component type="Timer" name="timer" prop:interval="2.5"></anvil-component>
+</div>

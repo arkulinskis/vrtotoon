@@ -1,0 +1,58 @@
+<anvil-form layout="VRtoToon.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="page-stage">
+      <div class="st-closed" anvil:name="closed">
+        <div class="st-closed-card">
+          <img src="_/theme/icon.svg" alt="" width="64" height="64">
+          <h1>The stage door is closed</h1>
+          <anvil-component type="Label" name="closed_label"></anvil-component>
+          <div class="ui-row center">
+            <a class="ui-btn primary lg" href="#door"><i class="ic ic-keyboard"></i>Type a stage door code</a>
+            <a class="ui-btn lg" href="#home">The Lot</a>
+          </div>
+        </div>
+      </div>
+      <div class="st" anvil:name="stage_box">
+        <div class="st-top">
+          <a class="st-back" anvil:name="back_link" href="#home"><i class="ic ic-back"></i></a>
+          <div class="st-title">
+            <anvil-component type="Label" name="title_label" prop:role='["st-title"]'></anvil-component>
+            <anvil-component type="Label" name="state_label" prop:role='["st-state"]'></anvil-component>
+          </div>
+          <span class="ui-spacer"></span>
+          <div class="st-pick">
+            <label><span>Role</span><anvil-component type="DropDown" name="role_dd"></anvil-component></label>
+            <label><span>From</span><anvil-component type="DropDown" name="from_dd"></anvil-component></label>
+            <label><span>To</span><anvil-component type="DropDown" name="to_dd"></anvil-component></label>
+            <anvil-component type="CheckBox" name="others_check" prop:text="Others play" prop:checked="true"></anvil-component>
+          </div>
+        </div>
+        <div class="st-call" anvil:name="call_box">
+          <i class="ic ic-clapper"></i>
+          <anvil-component type="Label" name="call_label" prop:role='["strong"]'></anvil-component>
+          <anvil-component type="Button" name="take_call_button" prop:text="Take it" prop:role='["btn", "btn-sm", "btn-primary"]'></anvil-component>
+        </div>
+        <div class="st-main">
+          <anvil-component type="VRtoToon.Components.PerformView" name="perform_view"></anvil-component>
+          <div class="st-count" anvil:name="count_box"><anvil-component type="Label" name="count_label" prop:role='["st-count-n"]'></anvil-component></div>
+        </div>
+        <div class="st-bar">
+          <div class="ui-row st-xr">
+            <anvil-component type="Button" name="vr_button" prop:text="Enter VR" prop:role='["btn", "btn-lg", "btn-gold", "ic-vr"]'></anvil-component>
+            <anvil-component type="Button" name="ar_button" prop:text="Passthrough" prop:role='["btn", "btn-lg", "ic-eye"]'></anvil-component>
+          </div>
+          <div class="ui-row st-run">
+            <anvil-component type="Button" name="action_button" prop:text="Action!" prop:role='["btn", "btn-lg", "btn-primary", "ic-clapper"]'></anvil-component>
+            <anvil-component type="Button" name="cut_button" prop:text="Cut" prop:role='["btn", "btn-lg", "ic-x"]'></anvil-component>
+            <anvil-component type="Button" name="keep_button" prop:text="Print it" prop:role='["btn", "btn-lg", "btn-primary", "ic-check"]'></anvil-component>
+            <anvil-component type="Button" name="retake_button" prop:text="Go again" prop:role='["btn", "btn-lg", "ic-refresh"]'></anvil-component>
+            <anvil-component type="Button" name="discard_button" prop:text="Discard" prop:role='["btn", "btn-lg", "btn-ghost", "ic-trash"]'></anvil-component>
+            <anvil-component type="Button" name="save_again_button" prop:text="Save the take again" prop:role='["btn", "btn-lg", "btn-danger", "btn-solid", "ic-refresh"]'></anvil-component>
+          </div>
+          <anvil-component type="Label" name="help_label" prop:role='["st-help"]'></anvil-component>
+        </div>
+      </div>
+      <anvil-component type="Timer" name="poll_timer" prop:interval="0"></anvil-component>
+    </div>
+  </anvil-block>
+</anvil-form>

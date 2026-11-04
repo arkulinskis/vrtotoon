@@ -1,0 +1,15 @@
+<div class="cast-row" anvil:name="row">
+  <div class="cast-row-pic" anvil:name="pic_box"><img anvil:name="pic" alt=""></div>
+  <div class="cast-row-main">
+    <div class="ui-row cast-row-top">
+      <anvil-component type="TextBox" name="name_box" prop:role='["cast-row-name"]' bind:text="self.item['name']"></anvil-component>
+      <anvil-component type="Button" name="change_button" prop:role='["btn", "btn-sm", "btn-ghost", "ic-users"]' prop:tooltip="Recast this part"></anvil-component>
+    </div>
+    <anvil-component type="Label" name="meta" prop:role='["fine-print"]'></anvil-component>
+    <div class="ui-row cast-row-tools">
+      <anvil-component type="DropDown" name="fx_dd" prop:role='["cast-row-fx"]' prop:tooltip="Voice effect"></anvil-component>
+      <anvil-component type="Link" name="perform_link" prop:text="Perform" prop:role='["btn", "btn-sm", "btn-primary", "ic-vr"]'></anvil-component>
+      <anvil-component type="Button" name="remove_button" prop:text="Remove" prop:role='["btn", "btn-sm", "btn-icon", "btn-ghost", "ic-trash"]'></anvil-component>
+    </div>
+  </div>
+</div>

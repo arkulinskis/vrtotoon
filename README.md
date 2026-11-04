@@ -1,0 +1,140 @@
+# VRtoToon
+
+Make cartoons and short films with 3D toon characters, performing every role yourself. Put on a VR headset and your
+head, hands and voice drive a character; then play the next role while the first one plays back around you. Direct the
+scene on your computer (walks, feelings, gestures, cameras, film looks) and export a video or a Blender kit. Hollywood
+themed, browser based, no install. Built on [Anvil](https://anvil.works) as native Anvil Forms; the 3D, VR, timeline and
+export engines are JavaScript (three.js r158) in `theme/assets/vt-*.js`.
+
+- **App repo:** github.com/arkulinskis/vrtotoon (branch `master`). Anvil pulls `master`.
+- **Live:** not published yet (planned https://vrtotoon.anvil.app)
+
+## What it does
+
+**The idea: one actor, every role.** A production is a list of *beats* (script lines and action beats). Each beat starts
+where the one before it ends, so retaking a line (longer or shorter) ripples everything after it. Walks, feelings,
+gestures, looks, camera shots and sound effects hang on beats, so they move with their line. A *take* is one recorded
+pass of one role, cut into clips per beat: the speaker's lines (which set the beat lengths) and that character's
+reactions during everyone else's lines. You can record roles in any order and retake any single line.
+
+**Landing:** a demo picture plays live in 3D inside a marquee of chasing bulbs; the one-actor relay; how a picture is made
+(4 reels); the headset + computer co-work; features; a cast wall (portraits rendered by the engine); FAQ.
+
+**Casting (#casting):** 25 premade toon characters in 5 roles (leads, sidekicks, villains, character actors, creatures)
+across 13 species (human, dog, cat, bear, rabbit, fox, frog, robot, ghost, alien, ogre, penguin, dino). Character sheet:
+a live turntable (drag to turn), 12 emotions, 15 gestures, "Say a line", "Star in a new picture". **Wardrobe:** make
+variants (colours, hair, hat, up to 6 accessories, height, build), saved per member, usable in any cast.
+
+**The Lot (#home):** your pictures as one-sheet posters (saved frame, or the cast), the headset how-to, demos to take apart,
+what's playing. **New picture:** title, a template (blank, meet cute, showdown, mystery, space opera, spooky night: a short
+script, a set, a film look, a score), the set, the starring cast.
+
+**The director's chair (#edit/<id>):** the 3D stage (film camera with grade + letterbox, or a free director's view with
+marks, walk paths and the camera body), a timeline (script row with ripple timing and recorded/estimated beats, a row per
+actor with walks, feelings, gestures, looks and recorded clips, camera row, sound row; drag keys to move them, drag a beat's
+edge to change its pause or an action beat's length, Ctrl+wheel zoom) and panels:
+- *Script:* one row per beat (speaker or ACTION, feeling, words, pause after: overlap to very long), add/move/delete,
+  **Record line** (the PC voice booth: microphone, silence trimmed, lip sync from the recording), **Paste a script**
+  (`NAME: (feeling) words`, `[ACTION 3s] what happens`; new names join the cast, matched to premade actors).
+- *Cast:* screen names, recast, voice effect (radio, robot, echo, megaphone, telephone, cave), Perform, remove, add.
+- *Direct:* pick an actor (or click one on the stage); feelings and gestures at the playhead; drag a character on the floor
+  to walk / run / sneak / glide / jump-cut there (then face their partner, the camera, a side, or someone); before the first
+  line, dragging moves the starting mark; looks (whoever's talking, the camera, someone); a selection card edits the key,
+  shot or sound picked on the timeline.
+- *Camera:* the **auto-director** (wide openers, close-ups and crash zooms on strong feelings, over-the-shoulder exchanges,
+  two-shots, reaction shots, re-establishing wides), or shots by hand: 12 shot types (wide, full, medium, close-up, extreme
+  close-up, two-shot, over the shoulder, low, high, dutch, orbit, overhead) x 7 moves (locked, push in, pull out, track,
+  crane, handheld, crash zoom). Framing follows the actors and keeps the 180-degree rule. Sound effects at the playhead.
+- *Takes:* every kept pass (VR, passthrough, desk puppet, voice), stars, Use (swap a whole take back in), Delete.
+- *Look:* 10 sets, 8 film looks (Technicolor, clean, noir, golden hour, moonlight, neon, sepia, sitcom pastel),
+  5 frames (16:9, CinemaScope, Academy, vertical, square), 8 synthesised scores + volume, subtitles, opening title / THE END,
+  logline, "use this frame as the poster".
+- Top bar: title, autosave (1.5 s after the last change; never undoes a take that arrived from the headset meanwhile),
+  undo/redo (also Ctrl+Z), Headset, Share, Export. Other people's demo or shared pictures open as a sandbox
+  ("Make my own copy").
+
+**The stage (#stage/<id>[/<actor>]):** full-screen performance. Pick the role and the run of beats; **Action!** gives a
+"quiet on set" countdown and a clapper. Your lines advance by voice (the teleprompter moves on when you stop talking) or
+with the button; the other characters play their takes (voice + body) or read their lines on the teleprompter for an
+estimated time; your reactions are recorded during their lines. Then playback in place: **Print it** (uploads at once),
+**Go again**, **Discard**. Modes:
+- **VR** (immersive-vr, local-floor): calibrates on your first frame, puts you on your character's mark at your character's
+  eye height (the world scales), hides your own head from you, a teleprompter ahead, the director's monitor (the film
+  camera, live) to the side, a laser-pointer menu (role, Action, others on/off, Keep / Go again / Next role).
+  Controllers: A/X action + next line, B/Y cut or go again, thumbstick switches role, trigger = point, grip = fist.
+- **Passthrough** (immersive-ar): your room, the characters in it, the set hidden.
+- **Desk puppet** (no headset): mouse = right hand (button = fist, F = point), A/D head turn, W/S nod, Q/E lean, Space.
+- **Co-work:** the editor's Headset button shows a 4-letter code; on the headset, the stage door (#door) keypad (big keys,
+  no I/L/O) opens the picture for 12 hours, no sign-in. The PC sees "Connected: Meta Quest", calls the next take
+  ("ROSIE, lines 3 to 5"), sends notes to the teleprompter, and new takes drop into the timeline while you work.
+
+**Exports (all in the browser):** video (MP4 or WebM, 720p/1080p/vertical/square, grade, titles, optional burned-in
+subtitles, the full mix of voices with their effects, music and sound effects; real-time recording with progress),
+**Blender kit** (.zip: film.glb with the set, every character as a jointed hierarchy with baked animation down to eyelids,
+brows and mouth, the film camera with cuts as timeline markers and lens changes, the lights; dialogue.wav; subtitles.srt;
+film.json; import_vrtotoon.py that imports it, sets fps/range/resolution, plays the dialogue in the sequencer, binds the
+camera cuts, animates the lens, switches on Freestyle outlines and Eevee), .glb alone, .srt, a WAV mix, the script.
+
+**Premieres (#premieres) and the screening room (#screen/<key>):** shared pictures (featured first) as posters; the film
+plays live in 3D between velvet curtains with controls (play, scrub, sound, subtitles, full screen); cast, credits, copy
+link, open in the studio, report.
+
+**Admin:** overview (members, pictures, takes, shared films), **Films** (feature, unshare, clear reports), feedback inbox
+(film reports), users, demo data.
+
+**Demo content:** three voiced pictures (The Big Break, Showdown at Dusty Gulch, The Case of the Missing Popcorn) with
+blocking, feelings, gestures, shots and effects; their 20 lines were voiced with Kokoro (open-source TTS) into
+`theme/assets/dv-*.mp3` by `tools/make_demo_voices.py`.
+
+## Setting it up in Anvil (once)
+
+1. Anvil editor: **Create app → Clone from GitHub**, paste `https://github.com/arkulinskis/vrtotoon`.
+2. Check the **Users** service (email + password, Continue with Google, sign-up on).
+3. Accept the **Schema Mismatch** alert with **"The schema of the source code is correct"**.
+4. Run it, sign up with the admin email first, then **Publish**.
+
+<!-- libraries:start -->
+## Libraries and outside services
+
+What this project uses besides its own code. Generated by `APP_MAKER/tools/libraries.py`; to change it, edit `APP_MAKER/libraries/catalog.py` and re-run the script.
+
+| Name | How it gets in | Used here for |
+|---|---|---|
+| [three.js](https://threejs.org) r158 | Copied into the app | the toon cast, the sets, the film player, the VR performance stage and the glTF export |
+| [Google Fonts](https://fonts.google.com) | Loaded from a CDN | Bebas Neue, DM Sans, Playfair Display |
+
+**Built into the browser:** Canvas 2D, WebGL, WebXR, Web Audio API, Camera, microphone and screen, MediaRecorder, localStorage, Clipboard, File downloads (Blob), Fullscreen.
+
+**Anvil platform:** Anvil, Anvil Data Tables, Anvil Google service, Anvil JS bridge (anvil.js), Anvil Users.
+
+**Build and test tools (not shipped):** Kokoro text-to-speech, NumPy, Node.js, PyYAML, Headless Chrome (DevTools Protocol), imageio-ffmpeg (MP3s of the demo films' Kokoro voices (tools/make_demo_voices.py)), soundfile.
+
+<!-- libraries:end -->
+
+## Working on it
+
+See `.claude/skills/vrtotoon/SKILL.md`. In short:
+
+```
+python tools/check.py                    # Anvil's validator, JS syntax, asset hashes, server tests -> ALL CHECKS PASSED
+python -I tools/ui_test.py               # the real app in the Anvil App Server (Docker) driven by headless Chrome
+python -I tools/ui_test.py --shots DIR   # + screenshots of every page (desktop/phone, light/dark, guest/member)
+python tools/make_demo_voices.py         # after changing the demo films' lines (Kokoro)
+git push origin master                   # deploy
+```
+
+## Project layout
+
+```
+client_code/    startup.py, router.py, state.py, auth.py, legal.py, vt.py (the door to the engines)
+                Layouts/Shell; Pages/ Landing Auth Home Casting Premieres Screen Edit Stage Door Profile Admin
+                Components/ Portrait FilmPlayer Turntable StageView TimelineView PerformView
+                Items/ NavLink CastCard ProductionCard Chip BeatRow CastRow TakeRow ShotRow KeyButton FilmRow FeedbackRow UserRow
+                Dialogs/ NewProduction CharacterSheet Wardrobe CastPicker ImportScript HeadsetLink Export Share VoiceBooth
+server_code/    common.py, Accounts.py, Productions.py, Takes.py, StageLink.py, Wardrobe.py, Screenings.py (+ /_/api/m/<key>),
+                Admin.py, Feedback.py, DemoData.py, demo_films.py, demo_voice_lengths.py, SchemaCheck.py, legal_server.py
+theme/assets/   three.min.js; vt-cast.js (characters) vt-sets.js (sets, looks, sound) vt-film.js (the film model)
+                vt-stage.js (player/editor stage) vt-xr.js (VR performance) vt-timeline.js vt-export.js vt-ui.js vt-ed.js;
+                app.css + vt.css, icons.css (generated), app-kit.js, theme.css (spinner), icon.svg + PNGs, dv-*.mp3 (demo voices)
+tools/          check.py, assets.py, make_demo_voices.py, ui_test.py + ui/ (flow, phone, admin, seed), live/drive.mjs, testing/
+```

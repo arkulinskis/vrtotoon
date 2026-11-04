@@ -1,0 +1,42 @@
+<div class="ui export-dlg">
+  <h2 class="dlg-h">Take it to the world</h2>
+  <p class="muted small">Everything is made right here in your browser: nothing is uploaded, nothing to wait for on a server.</p>
+  <div class="ex-grid">
+    <div class="ex-card">
+      <i class="ic ic-film"></i>
+      <h3>Video</h3>
+      <p class="small muted">The finished film with its look, titles and the full sound mix. It records in real time, so keep this tab open.</p>
+      <div class="ui-grid two">
+        <label class="ui-field"><span>Size</span><anvil-component type="DropDown" name="size_dd"></anvil-component></label>
+        <label class="ui-field"><span>&nbsp;</span><anvil-component type="CheckBox" name="subs_check" prop:text="Burn in subtitles"></anvil-component></label>
+      </div>
+      <div class="ex-progress" anvil:name="progress"><div class="ex-bar" anvil:dom-node="bar"></div></div>
+      <div class="ui-row">
+        <anvil-component type="Button" name="video_button" prop:text="Record the video" prop:role='["btn", "btn-primary", "ic-rec"]'></anvil-component>
+        <anvil-component type="Button" name="cancel_video_button" prop:text="Stop" prop:role='["btn", "btn-ghost"]' prop:visible="false"></anvil-component>
+      </div>
+    </div>
+    <div class="ex-card">
+      <i class="ic ic-box"></i>
+      <h3>Blender kit</h3>
+      <p class="small muted">A .zip: the scene as glTF (animated characters, the set, the camera with its cuts and lens changes), the dialogue as WAV, subtitles and an import script that sets it all up in Blender.</p>
+      <div class="ui-row">
+        <anvil-component type="Button" name="blender_button" prop:text="Blender kit (.zip)" prop:role='["btn", "btn-primary", "ic-download"]'></anvil-component>
+        <anvil-component type="Button" name="glb_button" prop:text="Just the .glb" prop:role='["btn", "ic-box"]'></anvil-component>
+      </div>
+    </div>
+    <div class="ex-card">
+      <i class="ic ic-book"></i>
+      <h3>Script, subtitles, sound</h3>
+      <div class="ui-row">
+        <anvil-component type="Button" name="srt_button" prop:text="Subtitles (.srt)" prop:role='["btn", "btn-sm", "ic-download"]'></anvil-component>
+        <anvil-component type="Button" name="wav_button" prop:text="Sound mix (.wav)" prop:role='["btn", "btn-sm", "ic-music"]'></anvil-component>
+        <anvil-component type="Button" name="txt_button" prop:text="Script (.txt)" prop:role='["btn", "btn-sm", "ic-book"]'></anvil-component>
+      </div>
+    </div>
+  </div>
+  <anvil-component type="Label" name="message" prop:role='["msg-note"]' prop:visible="false"></anvil-component>
+  <div class="ui-row end">
+    <anvil-component type="Button" name="close_button" prop:text="Close" prop:role='["btn", "btn-ghost"]'></anvil-component>
+  </div>
+</div>

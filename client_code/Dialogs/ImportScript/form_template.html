@@ -1,0 +1,15 @@
+<div class="ui import-script">
+  <h2 class="dlg-h">Paste a script</h2>
+  <p class="muted small">One line per beat. <b>NAME: (feeling) words</b> for dialogue, <b>[ACTION 3s] what happens</b> for an action beat. New names join the cast (a matching actor, if there is one).</p>
+  <anvil-component type="TextArea" name="text_box" prop:height="260" prop:role='["script-box"]'></anvil-component>
+  <anvil-component type="Label" name="preview" prop:role='["fine-print"]'></anvil-component>
+  <div class="ui-row">
+    <anvil-component type="RadioButton" name="mode_replace" prop:text="Replace the script" prop:group_name="mode" prop:value="replace" prop:selected="true"></anvil-component>
+    <anvil-component type="RadioButton" name="mode_append" prop:text="Add to the end" prop:group_name="mode" prop:value="append"></anvil-component>
+    <anvil-component type="CheckBox" name="direct_check" prop:text="Auto-direct the cameras" prop:checked="true"></anvil-component>
+  </div>
+  <div class="ui-row end">
+    <anvil-component type="Button" name="cancel_button" prop:text="Cancel" prop:role='["btn", "btn-ghost"]'></anvil-component>
+    <anvil-component type="Button" name="ok_button" prop:text="Use this script" prop:role='["btn", "btn-primary", "ic-book"]'></anvil-component>
+  </div>
+</div>

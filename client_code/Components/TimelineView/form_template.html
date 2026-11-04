@@ -1,0 +1,15 @@
+---
+custom_component: true
+events:
+  - name: select
+    description: A beat, key, shot or sound was picked ({kind, id}, or None)
+    parameters:
+      - name: kind
+      - name: item_id
+toolbox_item:
+  title: Timeline
+  group: VRtoToon
+help_text: |
+  The editor's timeline (theme/assets/vt-timeline.js). load(doc, film_getter) builds it; .timeline is the JS object.
+---
+<div class="vt-tlbox"><div class="vt-tl-mount" anvil:dom-node="mount"></div></div>

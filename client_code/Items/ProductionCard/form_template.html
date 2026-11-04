@@ -1,0 +1,21 @@
+<div class="prod-card-wrap"><article class="prod-card" anvil:name="card">
+  <a class="poster" anvil:name="poster_link" href="#home">
+    <img class="poster-img" anvil:name="poster_img" alt="">
+    <div class="poster-cast" anvil:name="poster_cast">
+      <anvil-component type="VRtoToon.Components.Portrait" name="p1" prop:size="200"></anvil-component>
+      <anvil-component type="VRtoToon.Components.Portrait" name="p2" prop:size="200"></anvil-component>
+      <anvil-component type="VRtoToon.Components.Portrait" name="p3" prop:size="200"></anvil-component>
+    </div>
+    <div class="poster-title"><anvil-component type="Label" name="title_label" prop:role='["poster-title"]' bind:text="self.item['title']"></anvil-component></div>
+    <anvil-component type="Label" name="badge" prop:role='["badge", "poster-badge"]'></anvil-component>
+  </a>
+  <div class="prod-meta">
+    <anvil-component type="Label" name="meta" prop:role='["fine-print"]'></anvil-component>
+    <div class="ui-row prod-actions">
+      <anvil-component type="Link" name="open_link" prop:text="Open" prop:role='["btn", "btn-sm", "btn-primary", "ic-clapper"]'></anvil-component>
+      <anvil-component type="Link" name="perform_link" prop:text="Perform" prop:role='["btn", "btn-sm", "ic-vr"]'></anvil-component>
+      <anvil-component type="Link" name="watch_link" prop:text="Watch" prop:role='["btn", "btn-sm", "btn-ghost", "ic-play"]'></anvil-component>
+      <anvil-component type="Button" name="delete_button" prop:text="Delete" prop:role='["btn", "btn-sm", "btn-icon", "btn-ghost", "ic-trash"]' prop:tooltip="Delete this picture"></anvil-component>
+    </div>
+  </div>
+</article></div>
