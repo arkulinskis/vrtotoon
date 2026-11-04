@@ -66,8 +66,8 @@ SEO = {
   ]
  ],
  "free": True,
- "site": "",
- "updated": "2026-11-03",
+ "site": "https://vrtotoon.anvil.app",
+ "updated": "2026-11-04",
  "icon": "icon-512.png",
  "colors": {
   "bg": "#120a0c",
