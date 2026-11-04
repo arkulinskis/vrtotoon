@@ -17,6 +17,7 @@ PAGES = {
     "auth": ("guest", "Sign in"),
     "home": ("user", "The Lot"),
     "casting": (None, "Casting"),
+    "wardrobe": ("user", "The wardrobe"),
     "premieres": (None, "Premieres"),
     "screen": (None, "Screening room"),
     "edit": (None, "Director's chair"),
@@ -46,6 +47,9 @@ def _form(name):
     if name == "casting":
         from .Pages.Casting import Casting
         return Casting
+    if name == "wardrobe":
+        from .Pages.Wardrobe import Wardrobe
+        return Wardrobe
     if name == "premieres":
         from .Pages.Premieres import Premieres
         return Premieres

@@ -26,7 +26,7 @@ class CharacterSheet(CharacterSheetTemplate):
         self.variant_button.visible = signed_in
         self.delete_button.visible = signed_in and self.custom
         self.star_button.visible = signed_in and not self.custom
-        self.variant_button.text = "Edit this variant" if self.custom else "Make a variant"
+        self.variant_button.text = "Edit in the wardrobe" if self.custom else "Make my own version"
         self._result = None
 
     def _chip(self, chip_id=None, kind=None, **event_args):
@@ -49,13 +49,12 @@ class CharacterSheet(CharacterSheetTemplate):
 
     @handle("variant_button", "click")
     def variant_button_click(self, **event_args):
-        from ..Wardrobe import Wardrobe
+        """Open the character editor (#wardrobe): this wardrobe character, or a new one starting from this actor."""
+        self.raise_event("x-close-alert", value=None)
         if self.custom:
-            dlg = Wardrobe(base=self.item["raw"].get("base") or "max", draft=self.item["raw"], uid=self.item["uid"])
+            router.go("wardrobe", self.item["uid"])
         else:
-            dlg = Wardrobe(base=self.item["id"])
-        if alert(dlg, buttons=[], role="app-dialog", large=True):
-            self.raise_event("x-close-alert", value="changed")
+            router.go("wardrobe", "new", self.item.get("id") or "max")
 
     @handle("delete_button", "click")
     def delete_button_click(self, **event_args):

@@ -35,7 +35,7 @@ class Shell(ShellTemplate):
         self.menu.visible = False
         state.set_attr(self.brand, "href", "#home" if me else "#landing")
         nav = router.NAV if me else router.GUEST_NAV
-        links = [{"page": p, "label": label, "icon": icon, "on": p == page} for p, label, icon in nav]
+        links = [{"page": p, "label": label, "icon": icon, "on": p == page or (p == "casting" and page == "wardrobe")} for p, label, icon in nav]
         self.nav_panel.items = links
         self.tab_panel.items = links if me else []
         self.tab_profile.classes["on"] = page == "profile"

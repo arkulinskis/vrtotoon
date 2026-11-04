@@ -7,22 +7,27 @@ from anvil import *
 from ._anvil_designer import StageTemplate
 from ... import router, state, vt
 
-DESK_HELP = ("Desk puppet: the mouse is your right hand (hold the button for a fist, F to point), A / D turn your head, W / S nod, "
+DESK_HELP = ("Desk puppet: the mouse moves a hand (hold the button for a fist, F to point, keys 1-8 for hand shapes: open, fist, "
+             "point, thumbs up, peace, OK, rock on, relaxed; Shift + 1-8 for the other hand), A / D turn your head, W / S nod, "
              "Q / E lean. Space = Action, then next line. Your microphone moves the mouth.")
-VR_HELP = ("In the headset: A (or X) = Action and next line, B (or Y) = cut or go again, thumbstick = switch role, "
-           "trigger = point, grip = fist. Look down for the teleprompter, right for the director's monitor.")
+VR_HELP = ("In the headset: A (or X) = Action and next line, B (or Y) = cut or go again, thumbstick = switch role. Your fingers "
+           "follow the controller (trigger = index finger, grip = the others, lift your thumb for thumbs up), or put the "
+           "controllers down and use your hands: every finger is recorded, pinch to press menu buttons. Look down for the "
+           "teleprompter, right for the director's monitor.")
 
 
 class Stage(StageTemplate):
     """#stage/<production id>[/<actor id>]: the performance stage (full screen). Records one role at a time: in VR,
     in passthrough, or as a desk puppet. The owner (signed in) or a headset paired at the stage door (#door) may use it.
-    Kept passes are uploaded at once (stage_save_pass); every 3 s it asks the server for the director's call and note."""
+    Kept passes are uploaded at once (stage_save_pass); every 2 s it asks the server for the director's call and note,
+    and for a live-view request from the director's computer (answered with VT.liveAnswer, vt-live.js)."""
 
     def __init__(self, args=(), **properties):
         super().__init__(**properties)
         self.pid = args[0] if args else ""
         self.want_actor = args[1] if len(args) > 1 else None
         self.pending = vt.NULL
+        self.rtc_id = None
         self.call_id = None
         self.call = {}
         self.loaded = False
@@ -75,11 +80,12 @@ class Stage(StageTemplate):
         self.pf = self.perform_view.load(self.doc, self.takes, self.role_dd.selected_value)
         anvil.js.window.VT_PERFORM = self.pf  # for the UI tests
         self._supports(self.pf.supports())  # Anvil waits for the JS promise
-        self.poll_timer.interval = 3
+        self.poll_timer.interval = 2
         self.poll_timer_tick()
 
     def leave(self):
         self.poll_timer.interval = 0
+        vt.VT.liveHangUp()
         self.perform_view.unload()
 
     def _supports(self, s=None, *args):
@@ -208,6 +214,11 @@ class Stage(StageTemplate):
         if not r.get("ok"):
             return
         self.pf.setNote(r.get("note") or "")
+        rtc = r.get("rtc")
+        if rtc and rtc.get("id") != self.rtc_id:
+            self.rtc_id = rtc["id"]
+            self._answer(rtc)
+        self.live_label.visible = bool(vt.VT.liveActive())
         call = r.get("call")
         if call and call.get("id") != self.call_id:
             self.call_id = call["id"]
@@ -227,6 +238,15 @@ class Stage(StageTemplate):
                 if self.pf.replaceDoc(fresh["production"]["data"]):
                     self._pickers()
                     self._range()
+
+    def _answer(self, rtc):
+        """The director's computer wants to watch: answer its WebRTC offer (the picture goes straight to it)."""
+        try:
+            sdp = vt.VT.liveAnswer(self.pf, rtc["offer"], {})  # a JS promise: Anvil waits for the answer
+        except Exception as e:
+            print("live view: %s" % e)
+            return
+        anvil.server.call_s("stage_rtc_reply", self.pid, rtc["id"], sdp)
 
     @handle("take_call_button", "click")
     def take_call_button_click(self, **event_args):

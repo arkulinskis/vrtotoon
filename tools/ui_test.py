@@ -4,15 +4,17 @@
     python -I tools/ui_test.py --shots DIR     also screenshots of every page (desktop + phone, light + dark) into DIR
     python -I tools/ui_test.py --stop          stop the local server afterwards
 
-The server runs this folder as it is (no build step): container "<key>-dev" on http://localhost:<PORT>, data in the
-Docker volume "<key>-data" (accounts made by tests stay there; `docker volume rm <key>-data` to start clean).
-Edits to client code show up on the next page load; server-code edits need the container restarted (--restart).
+The server runs a copy of this folder (copied into the Docker volume "<key>-app" on every run; no build step): container
+"<key>-dev" on http://localhost:<PORT>, data in the Docker volume "<key>-data" (accounts made by tests stay there;
+`docker volume rm <key>-data` to start clean). Server-code edits and new tables/columns need --restart.
 Needs Docker Desktop running and Chrome installed.
 """
+import io
 import json
 import pathlib
 import subprocess
 import sys
+import tarfile
 import tempfile
 import time
 import urllib.request
@@ -33,15 +35,34 @@ def running():
     return r.stdout.strip().startswith("Up")
 
 
+APP_PARTS = ("anvil.yaml", ".anvil_editor.yaml", "__init__.py", "client_code", "server_code", "theme")
+
+
+def copy_app():
+    """Copy the files the App Server needs into the container's /apps/MainApp (the "<key>-app" volume). Mounting the
+    Windows folder made every request slow (the App Server rereads the folder, .git included)."""
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w") as tar:
+        for part in APP_PARTS:
+            if (ROOT / part).exists():
+                tar.add(str(ROOT / part), arcname=part, filter=lambda t: None if "__pycache__" in t.name else t)
+    subprocess.run(["docker", "cp", "-", NAME + ":/apps/MainApp/"], input=buf.getvalue(), capture_output=True, check=True)
+
+
 def start(restart=False):
     if restart:
         sh("docker", "rm", "-f", NAME, check=False)
     if not running():
         sh("docker", "rm", "-f", NAME, check=False)
-        sh("docker", "run", "-d", "--name", NAME, "-p", "%d:%d" % (PORT, PORT), "-v", "%s:/apps/MainApp" % ROOT.as_posix(),
+        sh("docker", "volume", "rm", KEY + "-app", check=False)  # fresh copy: no files left over from old versions
+        sh("docker", "create", "--name", NAME, "-p", "%d:%d" % (PORT, PORT), "-v", KEY + "-app:/apps/MainApp",
            "-v", KEY + "-data:/anvil-data", IMAGE, "--app", "MainApp", "--origin", URL,
-           "--ignore-invalid-schema")  # columns a service adds by itself (e.g. Users) must not stop local tests
+           "--auto-migrate")  # new tables/columns reach the local database (--ignore-invalid-schema would block that)
+        copy_app()
+        sh("docker", "start", NAME)
         print("starting the App Server ...")
+    else:
+        copy_app()  # client edits since the last run
     for _ in range(300):
         logs = sh("docker", "logs", NAME, check=False)
         if "Downlink client connected" in logs.stdout + logs.stderr:
@@ -115,7 +136,7 @@ def main():
                  ("screen", "#screen/demo-bigbreak"), ("door", "#door")]
         member = [("home", "#home"), ("edit", "window.SEED.edit"), ("edit_cast", "window.SEED.edit + '/cast'"),
                   ("edit_direct", "window.SEED.edit + '/direct'"), ("edit_camera", "window.SEED.edit + '/camera'"),
-                  ("edit_look", "window.SEED.edit + '/look'"), ("stage", "window.SEED.stage"), ("profile", "#profile")]
+                  ("edit_look", "window.SEED.edit + '/look'"), ("stage", "window.SEED.stage"), ("profile", "#profile"), ("wardrobe", "#wardrobe/new/rosie")]
         for window, tag in (("1280,1000", ""), ("390,844", "_phone")):
             for theme in ("light", "dark"):
                 js = "UI.setTheme(%s)" % json.dumps(theme)

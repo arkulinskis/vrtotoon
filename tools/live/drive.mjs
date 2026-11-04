@@ -16,7 +16,7 @@ fs.mkdirSync(outDir, { recursive: true });
 const port = process.env.CDP_PORT ? +process.env.CDP_PORT : 9300 + Math.floor(Math.random() * 500);
 const chrome = process.env.CDP_PORT ? { kill() {} } : spawn('C:/Program Files/Google/Chrome/Application/chrome.exe', [
   '--headless=new', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', `--remote-debugging-port=${port}`, `--user-data-dir=${path.resolve(outDir, 'profile')}`,
-  `--window-size=${process.env.WINDOW || '1280,1000'}`, '--no-first-run', '--disable-extensions', 'about:blank'], { stdio: 'ignore' });
+  `--window-size=${process.env.WINDOW || '1280,1000'}`, '--no-first-run', '--disable-extensions', '--disable-popup-blocking', 'about:blank'], { stdio: 'ignore' });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const log = [];
 const say = s => { log.push(s); console.log(s); };

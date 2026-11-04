@@ -22,8 +22,18 @@ reactions during everyone else's lines. You can record roles in any order and re
 
 **Casting (#casting):** 25 premade toon characters in 5 roles (leads, sidekicks, villains, character actors, creatures)
 across 13 species (human, dog, cat, bear, rabbit, fox, frog, robot, ghost, alien, ogre, penguin, dino). Character sheet:
-a live turntable (drag to turn), 12 emotions, 15 gestures, "Say a line", "Star in a new picture". **Wardrobe:** make
-variants (colours, hair, hat, up to 6 accessories, height, build), saved per member, usable in any cast.
+a live turntable (drag to turn), 12 emotions, 21 gestures (6 of them finger work: peace, OK, rock on, count to three, come
+here, shush), "Say a line", "Star in a new picture". Every character has toon hands with a thumb and three jointed fingers
+(8 hand shapes, any finger pose).
+
+**The wardrobe (#wardrobe): a full character editor.** Start from any actor ("Make my own version"), from scratch (New
+character) or from **Surprise me**. A live turntable on one side, six tabs on the other: *Body* (13 species, 6 body shapes,
+height, build, head, legs, arms, hands), *Face* (eye size, spacing, height and shape, brows, nose, mouth, ear size, 9 ear
+styles, freckles, lashes, rosy cheeks, eye colour), *Hair & hat* (11 hair styles + colour, 14 hats + any hat colour),
+*Colours* (skin or fur, second fur, top, trousers, shoes, accent, gloves: suggested swatches or any colour), *Extras* (up
+to 6 of 15 accessories, incl. cartoon gloves), *Name & voice* (name, tagline, casting type, voice note, the actor it started
+from). A screen test (feelings and gestures) on the turntable, undo/redo, save, save as a copy, delete. Saved characters
+are listed under Casting > My wardrobe and can join any cast.
 
 **The Lot (#home):** your pictures as one-sheet posters (saved frame, or the cast), the headset how-to, demos to take apart,
 what's playing. **New picture:** title, a template (blank, meet cute, showdown, mystery, space opera, spooky night: a short
@@ -61,17 +71,27 @@ estimated time; your reactions are recorded during their lines. Then playback in
 - **VR** (immersive-vr, local-floor): calibrates on your first frame, puts you on your character's mark at your character's
   eye height (the world scales), hides your own head from you, a teleprompter ahead, the director's monitor (the film
   camera, live) to the side, a laser-pointer menu (role, Action, others on/off, Keep / Go again / Next role).
-  Controllers: A/X action + next line, B/Y cut or go again, thumbstick switches role, trigger = point, grip = fist.
+  Controllers: A/X action + next line, B/Y cut or go again, thumbstick switches role. **Fingers:** the controller's touch
+  sensors drive them (trigger = index finger, grip = the other fingers, lift the thumb off the buttons = thumbs up).
+  **Hand tracking:** put the controllers down and your own hands drive the toon's: wrist and every finger's bend from
+  the WebXR hand joints (ring + little finger share the toon's third finger); pinch to press menu buttons.
 - **Passthrough** (immersive-ar): your room, the characters in it, the set hidden.
-- **Desk puppet** (no headset): mouse = right hand (button = fist, F = point), A/D head turn, W/S nod, Q/E lean, Space.
+- **Desk puppet** (no headset): the mouse moves a hand (button = fist, F = point, keys 1-8 = open, fist, point, thumbs up,
+  peace, OK, rock on, relaxed; Shift + 1-8 for the other hand), A/D head turn, W/S nod, Q/E lean, Space.
+- Every take records the finger curls of both hands (4 per hand, 30 times a second); takes from before keep working.
 - **Co-work:** the editor's Headset button shows a 4-letter code; on the headset, the stage door (#door) keypad (big keys,
   no I/L/O) opens the picture for 12 hours, no sign-in. The PC sees "Connected: Meta Quest", calls the next take
   ("ROSIE, lines 3 to 5"), sends notes to the teleprompter, and new takes drop into the timeline while you work.
+- **Live view:** in the editor, **Watch live** (top bar once the headset is connected, or in the Headset window) opens a
+  floating monitor with the headset's picture, live over WebRTC (peer to peer; the Anvil server only passes the offer and
+  the answer): *their eyes* (what the performer sees, teleprompter included) or *the film camera*, the headset's microphone
+  (sound button), a caption with what's happening (ROLLING, the line), bigger/smaller, stop. The headset shows "Director
+  watching". The headset draws the picture at 640 x 360, ~12 frames a second.
 
 **Exports (all in the browser):** video (MP4 or WebM, 720p/1080p/vertical/square, grade, titles, optional burned-in
 subtitles, the full mix of voices with their effects, music and sound effects; real-time recording with progress),
-**Blender kit** (.zip: film.glb with the set, every character as a jointed hierarchy with baked animation down to eyelids,
-brows and mouth, the film camera with cuts as timeline markers and lens changes, the lights; dialogue.wav; subtitles.srt;
+**Blender kit** (.zip: film.glb with the set, every character as a jointed hierarchy with baked animation down to fingers,
+eyelids, brows and mouth, the film camera with cuts as timeline markers and lens changes, the lights; dialogue.wav; subtitles.srt;
 film.json; import_vrtotoon.py that imports it, sets fps/range/resolution, plays the dialogue in the sequencer, binds the
 camera cuts, animates the lens, switches on Freestyle outlines and Eevee), .glb alone, .srt, a WAV mix, the script.
 
@@ -103,7 +123,7 @@ What this project uses besides its own code. Generated by `APP_MAKER/tools/libra
 | [three.js](https://threejs.org) r158 | Copied into the app | the toon cast, the sets, the film player, the VR performance stage and the glTF export |
 | [Google Fonts](https://fonts.google.com) | Loaded from a CDN | Bebas Neue, DM Sans, Playfair Display |
 
-**Built into the browser:** Canvas 2D, WebGL, WebXR, Web Audio API, Camera, microphone and screen, MediaRecorder, localStorage, Clipboard, File downloads (Blob), Fullscreen.
+**Built into the browser:** Canvas 2D, WebGL, WebXR, Web Audio API, Camera, microphone and screen, MediaRecorder, WebRTC, localStorage, Clipboard, File downloads (Blob), Fullscreen.
 
 **Anvil platform:** Anvil, Anvil Data Tables, Anvil Google service, Anvil JS bridge (anvil.js), Anvil Users.
 
@@ -127,14 +147,14 @@ git push origin master                   # deploy
 
 ```
 client_code/    startup.py, router.py, state.py, auth.py, legal.py, vt.py (the door to the engines)
-                Layouts/Shell; Pages/ Landing Auth Home Casting Premieres Screen Edit Stage Door Profile Admin
-                Components/ Portrait FilmPlayer Turntable StageView TimelineView PerformView
-                Items/ NavLink CastCard ProductionCard Chip BeatRow CastRow TakeRow ShotRow KeyButton FilmRow FeedbackRow UserRow
-                Dialogs/ NewProduction CharacterSheet Wardrobe CastPicker ImportScript HeadsetLink Export Share VoiceBooth
+                Layouts/Shell; Pages/ Landing Auth Home Casting Wardrobe Premieres Screen Edit Stage Door Profile Admin
+                Components/ Portrait FilmPlayer Turntable StageView TimelineView PerformView LiveMonitor Slider ColorPick
+                Items/ NavLink CastCard ProductionCard Chip BeatRow CastRow TakeRow ShotRow KeyButton FilmRow Swatch FeedbackRow UserRow
+                Dialogs/ NewProduction CharacterSheet CastPicker ImportScript HeadsetLink Export Share VoiceBooth
 server_code/    common.py, Accounts.py, Productions.py, Takes.py, StageLink.py, Wardrobe.py, Screenings.py (+ /_/api/m/<key>),
                 Admin.py, Feedback.py, DemoData.py, demo_films.py, demo_voice_lengths.py, SchemaCheck.py, legal_server.py
 theme/assets/   three.min.js; vt-cast.js (characters) vt-sets.js (sets, looks, sound) vt-film.js (the film model)
-                vt-stage.js (player/editor stage) vt-xr.js (VR performance) vt-timeline.js vt-export.js vt-ui.js vt-ed.js;
+                vt-stage.js (player/editor stage) vt-xr.js (VR performance, hands, preview) vt-live.js (live view) vt-timeline.js vt-export.js vt-ui.js vt-ed.js;
                 app.css + vt.css, icons.css (generated), app-kit.js, theme.css (spinner), icon.svg + PNGs, dv-*.mp3 (demo voices)
 tools/          check.py, assets.py, make_demo_voices.py, ui_test.py + ui/ (flow, phone, admin, seed), live/drive.mjs, testing/
 ```

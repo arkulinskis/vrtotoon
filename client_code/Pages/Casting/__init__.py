@@ -25,6 +25,7 @@ class Casting(CastingTemplate):
             c["on"] = c["id"] == self.role
         self.filter_panel.items = chips
         self.empty.visible = False
+        self.wardrobe_tools.visible = self.role == "wardrobe"
         if self.role == "wardrobe":
             if self._wardrobe is None:
                 r = state.call("wardrobe_list")
@@ -40,6 +41,14 @@ class Casting(CastingTemplate):
         labels = {r["id"]: r["label"] for r in vt.roles()}
         self.section_title.text = labels.get(self.role, "Everyone on call") if self.role != "all" else "Everyone on call"
         self.cast_panel.items = cast
+
+    @handle("new_char_button", "click")
+    def new_char_button_click(self, **event_args):
+        router.go("wardrobe", "new", "max")
+
+    @handle("surprise_button", "click")
+    def surprise_button_click(self, **event_args):
+        router.go("wardrobe", "surprise")
 
     def _filter(self, chip_id=None, **event_args):
         self.role = chip_id or "all"

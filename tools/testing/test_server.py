@@ -234,12 +234,59 @@ anvil.server.session["stage"] = {"pid": pid, "link": T.stage_links.search()[0].g
 pl = ok(call("stage_poll", pid))
 assert pl["call"]["actor"] == "a_2" and pl["note"].startswith("Bigger")
 
+# the live view: the PC offers, the headset finds the offer in stage_poll and answers, the PC picks the answer up
+SDP_O, SDP_A = "v=0\r\no=- 1 2 IN IP4 127.0.0.1\r\ns=-\r\n", "v=0\r\no=- 3 4 IN IP4 127.0.0.1\r\ns=-\r\n"
+assert pl["rtc"] is None
+bad(call("stage_rtc_reply", pid, "nope", SDP_A), "nothing to answer yet")
+assert denied("stage_rtc_offer", pid, SDP_O) and denied("stage_rtc_answer", pid, "x"), "only signed-in owners ring the headset"
+as_user(bob)
+bad(call("stage_rtc_offer", pid, SDP_O), "only the owner can watch")
+as_user(ana)
+bad(call("stage_rtc_offer", pid, "hello"), "not a session description")
+bad(call("stage_rtc_offer", pid, "v=0" + "x" * 30000), "too long")
+o = ok(call("stage_rtc_offer", pid, SDP_O))
+assert o["online"], "the headset polled a moment ago"
+assert ok(call("stage_rtc_answer", pid, o["id"]))["answer"] is None
+as_user(bob)
+bad(call("stage_rtc_answer", pid, o["id"]), "bob can't read ana's live view")
+as_user(None)  # the paired headset (its session came from stage_join)
+pr = ok(call("stage_poll", pid))["rtc"]
+assert pr == {"id": o["id"], "offer": SDP_O}, pr
+bad(call("stage_rtc_reply", pid, "wrongid00", SDP_A))
+bad(call("stage_rtc_reply", pid, o["id"], "garbage"))
+ok(call("stage_rtc_reply", pid, o["id"], SDP_A))
+assert ok(call("stage_poll", pid))["rtc"] is None, "an answered offer isn't offered again"
+as_user(ana)
+assert ok(call("stage_rtc_answer", pid, o["id"]))["answer"] == SDP_A
+o2 = ok(call("stage_rtc_offer", pid, SDP_O))
+bad(call("stage_rtc_answer", pid, o["id"]), "a new offer replaces the old one")
+lk = T.stage_links.search()[0]
+lk["rtc"] = dict(lk["rtc"], at=(now - dt.timedelta(seconds=120)).isoformat())
+as_user(None)
+assert ok(call("stage_poll", pid))["rtc"] is None, "a stale offer is ignored"
+bad(call("stage_rtc_reply", pid, o2["id"], SDP_A), "too late to answer a stale offer")
+as_user(ana)
+assert ok(call("stage_rtc_answer", pid, o2["id"]))["waiting"] is False
+ok(call("stage_rtc_offer", pid, None))
+assert T.stage_links.search()[0]["rtc"] is None, "hanging up clears the offer"
+
 # ---------------------------------------------------------------------------------- wardrobe
 as_user(ana)
 bad(call("wardrobe_save", "bad", {"base": "max"}))
 bad(call("wardrobe_save", "c_abcdef12", {"name": "No base"}))
 w = ok(call("wardrobe_save", "c_abcdef12", {"base": "max", "name": "Max Noir", "colors": {"shirt": "#111111", "skin": "red"}, "build": {"h": 9}, "hat": "fedora", "evil": 1}))
 assert w["item"]["def"]["colors"] == {"shirt": "#111111"} and w["item"]["def"]["build"]["h"] == 1.6 and "evil" not in w["item"]["def"]
+# the character editor's fields: species, face sliders (clamped), switches, ears, hat/glove colours, role, voice
+full = {"base": "rosie", "name": "Captain Whiskers", "species": "cat", "role": "villain", "voice": "robot", "acc": ["gloves", "bowtie"],
+        "colors": {"hat": "#d7263d", "gloves": "#f7f4ee", "nonsense": "#000000"}, "build": {"hand": 1.3, "torso": "egg"},
+        "face": {"eyes": 9, "lift": -3, "nose": 0, "freckles": "yes", "lashes": 0, "ears": "long", "spooky": 1, "brows": True}}
+fd = ok(call("wardrobe_save", "c_whisker01", full))["item"]["def"]
+assert fd["species"] == "cat" and fd["role"] == "villain" and fd["voice"] == "robot", fd
+assert fd["face"] == {"eyes": 1.6, "lift": -1.0, "nose": 0.0, "freckles": 1, "lashes": 0, "ears": "long"}, fd["face"]
+assert fd["colors"] == {"hat": "#d7263d", "gloves": "#f7f4ee"} and fd["build"] == {"hand": 1.3, "torso": "egg"}
+odd = ok(call("wardrobe_save", "c_whisker01", dict(full, role="boss", voice="opera", face="big")))["item"]["def"]
+assert "role" not in odd and "voice" not in odd and odd["face"] == {}, odd
+ok(call("wardrobe_delete", "c_whisker01"))
 assert len(ok(call("wardrobe_list"))["items"]) == 1
 as_user(bob)
 assert ok(call("wardrobe_list"))["items"] == []
@@ -289,7 +336,7 @@ assert "email" in r["tables"]["users"] and "title" in r["tables"]["productions"]
 # ---------------------------------------------------------------------------------- every callable is covered by a permission check
 # A callable that changes data without require_user / a C.require_* check is a security hole. List the public ones here.
 PUBLIC = {"get_me", "submit_feedback", "legal_state", "legal_accept", "premieres_list", "screen_get", "screen_report",
-          "production_get", "stage_join", "stage_get", "stage_poll", "stage_save_pass"}
+          "production_get", "stage_join", "stage_get", "stage_poll", "stage_save_pass", "stage_rtc_reply"}
 for name, (f, need) in sorted(anvil.server.CALLABLES.items()):
     if name in PUBLIC:
         continue

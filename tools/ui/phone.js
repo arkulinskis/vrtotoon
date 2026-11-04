@@ -40,7 +40,7 @@
     $$('.new-prod button').find((b) => /Roll camera/.test(b.textContent)).click();
     await until(() => /^#edit\//.test(location.hash) && window.UI_READY && window.VT_EDITOR, 'editor', 60000);
     const ed = location.hash.split('/').slice(0, 2).join('/');
-    for (const h of ['#home', ed, ed + '/cast', ed + '/direct', ed + '/camera', ed + '/takes', ed + '/look', ed.replace('#edit', '#stage'), '#profile']) await check(h);
+    for (const h of ['#home', ed, ed + '/cast', ed + '/direct', ed + '/camera', ed + '/takes', ed + '/look', ed.replace('#edit', '#stage'), '#profile', '#wardrobe/new/rosie', '#casting/wardrobe']) await check(h);
     log.push(bad.length ? 'PROBLEMS: ' + bad.join(' | ') : 'PASSED');
     return { ok: !bad.length, log: log };
   } catch (e) {

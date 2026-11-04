@@ -5,8 +5,8 @@ description: Context, workflow and recipes for VRtoToon (folder vrtotoon), the u
 
 # VRtoToon: working on the app
 
-**What it is:** a browser cartoon studio (a better Flipside XR). Members cast 3D toon characters (25 premade + wardrobe
-variants), write or paste a script, perform each role in VR / passthrough / as a desk puppet (head + hands + voice; the
+**What it is:** a browser cartoon studio (a better Flipside XR). Members cast 3D toon characters (25 premade + their own
+characters from the wardrobe's character editor), write or paste a script, perform each role in VR / passthrough / as a desk puppet (head + hands + voice; the
 mouth follows the voice), direct on the PC (blocking by dragging, feelings, gestures, looks, shots, auto-director, film
 looks, score, sound effects), share a screening link (Premieres) and export video, a Blender kit (.glb + dialogue WAV +
 import script), .srt, WAV, script. The core problem it solves: ONE person playing MANY roles (see "The film model").
@@ -37,8 +37,9 @@ Claude deploys. Every page must fit 390 px. Light and dark.
 3. `python tools/check.py` (no -I) -> **ALL CHECKS PASSED**: Anvil's validator (type-checks every template and Python file),
    JS syntax, asset hashes, server tests (`tools/testing/test_server.py`).
 4. `python -I tools/ui_test.py` (Docker Desktop running) -> **ALL UI TESTS PASSED**: the folder runs in the open-source
-   Anvil App Server (container `vrtotoon-dev`); headless Chrome (SwiftShader WebGL, fake microphone) walks tools/ui/flow.js
-   (visitor pages, sign-up, new picture, every editor panel, voice booth, a desk-puppet pass on the stage, headset link,
+   Anvil App Server (container `vrtotoon-dev`, a copy of the folder in a Docker volume, `--auto-migrate`); headless Chrome (SwiftShader WebGL, fake microphone) walks tools/ui/flow.js
+   (visitor pages, sign-up, the character editor, new picture, every editor panel, voice booth, a desk-puppet pass with a
+   finger shape on the stage, headset link, the live view (a second window pairs at #door and streams to the editor),
    .glb export, share, stage door), phone.js (390 px, every page) and admin.js. Server edits need `--restart`.
    `--shots DIR` = screenshots of every page (seed.js makes an account and a picture). Read them.
 5. Commit as arkulinskis with the Co-Authored-By line; `git push origin master`. New tables/columns: Schema Mismatch step.
@@ -46,32 +47,39 @@ Claude deploys. Every page must fit 390 px. Light and dark.
 ## Architecture
 
 ```
-anvil.yaml        head_html loads three.min.js + vt-cast, vt-sets, vt-film, vt-stage, vt-timeline, vt-xr, vt-export, vt-ui, vt-ed
-                  (+ app.css, vt.css); tables: productions, takes, characters, stage_links (+ template tables)
+anvil.yaml        head_html loads three.min.js + vt-cast, vt-sets, vt-film, vt-stage, vt-timeline, vt-xr, vt-live, vt-export, vt-ui,
+                  vt-ed (+ app.css, vt.css); tables: productions, takes, characters, stage_links (+ rtc) (+ template tables)
 client_code/
   vt.py           THE door to window.VT: catalogues, portraits, new_doc_json, doc()/takes() engine objects, row lists (JSON)
                   for panels (VT.ed.*), NULL (a typed "nothing yet" for JS objects: the validator rejects attr-on-None)
   router.py       PAGES, NAV (Lot, Casting, Premieres, Headset), GUEST_NAV, CHROMELESS {stage, door}; calls page.leave()
   Layouts/Shell   marquee brand "VR<em>to</em>Toon"; classes no-chrome (stage, door) and wide-page (edit)
-  Pages/          Landing (FilmPlayer hero), Home (the Lot), Casting, Premieres, Screen, Edit (the director's chair),
-                  Stage (performance), Door (headset keypad), Auth, Profile, Admin (+ Films tab)
+  Pages/          Landing (FilmPlayer hero), Home (the Lot), Casting, Wardrobe (#wardrobe: the character editor), Premieres,
+                  Screen, Edit (the director's chair + LiveMonitor), Stage (performance; answers live-view offers), Door
+                  (headset keypad), Auth, Profile, Admin (+ Films tab)
   Components/     Portrait (img from VT.portrait), FilmPlayer (VT.Stage film/hero + VT.controls), Turntable (VT.Stage
                   turntable), StageView (VT.Stage edit; events select/place), TimelineView (VT.Timeline; event select),
-                  PerformView (VT.Perform; events state/kept)
-  Items/          CastCard ProductionCard Chip BeatRow CastRow TakeRow ShotRow KeyButton FilmRow (+ template ones)
-  Dialogs/        NewProduction CharacterSheet Wardrobe CastPicker ImportScript HeadsetLink Export Share VoiceBooth
+                  PerformView (VT.Perform; events state/kept), LiveMonitor (VT.LiveViewer: the floating headset view; event
+                  closed), Slider (range input; change(value, final)), ColorPick (swatches + native picker; change(value))
+  Items/          CastCard ProductionCard Chip BeatRow CastRow TakeRow ShotRow KeyButton FilmRow Swatch (+ template ones)
+  Dialogs/        NewProduction CharacterSheet CastPicker ImportScript HeadsetLink (Watch live) Export Share VoiceBooth
 server_code/      Productions (lot_home, new/get/save(merge)/copy/share/poster/logline/delete), Takes (save_take shared with
-                  StageLink, list/star/delete), StageLink (link, join, get, poll, save_pass, status, call, note),
-                  Wardrobe, Screenings (premieres_list, screen_get, screen_report, /_/api/m/<key>-m|-a media endpoint),
+                  StageLink, list/star/delete), StageLink (link, join, get, poll (+ a pending live-view offer), save_pass,
+                  status, call, note, rtc_offer / rtc_reply / rtc_answer), Wardrobe (clean_def: face ranges, colours,
+                  role, voice), Screenings (premieres_list, screen_get, screen_report, /_/api/m/<key>-m|-a media endpoint),
                   DemoData + demo_films.py + demo_voice_lengths.py, Admin (+ films), Feedback (+ record), Accounts, common
-theme/assets/     vt-cast.js    characters: VT.CAST (25, ids never change), species builder, face rig, IK arms, legs,
-                                VT.EMOTIONS (12), VT.GESTURES (15), VT.proceduralPose, VT.portrait, VT.makeDef (variants)
+theme/assets/     vt-cast.js    characters: VT.CAST (25, ids never change), species builder, face rig (+ def.face sliders), IK
+                                arms, toon hands (thumb + 3 fingers, curls), VT.HAND_SHAPES (8), VT.handQ, legs,
+                                VT.EMOTIONS (12), VT.GESTURES (21), VT.proceduralPose, VT.portrait, VT.makeDef, VT.randomDef
                   vt-sets.js    VT.SETS (10, ids never change), VT.buildSet, VT.GRADES (8), VT.ASPECTS, VT.SFX (14), VT.MUSIC (8)
                   vt-film.js    VT.Doc (undo/redo, ops), layout (ripple), VT.Film (place/walk, emotion, gesture, look, perform,
                                 mouth, camera shots), VT.autoDirect, VT.parseScript / applyScript, VT.TEMPLATES, voiceChain
                   vt-stage.js   VT.Stage (render loop, grade post pass, letterbox, titles/subtitles, audio mix, editor input,
                                 turntable), VT.scheduleAudio, VT.drawTitles
-                  vt-xr.js      VT.Perform (passes, VR/AR sessions, calibration, HUD: teleprompter, monitor, laser menu, desk puppet)
+                  vt-xr.js      VT.Perform (passes, VR/AR sessions, calibration, HUD: teleprompter, monitor, laser menu, desk puppet,
+                                hand tracking: VT.fingerCurls / VT.handFrameXR, controller fingers: VT.touchCurls,
+                                startPreview: the live picture)
+                  vt-live.js    VT.LiveViewer (PC) + VT.liveAnswer / liveHangUp / liveActive (headset): WebRTC, no trickle
                   vt-timeline.js VT.Timeline;  vt-export.js video, GLB, Blender kit, WAV, SRT, zip;  vt-ui.js controls, wire;
                   vt-ed.js      VT.ed rows/jobs for Python panels (beats, cast, takes, shots, key, recorder, passMeta ...)
 tools/            make_demo_voices.py (Kokoro TTS -> theme/assets/dv-<film>-<beat>.mp3 + demo_voice_lengths.py)
@@ -90,6 +98,12 @@ tools/            make_demo_voices.py (Kokoro TTS -> theme/assets/dv-<film>-<bea
   per frame: head p3 q4, left hand p3 q4, right hand p3 q4, left shape, right shape), m (mouth: 2 chars/frame open+wide)},
   audio}. Positions are metres in the character's own space (+Z forward, relative to its mark). Blocking (move keys) is
   added on top, so VR = upper body + voice, PC = where they walk.
+- Since Nov 2026 motion has `k` = floats per frame: **31** = the 23 above + finger curls [thumb, index, middle, ring] of
+  the left (23-26) and the right hand (27-30). Takes without `k` are the old 23-float format (curls come from the shape
+  number). Always read with `m.k || VT.FRAME0`; VT.sampleMotion returns hands as {p, q, g, c}.
+- **The rig's arm keys are positions, not anatomy:** 'r' is the arm on +X, which is the character's LEFT (it faces +Z).
+  The performer's left hand drives 'r' (vt-xr.js RIG_KEY). A hand's own frame: fingers -Y, palm -Z, thumb towards the
+  body's middle; author hand rotations with VT.handQ(fingerDir, palmDir), never Euler angles.
 - Film.actorAt(): root from move keys (walk/run/sneak/glide/place; faces partner "auto" = cheat to camera), upper body from
   the selected clip (cross-fade 0.3 s between sources) or VT.proceduralPose (idle, talking hands, gesture keys), face from
   emotion keys + the beat's emo, mouth from the take (or flapping to the words), blink, gaze at the look target.
@@ -118,7 +132,12 @@ dialogs = `alert(Form(...), buttons=[], role="app-dialog")`; server calls via `s
 - **New premade character:** a row in `VT.CAST` (vt-cast.js): {id, name, role, tag, species, build, colors, hair, hat, acc,
   voice}. Ids are referenced by productions: never rename. New species: a branch in `Actor` (proportions), `_buildHead`.
 - **New hat / hair / accessory:** `_buildHat` / `_buildHair` / `_buildFaceAcc` or `_buildBody`, plus `VT.HATS/HAIRS/ACCS`.
-- **New emotion / gesture:** `VT.EMOTIONS` (face params) / `VT.GESTURES` + a `case` in `VT.proceduralPose`.
+- **New emotion / gesture:** `VT.EMOTIONS` (face params) / `VT.GESTURES` + a `case` in `VT.proceduralPose` (set Rg / Lg to
+  a hand shape number, or Rc / Lc to curls; fingers blend in and out with the gesture).
+- **New hand shape:** a row at the END of `VT.HAND_SHAPES` (numbers are stored in takes; never reorder) + the desk puppet's
+  keys (Digit1-8 in vt-xr.js) and DESK_HELP in Pages/Stage.
+- **New character-editor control:** a face/build key in vt-cast.js (FACE0 / BUILD0 default + use it in the Actor), its
+  range in Wardrobe.py FACE_RANGES (server clamps), a Slider/Chip in Pages/Wardrobe (template + BODY/FACE tuple).
 - **New set:** a row in `VT.SETS` (vt-sets.js) with light, marks (5) and build(api) (api.box/cyl/sph/cone/floor/backdrop/
   sign/bulbs/lightCone/particles, `api.anim.push(fn(t))`). Keep the acting area x -3..3, z -2..2 clear.
 - **New shot type / move:** `VT.SHOTS` / `VT.MOVES` + a case in `Film.camera`; the auto-director is `VT.autoDirect`.
@@ -143,6 +162,15 @@ dialogs = `alert(Form(...), buttons=[], role="app-dialog")`; server calls via `s
 - Never write Anvil's theme-colour token pattern (percent, `color:`, name, percent) in theme.css.
 - The local App Server (1.18) lags hosted Anvil (attrs, notifications, `<anvil-dropzone>` wrappers): see the template notes.
 - Licensed music must never ship here (users export videos): all music and effects are synthesised (VT.MUSIC / VT.SFX).
+- **Live view:** the headset renders the preview into its own 640x360 render target (sRGB, no MSAA) ~12 times a second,
+  `readRenderTargetPixels` + a row flip into a 2D canvas, `captureStream(12)` -> WebRTC. readPixels stalls the GPU a little:
+  keep it small. The canvas track is replaced with `sender.replaceTrack`, and the microphone joins the same way once the
+  first Action opens it (no renegotiation). Offers expire after 60 s (StageLink.RTC_TTL).
+- **Testing the live view headless:** the flow test opens a popup window at #door (Anvil forbids iframes: frame-ancestors
+  'none'; drive.mjs runs Chrome with --disable-popup-blocking), types the code like a headset,
+  and waits for `window.VT_LIVE.stats()` (state live, videoWidth > 0, currentTime moving). Two WebGL apps in one headless
+  page are slow but work. Hand tracking and controller touch sensors can't run headless: VT.fingerCurls / handFrameXR /
+  touchCurls are pure functions (test them with synthetic joints) and need a real Quest session to judge.
 
 ## Privacy & Terms (legal kit)
 

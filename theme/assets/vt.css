@@ -438,7 +438,82 @@
   .lot-head .anvil-role-btn { width: 100%; }
   .lot-head .anvil-role-btn > button { width: 100%; }
 }
-@media (prefers-reduced-motion: reduce) { .lp-bulbs, .hl-dot.on, .booth-light { animation: none; } }
+/* ---------- the character editor (#wardrobe) */
+.page-wardrobe { padding-bottom: 40px; }
+.wdp-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 6px 0 16px; }
+.wdp-title { min-width: 0; }
+.anvil-role-wdp-name { font: 400 clamp(2rem, 4.5vw, 2.9rem)/1 var(--font-display); letter-spacing: .02em; display: block; overflow-wrap: anywhere; }
+.wdp-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 22px; align-items: start; }
+.wdp-stagecol { position: sticky; top: 76px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-width: 0; }
+.wdp-stage { position: relative; height: min(62vh, 560px); min-height: 320px; border-radius: 18px; overflow: hidden; background: #1d1417;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--c-gold) 45%, transparent); }
+.wdp-stage .vt-turntable { position: absolute; inset: 0; }
+.wdp-try { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; min-width: 0; }
+.wdp-stagecol > *, .wdp-try > *, .wdp-part > *, .wdp-foot > * { min-width: 0; }
+.wdp-panel { min-width: 0; background: var(--c-surface); border: 1px solid var(--c-line); border-radius: 18px; overflow: hidden; }
+.wdp-tabs { padding: 6px 8px; }
+.wdp-tabs > * { flex: none; }
+.wdp-tabs .anvil-role-tab > button, .wdp-tabs .anvil-role-tab > button *, .wdp-try .anvil-role-chip > button,
+.wdp-try .anvil-role-chip > button * { white-space: nowrap; }
+.wdp-try .anvil-role-chip > button { display: inline-flex; align-items: center; gap: 4px; }
+.wdp-part { padding: 14px 16px 6px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; min-width: 0; }
+.wdp-part > b.small { margin-top: 4px; }
+.wdp-sliders { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 18px; }
+.wdp-checks { gap: 18px; flex-wrap: wrap; }
+.wdp-foot { padding: 12px 16px 16px; border-top: 1px solid var(--c-line); display: grid; gap: 8px; }
+.wdp-foot .ui-row { flex-wrap: wrap; }
+.cast-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* sliders */
+.vt-slider { display: grid; gap: 2px; padding: 4px 0; }
+.sl-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.anvil-role-sl-label { font: 600 .82rem/1.2 var(--font-body); color: var(--c-ink); }
+.anvil-role-sl-value { font: 600 .78rem/1 var(--font-body); color: var(--c-muted); font-variant-numeric: tabular-nums; }
+.sl-input { width: 100%; accent-color: var(--c-brand); height: 26px; margin: 0; cursor: pointer; }
+
+/* colours */
+.vt-color { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 2px 0 4px; min-width: 0; }
+.cp-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.cp-any { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--c-muted); cursor: pointer; }
+.cp-native { width: 30px; height: 26px; padding: 0; border: 1px solid var(--c-line); border-radius: 7px; background: none; cursor: pointer; }
+.anvil-role-swatch-row > div { display: flex; flex-wrap: wrap; gap: 6px; padding: 3px 2px 6px; }
+.anvil-role-swatch > button { width: 28px; height: 28px; min-height: 0; min-width: 28px; padding: 0; border-radius: 50%; border: 2px solid var(--c-surface);
+  box-shadow: 0 0 0 1px var(--c-line); cursor: pointer; margin: 0; flex: none; }
+.anvil-role-swatch.anvil-role-on > button { box-shadow: 0 0 0 2px var(--c-ink); transform: scale(1.08); }
+.anvil-role-swatch.anvil-role-swatch-auto > button { width: auto; border-radius: 999px; padding: 0 9px; font: 700 .7rem/1 var(--font-body);
+  background: repeating-linear-gradient(45deg, var(--c-surface-2) 0 5px, var(--c-surface) 5px 10px); color: var(--c-ink); }
+
+/* the live view from the headset (editor) */
+.vt-live { position: fixed; z-index: 70; right: 18px; bottom: 18px; width: 380px; max-width: calc(100vw - 24px); background: #120a0c; color: #f6ecdd;
+  border-radius: 16px; overflow: hidden; box-shadow: 0 18px 50px rgba(0, 0, 0, .45), inset 0 0 0 2px color-mix(in srgb, var(--c-gold) 55%, transparent); }
+.vt-live.big { width: 760px; }
+.lv-head { display: flex; align-items: center; gap: 6px; padding: 6px 8px 6px 12px; }
+.lv-dot { width: 10px; height: 10px; border-radius: 50%; background: #6b5a60; flex: none; }
+.lv-dot.on { background: #ff3b4f; box-shadow: 0 0 0 4px rgba(255, 59, 79, .25); animation: hl-pulse 1.4s ease-in-out infinite; }
+.anvil-role-lv-status { font: 600 .82rem/1.2 var(--font-body); color: #f6ecdd; }
+.lv-icon > button, .anvil-role-lv-icon > button { color: #f6ecdd !important; padding: 6px 8px; }
+.lv-screen { position: relative; aspect-ratio: 16 / 9; background: #000; }
+.lv-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
+.lv-wait { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 10px; padding: 16px; text-align: center; background: #1d1417; }
+.anvil-role-lv-wait-text { font-size: .86rem; color: rgba(246, 236, 221, .8); max-width: 30ch; }
+.anvil-role-lv-caption { position: absolute; left: 8px; right: 8px; bottom: 8px; font: 600 .76rem/1.3 var(--font-body); color: #fff8ec;
+  background: rgba(10, 6, 8, .7); padding: 5px 9px; border-radius: 8px; }
+.lv-foot { display: flex; gap: 2px; padding: 6px; }
+.lv-foot .anvil-role-tab > button { color: rgba(246, 236, 221, .7); }
+.lv-foot .anvil-role-tab.anvil-role-on > button { background: #f6ecdd; color: #120a0c; }
+.anvil-role-st-live { font: 700 .76rem/1 var(--font-body); color: #ff8a95; background: #3a1419; padding: 6px 10px; border-radius: 999px; letter-spacing: .02em; }
+
+@media (max-width: 860px) {
+  .wdp-grid { grid-template-columns: minmax(0, 1fr); }
+  .wdp-stagecol { position: static; }
+  .wdp-stage { height: 320px; min-height: 0; }
+}
+@media (max-width: 720px) {
+  .wdp-sliders { grid-template-columns: minmax(0, 1fr); }
+  .wdp-tools { width: 100%; }
+  .vt-live, .vt-live.big { left: 8px; right: 8px; bottom: 74px; width: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .lp-bulbs, .hl-dot.on, .booth-light, .lv-dot.on { animation: none; } }
 .prod-actions { flex-wrap: wrap; }
 .prod-actions a.anvil-role-btn, .prod-actions .anvil-role-btn { display: inline-flex !important; width: auto !important; }
 .ed-main > *, .ed-left, .ed-panel { min-width: 0; }

@@ -5,6 +5,10 @@ PC (signed in):   stage_link(pid) -> a 4-letter code;  stage_status(pid, since) 
 Headset (no sign-in needed, typing on a headset is painful): #door, type the code -> stage_join(code) puts the
                   production in this browser session (12 hours) -> #stage/<pid>: stage_get, stage_poll, stage_save_pass.
 A signed-in owner can use the stage_* calls directly too (one person, one browser, no code needed).
+
+The live view (vt-live.js): the PC posts a WebRTC offer (stage_rtc_offer), the headset finds it in stage_poll and answers
+(stage_rtc_reply), the PC picks the answer up (stage_rtc_answer). Only those two descriptions pass through here; the
+picture goes straight from the headset to the PC. rtc = {id, offer, answer, at}; an offer older than RTC_TTL is ignored.
 """
 import datetime as dt
 import random
@@ -19,6 +23,8 @@ from . import Productions, Takes
 
 ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ"  # no I, L, O: easy to read and to press on a headset
 HOURS = 12
+RTC_TTL = 60  # seconds an unanswered live-view offer waits for the headset
+MAX_SDP = 20000
 
 
 def _session():
@@ -105,7 +111,79 @@ def stage_poll(pid, device=None):
     link = _link(p)
     if link is not None:
         link.update(last_seen=C.now(), device=C.text(device, 60) or link["device"])
-    return C.ok(rev=p["rev"] or 0, call=link["call"] if link else None, note=link["note"] if link else "")
+    return C.ok(rev=p["rev"] or 0, call=link["call"] if link else None, note=link["note"] if link else "", rtc=_pending_offer(link))
+
+
+def _rtc(link):
+    r = link["rtc"] if link is not None else None
+    return r if isinstance(r, dict) else None
+
+
+def _fresh(r):
+    t = C.parse_iso(r.get("at"))
+    return bool(t and (C.now() - t).total_seconds() < RTC_TTL)
+
+
+def _pending_offer(link):
+    """The live-view offer waiting for this headset, if any: {id, offer}."""
+    r = _rtc(link)
+    if r and r.get("offer") and not r.get("answer") and _fresh(r):
+        return {"id": r["id"], "offer": r["offer"]}
+    return None
+
+
+def _sdp(sdp):
+    return isinstance(sdp, str) and sdp.startswith("v=0") and len(sdp) <= MAX_SDP
+
+
+@anvil.server.callable(require_user=True)
+def stage_rtc_offer(pid, sdp):
+    """The PC wants to watch the headset: store its WebRTC offer (sdp None = stop watching)."""
+    p = Productions.owned(pid)
+    if p is None:
+        return C.fail("Only the owner can watch this stage.")
+    link = _link(p)
+    if link is None or not link["expires"] or link["expires"] < C.now():
+        return C.fail("Open the headset link first (the Headset button).")
+    if sdp is None:
+        link["rtc"] = None
+        return C.ok()
+    if not _sdp(sdp):
+        return C.fail("That live-view request didn't look right. Try again.")
+    if C.rate_limited("stage_rtc", 40, 600):
+        return C.fail("Lots of live-view tries in a few minutes. Wait a moment, then try again.")
+    rid = C.rand_key(10)
+    link["rtc"] = {"id": rid, "offer": sdp, "answer": None, "at": C.iso(C.now())}
+    return C.ok(id=rid, online=_online(link))
+
+
+@anvil.server.callable
+def stage_rtc_reply(pid, rid, sdp):
+    """The headset answers the PC's offer (owner or a paired headset session)."""
+    p, owner = access(pid)
+    if p is None:
+        return C.fail("This stage door is closed.")
+    link = _link(p)
+    r = _rtc(link)
+    if not r or r.get("id") != rid or not _fresh(r):
+        return C.fail("The director stopped watching.")
+    if not _sdp(sdp):
+        return C.fail("That answer didn't look right.")
+    link["rtc"] = dict(r, answer=sdp)
+    return C.ok()
+
+
+@anvil.server.callable(require_user=True)
+def stage_rtc_answer(pid, rid):
+    """The PC asks whether the headset answered offer `rid`: {answer: sdp | None, waiting: bool}."""
+    p = Productions.owned(pid)
+    if p is None:
+        return C.fail("Only the owner can watch this stage.")
+    link = _link(p)
+    r = _rtc(link)
+    if not r or r.get("id") != rid:
+        return C.fail("That live view was replaced or stopped.")
+    return C.ok(answer=r.get("answer"), waiting=not r.get("answer") and _fresh(r), online=_online(link))
 
 
 @anvil.server.callable

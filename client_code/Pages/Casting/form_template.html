@@ -9,12 +9,19 @@
         </div>
       </div>
       <anvil-component type="RepeatingPanel" name="filter_panel" prop:item_template="VRtoToon.Items.Chip" prop:role='["chip-row"]'></anvil-component>
-      <anvil-component type="Label" name="section_title" prop:role='["sec-title", "cast-section"]'></anvil-component>
+      <div class="cast-head">
+        <anvil-component type="Label" name="section_title" prop:role='["sec-title", "cast-section"]'></anvil-component>
+        <span class="ui-spacer"></span>
+        <div class="ui-row" anvil:name="wardrobe_tools">
+          <anvil-component type="Button" name="surprise_button" prop:text="Surprise me" prop:role='["btn", "btn-sm", "ic-dice"]'></anvil-component>
+          <anvil-component type="Button" name="new_char_button" prop:text="New character" prop:role='["btn", "btn-sm", "btn-primary", "ic-plus"]'></anvil-component>
+        </div>
+      </div>
       <anvil-component type="RepeatingPanel" name="cast_panel" prop:item_template="VRtoToon.Items.CastCard" prop:role='["cast-grid"]'></anvil-component>
       <div class="ui-empty" anvil:name="empty">
         <i class="ic ic-users"></i>
         <h3>Your wardrobe is empty</h3>
-        <p>Open any character and press "Make a variant": new colours, a hat, a different height. Variants can join any cast.</p>
+        <p>Make your own characters in the character editor: species, body, face, hair, hats, colours, accessories and a voice. Start from any actor ("Make my own version" on their card), or press New character. Your characters can join any cast.</p>
       </div>
     </div>
   </anvil-block>

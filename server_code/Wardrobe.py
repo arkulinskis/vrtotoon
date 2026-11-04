@@ -1,7 +1,9 @@
-"""The wardrobe: your own variants of the premade characters ({base, name, colors, build, hair, hat, acc}).
+"""The wardrobe: your own characters, made in the character editor (#wardrobe): a premade character to start from
+({base}) plus everything you changed: species, colours, body (build), face, hair, hat, accessories, name, tagline, role
+and voice note.
 
-A variant is data only: the browser builds it with VT.makeDef(base, overrides). When a variant joins a cast, the
-editor copies its definition into the production (doc.custom), so films stay complete even if the variant changes later.
+A character is data only: the browser builds it with VT.makeDef(base, overrides). When it joins a cast, the editor copies
+its definition into the production (doc.custom), so films stay complete even if the character changes later.
 """
 import re
 
@@ -13,7 +15,30 @@ from . import common as C
 
 UID = re.compile(r"^c_[a-z0-9]{6,16}$")
 HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
-FIELDS = {"base", "name", "colors", "build", "hair", "hat", "acc", "species", "tag", "role"}
+FIELDS = {"base", "name", "colors", "build", "face", "hair", "hat", "acc", "species", "tag", "role", "voice"}
+COLOR_KEYS = {"skin", "fur2", "hair", "shirt", "pants", "shoes", "accent", "eyes", "hat", "gloves"}
+# face sliders: name -> (lowest, highest); switches are 0/1
+FACE_RANGES = {"eyes": (0.5, 1.6), "spread": (0.6, 1.5), "lift": (-1.0, 1.0), "tall": (0.6, 1.7), "brows": (0.0, 2.2),
+               "nose": (0.0, 2.0), "mouth": (0.5, 1.6), "earSize": (0.5, 1.7)}
+FACE_SWITCHES = {"freckles", "lashes", "cheeks"}
+EARS = {"auto", "none", "human", "round", "point", "long", "flop", "horn", "antenna"}
+ROLES = {"lead", "sidekick", "villain", "character", "creature"}
+VOICES = {"bright", "warm", "deep", "smoky", "grand", "radio", "robot", "echo"}
+
+
+def clean_face(face):
+    out = {}
+    if not isinstance(face, dict):
+        return out
+    for k, v in face.items():
+        if k in FACE_RANGES and isinstance(v, (int, float)) and not isinstance(v, bool):
+            lo, hi = FACE_RANGES[k]
+            out[k] = round(max(lo, min(hi, float(v))), 3)
+        elif k in FACE_SWITCHES:
+            out[k] = 1 if v else 0
+        elif k == "ears" and v in EARS:
+            out[k] = v
+    return out
 
 
 def clean_def(d):
@@ -23,7 +48,13 @@ def clean_def(d):
     out["name"] = C.text(out.get("name") or "My character", 40)
     out["tag"] = C.text(out.get("tag") or "", 80)
     colors = out.get("colors")
-    out["colors"] = {k: v for k, v in colors.items() if isinstance(v, str) and HEX.match(v)} if isinstance(colors, dict) else {}
+    out["colors"] = {k: v for k, v in colors.items() if k in COLOR_KEYS and isinstance(v, str) and HEX.match(v)} if isinstance(colors, dict) else {}
+    if "face" in out:
+        out["face"] = clean_face(out["face"])
+    if out.get("role") not in ROLES:
+        out.pop("role", None)
+    if out.get("voice") not in VOICES:
+        out.pop("voice", None)
     build = out.get("build")
     if not isinstance(build, dict):
         build = {}

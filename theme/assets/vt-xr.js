@@ -10,7 +10,12 @@
      Passthrough immersive-ar: your room, the characters in it (no set).
      Flat        no headset: the mouse is your right hand, the keys move your head (a desk puppet), same recording.
    Controllers: A / X = action, next line, cut;  B / Y = retake;  thumbstick left/right = switch role (between takes);
-                trigger = point, grip = fist (hand shapes are recorded too); the laser picks menu buttons.
+                the fingers follow the touch sensors (trigger = index, grip = the other fingers, a thumb off the buttons =
+                thumbs up); the laser picks menu buttons.
+   Hands (hand tracking, no controllers): the wrist and every finger's curl come from the WebXR hand joints; a pinch
+                presses menu buttons. Takes record four curls per hand (thumb, index, middle, ring + little finger).
+   Live view: startPreview() renders what the performer sees (or the film camera) into a small canvas ~12 times a second
+                and returns its stream; vt-live.js sends it to the director's computer over WebRTC.
    stage.live[actorId] drives the performer from the headset instead of the film. */
 (function () {
   'use strict';
@@ -18,7 +23,54 @@
   var T = window.THREE;
   if (!T) return;
   var D2R = Math.PI / 180, FPS = 30, PREROLL = 1.0;
-  var HAND_OFF = new T.Quaternion(0, Math.SQRT1_2, Math.SQRT1_2, 0);  // the mitten's fingers (-Y) along the grip's ray (-Z), thumb up
+  var HAND_OFF = new T.Quaternion(0, Math.SQRT1_2, Math.SQRT1_2, 0);  // the toon hand's fingers (-Y) along the XR -Z, its back (+Z) along XR +Y
+  // The rig names its arms by where they sit: 'r' is the arm on +X. A character faces +Z, so that is its LEFT arm, and the
+  // performer's left hand (on their +X once calibrated) must drive it, or the arms cross.
+  var RIG_KEY = { left: 'r', right: 'l' };
+  var FINGERS = {
+    thumb: ['thumb-metacarpal', 'thumb-phalanx-proximal', 'thumb-phalanx-distal', 'thumb-tip'],
+    index: ['index-finger-metacarpal', 'index-finger-phalanx-proximal', 'index-finger-phalanx-intermediate', 'index-finger-phalanx-distal', 'index-finger-tip'],
+    middle: ['middle-finger-metacarpal', 'middle-finger-phalanx-proximal', 'middle-finger-phalanx-intermediate', 'middle-finger-phalanx-distal', 'middle-finger-tip'],
+    ring: ['ring-finger-metacarpal', 'ring-finger-phalanx-proximal', 'ring-finger-phalanx-intermediate', 'ring-finger-phalanx-distal', 'ring-finger-tip'],
+    pinky: ['pinky-finger-metacarpal', 'pinky-finger-phalanx-proximal', 'pinky-finger-phalanx-intermediate', 'pinky-finger-phalanx-distal', 'pinky-finger-tip']
+  };
+  function bendOf(ps) {  // the sum of the angles between a finger's bones (radians)
+    var s = 0;
+    for (var i = 0; i + 2 < ps.length; i++) {
+      var a = ps[i + 1].clone().sub(ps[i]), b = ps[i + 2].clone().sub(ps[i + 1]);
+      if (a.lengthSq() > 1e-10 && b.lengthSq() > 1e-10) s += a.angleTo(b);
+    }
+    return s;
+  }
+  /* finger curls [thumb, index, middle, ring] (0 straight .. 1 curled) from WebXR hand joint positions {name: Vector3};
+     the toon's third finger stands for the ring and little fingers together. null when a joint is missing. */
+  VT.fingerCurls = function (pos) {
+    function f(name) { var out = FINGERS[name].map(function (j) { return pos[j]; }); return out.every(Boolean) ? out : null; }
+    var th = f('thumb'), ix = f('index'), md = f('middle'), rg = f('ring'), pk = f('pinky');
+    if (!th || !ix || !md || !rg) return null;
+    var k = function (b, lo, span) { return VT.clamp((b - lo) / span, 0, 1); };
+    var ring = k(bendOf(rg), 0.3, 3.7), pinky = pk ? k(bendOf(pk), 0.3, 3.7) : ring;
+    return [k(bendOf(th), 0.35, 1.5), k(bendOf(ix), 0.3, 3.7), k(bendOf(md), 0.3, 3.7), (ring + pinky) / 2];
+  };
+  /* the hand's rotation in the XR convention (fingers -Z, back of the hand +Y) from the wrist and the knuckles */
+  VT.handFrameXR = function (pos, left) {
+    var w = pos['wrist'], m = pos['middle-finger-phalanx-proximal'], ix = pos['index-finger-phalanx-proximal'], pk = pos['pinky-finger-phalanx-proximal'] || pos['ring-finger-phalanx-proximal'];
+    if (!w || !m || !ix || !pk) return null;
+    var f = m.clone().sub(w).normalize(), a = ix.clone().sub(pk).normalize();
+    var back = left ? new T.Vector3().crossVectors(a, f) : new T.Vector3().crossVectors(f, a);
+    var z = f.clone().negate(), y = back.sub(z.clone().multiplyScalar(back.dot(z))).normalize(), x = new T.Vector3().crossVectors(y, z);
+    return new T.Quaternion().setFromRotationMatrix(new T.Matrix4().makeBasis(x, y, z));
+  };
+  /* finger curls from a controller's touch sensors (Quest Touch reports `touched`); without them, from how hard you squeeze */
+  VT.touchCurls = function (gp, seenTouch) {
+    var b = (gp && gp.buttons) || [], val = function (i) { return b[i] ? b[i].value || (b[i].pressed ? 1 : 0) : 0; };
+    var touch = function (i) { return !!(b[i] && (b[i].touched || b[i].pressed)); };
+    var trig = val(0), grip = val(1), mid = 0.18 + 0.82 * grip;
+    if (!seenTouch) return [grip > 0.5 ? 0.75 : 0.2, 0.15 + 0.85 * trig, mid, Math.min(1, mid + 0.05)];
+    var thumbDown = touch(3) || touch(4) || touch(5) || touch(6);
+    var index = touch(0) || trig > 0.05 ? 0.35 + 0.65 * trig : 0.03;
+    return [thumbDown ? 0.72 : (grip > 0.5 ? 0 : 0.15), index, mid, Math.min(1, mid + 0.05)];
+  };
 
   function Perform(el, o) {
     var self = this;
@@ -128,11 +180,11 @@
     var menu = this.menuMesh = new T.Mesh(new T.PlaneGeometry(0.8, 0.5), new T.MeshBasicMaterial({ map: this.menuTex, transparent: true, fog: false, toneMapped: false }));
     hud.add(menu);
     this.ctrl = [0, 1].map(function (i) {
-      var c = r.xr.getController(i), g = r.xr.getControllerGrip(i);
+      var c = r.xr.getController(i), g = r.xr.getControllerGrip(i), hs = r.xr.getHand(i);
       var laser = new T.Line(new T.BufferGeometry().setFromPoints([new T.Vector3(), new T.Vector3(0, 0, -1)]), new T.LineBasicMaterial({ color: '#ffd166' }));
       var dot = new T.Mesh(new T.SphereGeometry(0.008, 10, 8), new T.MeshBasicMaterial({ color: '#ffd166' }));
       hud.add(laser); hud.add(dot);
-      var info = { c: c, g: g, laser: laser, dot: dot, hand: null, src: null };
+      var info = { c: c, g: g, hs: hs, laser: laser, dot: dot, hand: null, src: null, touch: false, curl: null };
       c.addEventListener('connected', function (e) { info.src = e.data; info.hand = e.data.handedness; });
       c.addEventListener('disconnected', function () { info.src = null; });
       c.addEventListener('selectstart', function () { if (self._hover && self.state !== 'rec') self._hover.fn(); });
@@ -183,21 +235,38 @@
     var self = this;
     (this.ctrl || []).forEach(function (info) {
       if (!info.src) return;
-      var key = info.hand === 'left' ? 'l' : 'r';
+      var key = RIG_KEY[info.hand] || 'l';
+      var hand = info.src.hand ? self._readHand(info, toLocal) : null;
+      if (hand) { out[key] = hand; return; }
+      if (info.src.hand) return;  // a tracked hand that is out of view this frame: the arm rests
       var g = toLocal(info.g.matrix.clone());
       var hq = g.q.clone().multiply(HAND_OFF);
       var wrist = g.p.clone().add(new T.Vector3(0, 0.055 * a.def.build.h, 0).applyQuaternion(hq));
-      var gp = info.src.gamepad, shape = 0;
-      if (gp && gp.buttons) {
-        var trig = gp.buttons[0] && gp.buttons[0].value > 0.5, grip = gp.buttons[1] && gp.buttons[1].value > 0.5;
-        shape = grip && trig ? 1 : grip ? 2 : 0;
-        var thumbUp = grip && trig && gp.buttons[3] && !gp.buttons[3].touched && gp.buttons[4] && !gp.buttons[4].touched && gp.buttons[5] && !gp.buttons[5].touched;
-        if (thumbUp) shape = 3;
-      }
-      out[key] = { p: [wrist.x, wrist.y, wrist.z], q: [hq.x, hq.y, hq.z, hq.w], g: shape };
+      var gp = info.src.gamepad;
+      if (gp && gp.buttons && !info.touch) info.touch = gp.buttons.some(function (b) { return b && b.touched && !b.pressed; });
+      var c = self._smooth(info, VT.touchCurls(gp, info.touch));
+      out[key] = { p: [wrist.x, wrist.y, wrist.z], q: [hq.x, hq.y, hq.z, hq.w], g: VT.nearestShape(c), c: c };
       self._buttons(info, gp);
     });
     return out;
+  };
+  // a tracked hand: wrist position + rotation from the joints, finger curls from the bones
+  Perform.prototype._readHand = function (info, toLocal) {
+    var J = info.hs && info.hs.joints;
+    if (!J || !J['wrist'] || !J['wrist'].visible) return null;
+    var pos = {};
+    Object.keys(J).forEach(function (n) { if (J[n].visible) pos[n] = J[n].position.clone(); });
+    var qx = VT.handFrameXR(pos, info.hand === 'left'), c = VT.fingerCurls(pos);
+    if (!qx || !c) return null;
+    var m = new T.Matrix4().compose(pos['wrist'], qx, new T.Vector3(1, 1, 1));
+    var w = toLocal(m), hq = w.q.clone().multiply(HAND_OFF);
+    c = this._smooth(info, c);
+    return { p: [w.p.x, w.p.y, w.p.z], q: [hq.x, hq.y, hq.z, hq.w], g: VT.nearestShape(c), c: c };
+  };
+  Perform.prototype._smooth = function (info, c) {  // a little low-pass so tracking jitter doesn't twitch the fingers
+    if (!info.curl) info.curl = c.slice();
+    for (var i = 0; i < 4; i++) info.curl[i] += (c[i] - info.curl[i]) * 0.5;
+    return info.curl.map(function (v) { return Math.round(v * 1000) / 1000; });
   };
   Perform.prototype._readPuppet = function () {
     var a = this.stage.actors[this.actor]; if (!a) return null;
@@ -205,7 +274,10 @@
     var base = VT.proceduralPose(a, { t: t, seed: 4, speaking: this._level > 0.15, talk: this._level });
     var sh = a.P.hipY + a.P.torsoH * 0.8;
     var rx = a.P.torsoW * 1.2 + P.mx * 0.42 * h, ry = sh + P.my * 0.42 * h, rz = 0.22 * h + Math.max(0, 0.2 - Math.abs(P.mx) * 0.2) * h;
-    base.r = { p: [rx, ry, rz], q: P.down || P.point ? VT.quatYXZ(90, 0, -20) : VT.quatYXZ(150 - P.my * 60, 0, -30 + P.mx * 20), g: P.down ? 1 : P.point ? 2 : 0 };
+    var gr = P.down ? 1 : P.point ? 2 : P.shapeR != null ? P.shapeR : 7;
+    var fwd = P.down || P.point || gr === 3;  // fists and points reach forward, palm in; open hands face the camera
+    base.r = { p: [rx, ry, rz], q: fwd ? VT.handQ(0.12, 0.1, 1, -1, 0, 0) : VT.handQ(-0.15 + P.mx * 0.2, 1, 0.25 - P.my * 0.35, -0.25, 0, 1), g: gr, c: VT.handCurls(gr) };
+    if (P.shapeL != null) { base.l.g = P.shapeL; base.l.c = VT.handCurls(P.shapeL); base.l.p[1] += 0.12 * h; base.l.p[2] += 0.14 * h; base.l.q = VT.handQ(0.15, 1, 0.25, 0.25, 0, 1); }
     var hp = base.head.p;
     var yaw = P.yaw + P.mx * 14, pitch = P.pitch - P.my * 8;
     base.head = { p: [hp[0] + P.lean * 0.08 * h, hp[1], hp[2] + Math.abs(P.lean) * 0.02], q: VT.quatYXZ(pitch, yaw, -P.lean * 8) };
@@ -231,6 +303,11 @@
       if (ev.code === 'KeyQ') P.lean = on ? -1 : 0;
       if (ev.code === 'KeyE') P.lean = on ? 1 : 0;
       if (ev.code === 'KeyF') P.point = on;
+      var dg = /^Digit([1-8])$/.exec(ev.code);  // 1-8: a hand shape for the mouse hand (Shift: the other hand); again = relaxed
+      if (on && dg && !ev.repeat) {
+        var n = +dg[1] - 1, k2 = ev.shiftKey ? 'shapeL' : 'shapeR';
+        P[k2] = P[k2] === n ? null : n;
+      }
       if (on && ev.code === 'Space' && !ev.repeat) { ev.preventDefault(); self.primary(); }
     };
     el.addEventListener('pointermove', this._onMove);
@@ -369,7 +446,7 @@
       return String.fromCharCode(48 + Math.round(o * 9)) + String.fromCharCode(48 + Math.round(w * 9));
     }).join('');
     var n = this._frames.length / VT.FRAME;
-    var motion = { fps: FPS, n: n, f: Float32Array.from(this._frames), m: m };
+    var motion = { fps: FPS, n: n, k: VT.FRAME, f: Float32Array.from(this._frames), m: m };
     var clips = this._run.filter(function (r) { return r.start != null && r.dur != null; }).map(function (r) {
       return { beat: r.id, off: Math.round(r.start * 1000) / 1000, dur: Math.round(r.dur * 1000) / 1000, line: !!r.mine };
     });
@@ -496,6 +573,7 @@
     v(fr.head.p, 3); v(fr.head.q || [0, 0, 0, 1], 4);
     ['l', 'r'].forEach(function (k) { var h = fr[k] || { p: [rest[k].x, rest[k].y, rest[k].z] }; v(h.p, 3); v(h.q || [0, 0, 0, 1], 4); });
     f.push(fr.l && fr.l.g || 0); f.push(fr.r && fr.r.g || 0);
+    ['l', 'r'].forEach(function (k) { var h = fr[k] || {}; v(h.c || VT.handCurls(h.g || 0), 4); });
   };
   // the performer's toon follows them live (face: the beat's emotion; mouth: the microphone)
   Perform.prototype._livePose = function (a, t) {
@@ -523,6 +601,60 @@
       st.cam.lookAt(new T.Vector3(r.position.x, h * 0.62, r.position.z).addScaledVector(side, h * 0.6)); st.cam.fov = 38; st.cam.updateProjectionMatrix();
     }
     if (this.mode !== 'flat' && this.hud) this._placeHud();
+    if (this._pv) this._capturePreview();
+  };
+
+  /* ------------------------------------------------------------------ the live view for the director (vt-live.js) */
+  // o = {w, h, fps, view: 'eyes' | 'film'}; returns the canvas's MediaStream
+  Perform.prototype.startPreview = function (o) {
+    o = o || {};
+    if (this._pv) { this.setPreviewView(o.view || this._pv.view); return this._pv.stream; }
+    var w = o.w || 640, h = o.h || 360, cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    var c = cv.getContext('2d'); c.fillStyle = '#120a0c'; c.fillRect(0, 0, w, h);
+    var rt = new T.WebGLRenderTarget(w, h); rt.texture.colorSpace = T.SRGBColorSpace;
+    this._pv = { w: w, h: h, every: 1000 / (o.fps || 12), view: o.view || 'eyes', at: 0, canvas: cv, ctx: c, rt: rt,
+      buf: new Uint8Array(w * h * 4), img: c.createImageData(w, h), cam: new T.PerspectiveCamera(80, w / h, 0.03, 160), frames: 0 };
+    this._pv.stream = cv.captureStream(o.fps || 12);
+    return this._pv.stream;
+  };
+  Perform.prototype.setPreviewView = function (v) { if (this._pv) this._pv.view = v === 'film' ? 'film' : 'eyes'; };
+  Perform.prototype.stopPreview = function () {
+    var pv = this._pv; if (!pv) return;
+    this._pv = null;
+    pv.stream.getTracks().forEach(function (t) { t.stop(); });
+    pv.rt.dispose();
+  };
+  Perform.prototype.previewFrames = function () { return this._pv ? this._pv.frames : 0; };
+  Perform.prototype._capturePreview = function () {
+    var pv = this._pv, now = performance.now();
+    if (now - pv.at < pv.every) return;
+    pv.at = now;
+    var st = this.stage, r = st.renderer, cam = pv.cam, k = this._calib && this.mode !== 'flat' ? this._calib.k : 1;
+    if (pv.view === 'film') {  // the director's monitor: the film camera, seeing everyone (the performer's head too)
+      var film = st.film.camera(this.state === 'review' ? st.time : this._filmT(), st.actors, pv.w / pv.h);
+      cam.position.copy(film.pos).multiplyScalar(k); cam.up.set(0, 1, 0); cam.lookAt(film.look.clone().multiplyScalar(k));
+      if (film.roll) cam.rotateZ(film.roll);
+      cam.fov = film.fov; cam.layers.enable(3);
+    } else if (r.xr.isPresenting) {  // through the performer's eyes (their own head stays hidden: layer 3 off)
+      var xc = r.xr.getCamera(); xc.updateMatrixWorld(true);
+      xc.matrixWorld.decompose(cam.position, cam.quaternion, new T.Vector3());
+      cam.fov = 80; cam.layers.disable(3);
+    } else {  // the desk view the performer has on screen
+      cam.position.copy(st.cam.position); cam.quaternion.copy(st.cam.quaternion); cam.fov = st.cam.fov; cam.layers.disable(3);
+    }
+    cam.aspect = pv.w / pv.h; cam.updateProjectionMatrix(); cam.updateMatrixWorld(true);
+    var prev = r.getRenderTarget(), xrOn = r.xr.enabled;
+    r.xr.enabled = false;
+    r.setRenderTarget(pv.rt); r.setClearColor(st.scene.background || new T.Color('#000'), this.mode === 'ar' ? 0 : 1); r.clear(); r.render(st.scene, cam);
+    r.readRenderTargetPixels(pv.rt, 0, 0, pv.w, pv.h, pv.buf);
+    r.setRenderTarget(prev); r.xr.enabled = xrOn;
+    var row = pv.w * 4, d = pv.img.data;  // WebGL rows run bottom-up
+    for (var y = 0; y < pv.h; y++) d.set(pv.buf.subarray((pv.h - 1 - y) * row, (pv.h - y) * row), y * row);
+    for (var i = 3; i < d.length; i += 4) d[i] = 255;
+    pv.ctx.putImageData(pv.img, 0, 0);
+    if (this.state === 'rec') { pv.ctx.fillStyle = '#ff3b4f'; pv.ctx.beginPath(); pv.ctx.arc(pv.w - 22, 22, 9, 0, Math.PI * 2); pv.ctx.fill(); }
+    pv.frames++;
   };
   Perform.prototype._placeHud = function () {
     var st = this.stage, r = st.renderer, k = this._calib ? this._calib.k : 1;
@@ -689,6 +821,7 @@
     if (this.session) { try { this.session.end(); } catch (e) {} }
     if (this._rec && this._rec.state !== 'inactive') { try { this._rec.stop(); } catch (e) {} }
     if (this._stream) this._stream.getTracks().forEach(function (t) { t.stop(); });
+    this.stopPreview();
     window.removeEventListener('keydown', this._onKey); window.removeEventListener('keyup', this._onKey); window.removeEventListener('pointerup', this._onUp);
     if (this.stage) this.stage.destroy();
   };

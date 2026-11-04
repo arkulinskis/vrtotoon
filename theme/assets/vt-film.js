@@ -16,14 +16,17 @@
           shots: [{id, beat, at, type, a, b, move}], sfx: [{id, beat, at, sfx, vol}],
           sel: {"<beat>|<actor>": "<take uid>"}, custom: {<char uid>: def}}
    take = {uid, actor, source: 'vr' | 'desk' | 'voice' | 'builtin', clips: [{beat, off, dur, line}], dur,
-           motion: {fps, n, f: Float32Array (23 per frame), m: 'mouth string'}, audioUrl, buffer} */
+           motion: {fps, n, k, f: Float32Array (k floats per frame: 31 now, 23 in takes made before fingers), m: 'mouth string'},
+           audioUrl, buffer} */
 (function () {
   'use strict';
   var VT = window.VT = window.VT || {};
   var T = window.THREE;
   var D2R = Math.PI / 180;
-  var FRAME = 23;  // head p3 q4, left hand p3 q4, right hand p3 q4, left shape, right shape
-  VT.FRAME = FRAME;
+  // one recorded frame: head p3 q4, left hand p3 q4, right hand p3 q4, left shape, right shape (23 floats, the first format),
+  // then the finger curls [thumb, index, middle, ring] of the left and the right hand (31 floats, since Nov 2026)
+  var FRAME = 31, FRAME0 = 23;
+  VT.FRAME = FRAME; VT.FRAME0 = FRAME0;
 
   VT.uid = function (p) { var s = ''; for (var i = 0; i < 10; i++) s += 'abcdefghijklmnopqrstuvwxyz0123456789'.charAt(Math.floor(Math.random() * 36)); return (p || 'x') + '_' + s; };
   function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
@@ -235,16 +238,17 @@
     return m;
   };
   VT.packMotion = function (m) {
-    return { fps: m.fps, n: m.n, f: Array.prototype.map.call(m.f, function (v) { return Math.round(v * 1000) / 1000; }), m: m.m || '' };
+    return { fps: m.fps, n: m.n, k: m.k || FRAME0, f: Array.prototype.map.call(m.f, function (v) { return Math.round(v * 1000) / 1000; }), m: m.m || '' };
   };
   var _qa = new T.Quaternion(), _qb = new T.Quaternion();
   VT.sampleMotion = function (m, t) {
     if (!m || !m.n) return null;
     var x = clamp(t * m.fps, 0, m.n - 1), i = Math.floor(x), j = Math.min(m.n - 1, i + 1), u = x - i, f = m.f;
-    var A = i * FRAME, B = j * FRAME;
+    var K = m.k || FRAME0, A = i * K, B = j * K;
     function v3(o) { return [lerp(f[A + o], f[B + o], u), lerp(f[A + o + 1], f[B + o + 1], u), lerp(f[A + o + 2], f[B + o + 2], u)]; }
     function q4(o) { _qa.set(f[A + o], f[A + o + 1], f[A + o + 2], f[A + o + 3]); _qb.set(f[B + o], f[B + o + 1], f[B + o + 2], f[B + o + 3]); _qa.slerp(_qb, u); return [_qa.x, _qa.y, _qa.z, _qa.w]; }
-    return { head: { p: v3(0), q: q4(3) }, l: { p: v3(7), q: q4(10), g: f[A + 21] }, r: { p: v3(14), q: q4(17), g: f[A + 22] } };
+    function c4(o) { return K >= FRAME ? [lerp(f[A + o], f[B + o], u), lerp(f[A + o + 1], f[B + o + 1], u), lerp(f[A + o + 2], f[B + o + 2], u), lerp(f[A + o + 3], f[B + o + 3], u)] : null; }
+    return { head: { p: v3(0), q: q4(3) }, l: { p: v3(7), q: q4(10), g: f[A + 21], c: c4(23) }, r: { p: v3(14), q: q4(17), g: f[A + 22], c: c4(27) } };
   };
   VT.mouthAt = function (mstr, fps, t) {
     if (!mstr) return null;
@@ -460,7 +464,7 @@
   };
   function blendPose(A, B, w) {
     if (!A) return B; if (!B) return A;
-    function bp(a, b) { if (!a || !a.p) return b; if (!b || !b.p) return a; var q = null; if (a.q && b.q) { _qa.set(a.q[0], a.q[1], a.q[2], a.q[3]); _qb.set(b.q[0], b.q[1], b.q[2], b.q[3]); _qa.slerp(_qb, w); q = [_qa.x, _qa.y, _qa.z, _qa.w]; } else q = w < 0.5 ? a.q : b.q; return { p: [lerp(a.p[0], b.p[0], w), lerp(a.p[1], b.p[1], w), lerp(a.p[2], b.p[2], w)], q: q, g: w < 0.5 ? a.g : b.g }; }
+    function bp(a, b) { if (!a || !a.p) return b; if (!b || !b.p) return a; var q = null; if (a.q && b.q) { _qa.set(a.q[0], a.q[1], a.q[2], a.q[3]); _qb.set(b.q[0], b.q[1], b.q[2], b.q[3]); _qa.slerp(_qb, w); q = [_qa.x, _qa.y, _qa.z, _qa.w]; } else q = w < 0.5 ? a.q : b.q; var ca = a.c || VT.handCurls(a.g), cb = b.c || VT.handCurls(b.g); return { p: [lerp(a.p[0], b.p[0], w), lerp(a.p[1], b.p[1], w), lerp(a.p[2], b.p[2], w)], q: q, g: w < 0.5 ? a.g : b.g, c: [0, 1, 2, 3].map(function (i) { return lerp(ca[i], cb[i], w); }) }; }
     return { head: bp(A.head, B.head), l: bp(A.l, B.l), r: bp(A.r, B.r) };
   }
   VT.blendPose = blendPose;

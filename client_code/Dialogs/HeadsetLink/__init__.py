@@ -37,6 +37,11 @@ class HeadsetLink(HeadsetLinkTemplate):
         if r.get("ok"):
             self._status(r["online"], r["device"])
 
+    @handle("watch_button", "click")
+    def watch_button_click(self, **event_args):
+        self.timer.interval = 0
+        self.raise_event("x-close-alert", value="watch")
+
     @handle("call_button", "click")
     def call_button_click(self, **event_args):
         call = {"actor": self.actor_dd.selected_value, "from": self.from_dd.selected_value or None, "to": self.to_dd.selected_value or None}

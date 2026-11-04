@@ -1,0 +1,39 @@
+---
+custom_component: true
+properties:
+  - name: label
+    type: string
+    default_value: ""
+  - name: value
+    type: string
+    default_value: "#d7263d"
+    default_binding_prop: true
+    description: A colour as #rrggbb ("" = the part's own colour, when auto is on)
+  - name: palette
+    type: string
+    default_value: clothes
+    description: Which swatches to offer - clothes, skin, hair or eyes
+  - name: auto
+    type: boolean
+    default_value: false
+    description: Offer an "own colour" swatch (value "")
+events:
+  - name: change
+    default_event: true
+    parameters:
+      - name: value
+toolbox_item:
+  title: Colour picker
+  group: VRtoToon
+help_text: |
+  A colour field: a row of suggested swatches plus the browser's own colour picker for any colour.
+---
+<div class="vt-color-wrap">
+  <div class="vt-color">
+    <div class="cp-top">
+      <anvil-component type="Label" name="label_label" prop:role='["sl-label"]'></anvil-component>
+      <label class="cp-any" title="Any colour"><input type="color" class="cp-native" anvil:dom-node="input"><span>Any</span></label>
+    </div>
+    <anvil-component type="RepeatingPanel" name="swatch_panel" prop:item_template="VRtoToon.Items.Swatch" prop:role='["swatch-row"]'></anvil-component>
+  </div>
+</div>

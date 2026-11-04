@@ -16,6 +16,7 @@
             <anvil-component type="Button" name="undo_button" prop:text="Undo" prop:role='["btn", "btn-sm", "btn-icon", "ic-undo"]' prop:tooltip="Undo (Ctrl+Z)"></anvil-component>
             <anvil-component type="Button" name="redo_button" prop:text="Redo" prop:role='["btn", "btn-sm", "btn-icon", "ic-redo"]' prop:tooltip="Redo"></anvil-component>
             <anvil-component type="Button" name="headset_button" prop:text="Headset" prop:role='["btn", "btn-sm", "ic-vr"]' prop:tooltip="Pair a VR headset with this picture"></anvil-component>
+            <anvil-component type="Button" name="watch_button" prop:text="Watch live" prop:role='["btn", "btn-sm", "ic-eye", "live"]' prop:tooltip="See what the headset sees, live" prop:visible="false"></anvil-component>
             <anvil-component type="Button" name="share_button" prop:text="Share" prop:role='["btn", "btn-sm", "ic-share"]'></anvil-component>
             <anvil-component type="Button" name="export_button" prop:text="Export" prop:role='["btn", "btn-sm", "btn-primary", "ic-download"]'></anvil-component>
           </div>
@@ -147,6 +148,7 @@
         </div>
 
       </div>
+      <anvil-component type="VRtoToon.Components.LiveMonitor" name="live_monitor"></anvil-component>
       <anvil-component type="Timer" name="save_timer" prop:interval="0"></anvil-component>
       <anvil-component type="Timer" name="link_timer" prop:interval="0"></anvil-component>
     </div>

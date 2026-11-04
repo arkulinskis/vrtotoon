@@ -1,0 +1,46 @@
+---
+custom_component: true
+properties:
+  - name: label
+    type: string
+    default_value: ""
+    description: The name shown above the slider
+  - name: value
+    type: number
+    default_value: 1
+    default_binding_prop: true
+  - name: min_value
+    type: number
+    default_value: 0
+  - name: max_value
+    type: number
+    default_value: 2
+  - name: step
+    type: number
+    default_value: 0.01
+  - name: fmt
+    type: string
+    default_value: pct
+    description: How the value reads - pct (120%), signed (+0.4) or plain (1.20)
+events:
+  - name: change
+    default_event: true
+    description: The value moved (final = False while dragging, True when let go)
+    parameters:
+      - name: value
+      - name: final
+toolbox_item:
+  title: Slider
+  group: VRtoToon
+help_text: |
+  A labelled range slider with its value on the right (the character editor's body and face controls).
+---
+<div class="vt-slider-wrap">
+  <div class="vt-slider">
+    <div class="sl-top">
+      <anvil-component type="Label" name="label_label" prop:role='["sl-label"]'></anvil-component>
+      <anvil-component type="Label" name="value_label" prop:role='["sl-value"]'></anvil-component>
+    </div>
+    <input type="range" class="sl-input" anvil:dom-node="input">
+  </div>
+</div>

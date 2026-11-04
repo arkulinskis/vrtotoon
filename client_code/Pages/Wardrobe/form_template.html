@@ -1,0 +1,129 @@
+<anvil-form layout="VRtoToon.Layouts.Shell">
+  <anvil-block slot="content">
+    <div class="ui-wrap page-wardrobe">
+      <div class="wdp-head">
+        <a class="ui-btn ghost sm" href="#casting/wardrobe"><i class="ic ic-back"></i><span>Wardrobe</span></a>
+        <div class="wdp-title">
+          <div class="eyebrow">The wardrobe</div>
+          <anvil-component type="Label" name="title_label" prop:role='["wdp-name"]'></anvil-component>
+          <anvil-component type="Label" name="base_label" prop:role='["fine-print"]'></anvil-component>
+        </div>
+        <span class="ui-spacer"></span>
+        <div class="ui-row wdp-tools">
+          <anvil-component type="Button" name="undo_button" prop:text="Undo" prop:role='["btn", "btn-sm", "btn-icon", "ic-undo"]' prop:tooltip="Undo"></anvil-component>
+          <anvil-component type="Button" name="redo_button" prop:text="Redo" prop:role='["btn", "btn-sm", "btn-icon", "ic-redo"]' prop:tooltip="Redo"></anvil-component>
+          <anvil-component type="Button" name="surprise_button" prop:text="Surprise me" prop:role='["btn", "btn-sm", "ic-dice"]' prop:tooltip="A random character (keeps the name)"></anvil-component>
+        </div>
+      </div>
+      <div class="wdp-grid">
+        <div class="wdp-stagecol">
+          <div class="wdp-stage">
+            <anvil-component type="VRtoToon.Components.Turntable" name="turntable"></anvil-component>
+            <span class="cs-hint">Drag to turn</span>
+          </div>
+          <div class="wdp-try">
+            <b class="small">Screen test</b>
+            <anvil-component type="RepeatingPanel" name="try_emo_panel" prop:item_template="VRtoToon.Items.Chip" prop:role='["chip-row", "chip-small"]'></anvil-component>
+            <anvil-component type="RepeatingPanel" name="try_gest_panel" prop:item_template="VRtoToon.Items.Chip" prop:role='["chip-row", "chip-small"]'></anvil-component>
+          </div>
+        </div>
+        <div class="wdp-panel">
+          <nav class="ed-tabs wdp-tabs" aria-label="Character parts">
+            <anvil-component type="Button" name="tab_body" prop:text="Body" prop:role='["tab", "on"]'></anvil-component>
+            <anvil-component type="Button" name="tab_face" prop:text="Face" prop:role='["tab"]'></anvil-component>
+            <anvil-component type="Button" name="tab_hair" prop:text="Hair &amp; hat" prop:role='["tab"]'></anvil-component>
+            <anvil-component type="Button" name="tab_outfit" prop:text="Colours" prop:role='["tab"]'></anvil-component>
+            <anvil-component type="Button" name="tab_extras" prop:text="Extras" prop:role='["tab"]'></anvil-component>
+            <anvil-component type="Button" name="tab_card" prop:text="Name &amp; voice" prop:role='["tab"]'></anvil-component>
+          </nav>
+
+          <div class="wdp-part" anvil:name="part_body">
+            <b class="small">Species</b>
+            <anvil-component type="RepeatingPanel" name="species_panel" prop:item_template="VRtoToon.Items.Chip" prop:role='["chip-row", "chip-wrap", "chip-small"]'></anvil-component>
+            <b class="small">Body shape</b>
+            <anvil-component type="RepeatingPanel" name="torso_panel" prop:item_template="VRtoToon.Items.Chip" prop:role='["chip-row", "chip-wrap", "chip-small"]'></anvil-component>
+            <div class="wdp-sliders">
+              <anvil-component type="VRtoToon.Components.Slider" name="s_h" prop:label="Height" prop:min_value="0.65" prop:max_value="1.3"></anvil-component>
+              <anvil-component type="VRtoToon.Components.Slider" name="s_girth" prop:label="Build" prop:min_value="0.7" prop:max_value="1.5"></anvil-component>
+              <anvil-component type="VRtoToon.Components.Slider" name="s_head" prop:label="Head size" prop:min_value="0.8" prop:max_value="1.35"></anvil-component>
+              <anvil-component type="VRtoToon.Components.Slider" name="s_legs" prop:label="Legs" prop:min_value="0.75" prop:max_value="1.3"></anvil-component>
+              <anvil-component type="VRtoToon.Components.Slider" name="s_arms" prop:label="Arms" prop:min_value="0.8" prop:max_value="1.25"></anvil-component>
+              <anvil-component type="VRtoToon.Components.Slider" name="s_hand" prop:label="Hands" prop:min_value="0.75" prop:max_value="1.5"></anvil-component>
+            </div>
+          </div>
+
+          <div class="wdp-part" anvil:name="part_face">
+            <div class="wdp-sliders">
+              <anvil-component type="VRtoToon.Components.Slider" name="f_eyes" prop:label="Eye size" prop:min_value="0.6" prop:max_value="1.5"></anvil-component>
+              <anvil-component type="VRtoToon.Components.Slider" name="f_spread" prop:label="Eye spacing" prop:min_value="0.7" prop:max_value="1.4"></anvil-component>
+              <anvil-component type="VRtoToon.Components.Slider" name="f_lift" prop:label="Eye height" prop:min_value="-1" prop:max_value="1" prop:fmt="signed"></anvil-component>
+              <anvil-component type="VRtoToon.Components.Slider" name="f_tall" prop:label="Eye shape (round to tall)" prop:min_value="0.7" prop:max_value="1.6"></anvil-component>
+              <anvil-component type="VRtoToon.Components.Slider" name="f_brows" prop:label="Brows (0 = none)" prop:min_value="0" prop:max_value="2"></anvil-component>
+              <anvil-component type="VRtoToon.Components.Slider" name="f_nose" prop:label="Nose (0 = none)" prop:min_value="0" prop:max_value="2"></anvil-component>
+              <anvil-component type="VRtoToon.Components.Slider" name="f_mouth" prop:label="Mouth width" prop:min_value="0.6" prop:max_value="1.5"></anvil-component>
+              <anvil-component type="VRtoToon.Components.Slider" name="f_earSize" prop:label="Ear size" prop:min_value="0.6" prop:max_value="1.6"></anvil-component>
+            </div>
+            <b class="small">Ears</b>
+            <anvil-component type="RepeatingPanel" name="ears_panel" prop:item_template="VRtoToon.Items.Chip" prop:role='["chip-row", "chip-wrap", "chip-small"]'></anvil-component>
+            <div class="ui-row wdp-checks">
+              <anvil-component type="CheckBox" name="freckles_check" prop:text="Freckles"></anvil-component>
+              <anvil-component type="CheckBox" name="lashes_check" prop:text="Lashes"></anvil-component>
+              <anvil-component type="CheckBox" name="cheeks_check" prop:text="Rosy cheeks"></anvil-component>
+            </div>
+            <anvil-component type="VRtoToon.Components.ColorPick" name="c_eyes" prop:label="Eyes" prop:palette="eyes"></anvil-component>
+          </div>
+
+          <div class="wdp-part" anvil:name="part_hair">
+            <b class="small">Hair</b>
+            <anvil-component type="Label" name="hair_note" prop:role='["fine-print"]' prop:text="Hair grows on humans only (animals keep their fur)."></anvil-component>
+            <anvil-component type="RepeatingPanel" name="hair_panel" prop:item_template="VRtoToon.Items.Chip" prop:role='["chip-row", "chip-wrap", "chip-small"]'></anvil-component>
+            <anvil-component type="VRtoToon.Components.ColorPick" name="c_hair" prop:label="Hair, brows and moustache" prop:palette="hair"></anvil-component>
+            <b class="small">Hat</b>
+            <anvil-component type="RepeatingPanel" name="hat_panel" prop:item_template="VRtoToon.Items.Chip" prop:role='["chip-row", "chip-wrap", "chip-small"]'></anvil-component>
+            <anvil-component type="VRtoToon.Components.ColorPick" name="c_hat" prop:label="Hat colour" prop:palette="clothes" prop:auto="true"></anvil-component>
+          </div>
+
+          <div class="wdp-part" anvil:name="part_outfit">
+            <anvil-component type="VRtoToon.Components.ColorPick" name="c_skin" prop:label="Skin or fur" prop:palette="skin"></anvil-component>
+            <anvil-component type="VRtoToon.Components.ColorPick" name="c_fur2" prop:label="Second fur (tummy, snout, ears)" prop:palette="skin"></anvil-component>
+            <anvil-component type="VRtoToon.Components.ColorPick" name="c_shirt" prop:label="Top" prop:palette="clothes"></anvil-component>
+            <anvil-component type="VRtoToon.Components.ColorPick" name="c_pants" prop:label="Trousers" prop:palette="clothes"></anvil-component>
+            <anvil-component type="VRtoToon.Components.ColorPick" name="c_shoes" prop:label="Shoes" prop:palette="clothes"></anvil-component>
+            <anvil-component type="VRtoToon.Components.ColorPick" name="c_accent" prop:label="Accent (bows, ties, scarves, trims)" prop:palette="clothes"></anvil-component>
+            <anvil-component type="VRtoToon.Components.ColorPick" name="c_gloves" prop:label="Gloves" prop:palette="clothes"></anvil-component>
+          </div>
+
+          <div class="wdp-part" anvil:name="part_extras">
+            <div class="ui-row"><b class="small">Accessories</b><span class="ui-spacer"></span><anvil-component type="Label" name="acc_count" prop:role='["fine-print"]'></anvil-component></div>
+            <anvil-component type="RepeatingPanel" name="acc_panel" prop:item_template="VRtoToon.Items.Chip" prop:role='["chip-row", "chip-wrap", "chip-small"]'></anvil-component>
+            <p class="fine-print">Up to six. Cartoon gloves put white gloves with a cuff on the hands, classic cartoon style (pick their colour under Colours).</p>
+          </div>
+
+          <div class="wdp-part" anvil:name="part_card">
+            <div class="ui-stack">
+              <label class="ui-field"><span>Name</span><anvil-component type="TextBox" name="name_box" prop:placeholder="Max Noir"></anvil-component></label>
+              <label class="ui-field"><span>Tagline</span><anvil-component type="TextBox" name="tag_box" prop:placeholder="The hero nobody saw coming"></anvil-component></label>
+              <div class="wd-grid">
+                <label class="ui-field"><span>Casting type</span><anvil-component type="DropDown" name="role_dd"></anvil-component></label>
+                <label class="ui-field"><span>Voice</span><anvil-component type="DropDown" name="voice_dd"></anvil-component></label>
+              </div>
+              <span class="fine-print">The voice is a hint: when this character joins a cast, its voice effect starts from it (robot, radio, echo...). You still speak the lines yourself.</span>
+              <label class="ui-field"><span>Started from</span><anvil-component type="DropDown" name="base_dd"></anvil-component></label>
+              <span class="fine-print">Picking another actor here starts again from their look (Undo brings yours back).</span>
+            </div>
+          </div>
+
+          <div class="wdp-foot">
+            <anvil-component type="Label" name="message" prop:role='["msg-error"]' prop:visible="false"></anvil-component>
+            <div class="ui-row end">
+              <anvil-component type="Button" name="delete_button" prop:text="Delete" prop:role='["btn", "btn-ghost", "btn-danger", "ic-trash"]' prop:visible="false"></anvil-component>
+              <span class="ui-spacer"></span>
+              <anvil-component type="Button" name="copy_button" prop:text="Save as a copy" prop:role='["btn", "ic-copy"]' prop:visible="false"></anvil-component>
+              <anvil-component type="Button" name="save_button" prop:text="Hang it in the wardrobe" prop:role='["btn", "btn-primary", "ic-check"]'></anvil-component>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </anvil-block>
+</anvil-form>

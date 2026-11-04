@@ -239,10 +239,16 @@
   VT.VOICE_HINT = { bright: 'none', warm: 'none', deep: 'none', smoky: 'none', grand: 'echo', radio: 'radio', robot: 'robot', echo: 'echo' };
   VT.HAIRS = ['none', 'short', 'spiky', 'bob', 'long', 'bun', 'curly', 'afro', 'mohawk', 'slick', 'pigtails'];
   VT.HATS = ['none', 'top', 'fedora', 'cowboy', 'beret', 'crown', 'space', 'witch', 'chef', 'cap', 'police', 'knight', 'bow', 'headphones'];
-  VT.ACCS = ['bowtie', 'tie', 'cape', 'scarf', 'glasses', 'shades', 'monocle', 'mustache', 'beard', 'badge', 'necklace', 'belt', 'vest', 'collar'];
+  VT.ACCS = ['bowtie', 'tie', 'cape', 'scarf', 'glasses', 'shades', 'monocle', 'mustache', 'beard', 'badge', 'necklace', 'belt', 'vest', 'collar', 'gloves'];
   VT.SPECIES = ['human', 'dog', 'cat', 'bear', 'rabbit', 'fox', 'frog', 'robot', 'ghost', 'alien', 'ogre', 'penguin', 'dino'];
+  VT.TORSOS = ['round', 'pear', 'box', 'egg', 'dress', 'coat'];
+  VT.EARS = ['auto', 'none', 'human', 'round', 'point', 'long', 'flop', 'horn', 'antenna'];
+  VT.VOICES = ['bright', 'warm', 'deep', 'smoky', 'grand', 'radio', 'robot', 'echo'];
+  // what the character editor's face sliders change (1 = as built; nose 0 = no nose)
+  var FACE0 = { eyes: 1, spread: 1, lift: 0, tall: 1, brows: 1, nose: 1, mouth: 1, ears: 'auto', earSize: 1, freckles: 0, lashes: 0, cheeks: 0 };
+  VT.FACE0 = FACE0;
 
-  var BUILD0 = { h: 1, head: 1, girth: 1, legs: 1, arms: 1, torso: 'round' };
+  var BUILD0 = { h: 1, head: 1, girth: 1, legs: 1, arms: 1, hand: 1, torso: 'round' };
   var COLORS0 = { skin: SKIN.a, fur2: '#ffffff', hair: '#4a2c17', shirt: '#4d8fd6', pants: '#2b2d42', shoes: '#1b1b1b', accent: '#ffd166', eyes: '#2a1a10' };
   VT.normalize = function (def) {
     def = def || VT.CAST[0];
@@ -250,19 +256,21 @@
     var d = JSON.parse(JSON.stringify(base ? VT.makeDef(base, def) : def));
     d.build = Object.assign({}, BUILD0, d.build || {});
     d.colors = Object.assign({}, COLORS0, d.colors || {});
+    d.face = Object.assign({}, FACE0, d.face || {});
+    if (VT.EARS.indexOf(d.face.ears) < 0) d.face.ears = 'auto';
     d.species = VT.SPECIES.indexOf(d.species) >= 0 ? d.species : 'human';
     d.hair = d.hair || (d.species === 'human' ? 'short' : 'none');
     d.hat = d.hat || 'none';
     d.acc = (d.acc || []).slice(0, 6);
     return d;
   };
-  /* A variant of a premade character: overrides win, colours and build merge (the wardrobe saves {base, ...overrides}). */
+  /* A variant of a premade character: overrides win, colours, build and face merge (the wardrobe saves {base, ...overrides}). */
   VT.makeDef = function (base, over) {
     var b = typeof base === 'string' ? VT.CAST_BY[base] : base;
     var d = JSON.parse(JSON.stringify(b || VT.CAST[0]));
     over = over || {};
     Object.keys(over).forEach(function (k) {
-      if (k === 'colors' || k === 'build') d[k] = Object.assign({}, d[k] || {}, over[k]);
+      if (k === 'colors' || k === 'build' || k === 'face') d[k] = Object.assign({}, d[k] || {}, over[k]);
       else if (k !== 'base') d[k] = over[k];
     });
     d.base = b ? b.id : null;
@@ -362,8 +370,9 @@
       f.position.y = -P.fore / 2; fore.add(f);
       if (sp !== 'penguin') { var el = mesh(SPH(), armCol, { outline: false }); at(el, 0, 0, 0, ar * 0.98); fore.add(el); }
       var hand = grp('arm_' + key + '_hand', fore); hand.position.y = -P.fore;
-      var handCol = sp === 'robot' ? c.accent : sp === 'penguin' ? skin : (sp === 'human' && (d.acc.indexOf('cape') >= 0 && d.hat === 'top') ? '#f7f4ee' : skin);
-      var H = self2._buildHand(hand, handCol, S * (sp === 'dino' ? 0.75 : sp === 'penguin' ? 0.6 : 1) * (d.build.hand || 1), side, sp);
+      var gloves = d.acc.indexOf('gloves') >= 0;
+      var handCol = gloves ? (c.gloves || '#f7f4ee') : sp === 'robot' ? c.accent : sp === 'penguin' ? skin : (sp === 'human' && (d.acc.indexOf('cape') >= 0 && d.hat === 'top') ? '#f7f4ee' : skin);
+      var H = self2._buildHand(hand, handCol, S * (sp === 'dino' ? 0.75 : sp === 'penguin' ? 0.6 : 1) * (d.build.hand || 1), side, sp, gloves);
       self2.arms[key] = { side: side, shoulder: sh, upper: upper, fore: fore, hand: hand, a: P.upper, b: P.fore, H: H };
     });
 
@@ -419,7 +428,7 @@
 
   /* ---- the head: shape, ears, eyes, lids, brows, mouth, nose, hair, hats, face accessories */
   Actor.prototype._buildHead = function (hm, d, hR, S) {
-    var c = d.colors, sp = d.species, f = this.face = {};
+    var c = d.colors, sp = d.species, f = this.face = {}, FX = d.face || FACE0;
     var skin = c.skin, fur2 = c.fur2;
     var rx = hR, ry = hR * 0.94, rz = hR * 0.92;
     var shape;
@@ -449,9 +458,9 @@
       hm.add(snout);
       snoutZ = snout.position.z + snout.scale.z * 0.85;
       var noseCol = sp === 'ogre' || sp === 'dino' ? shade(skin, -0.12) : sp === 'cat' || sp === 'rabbit' ? '#ff8fab' : '#1d1416';
-      var nose = mesh(SPH(), noseCol);
-      at(nose, 0, snout.position.y + sn[1] * hR * 0.45, snoutZ - 0.01 * S, (sp === 'cat' || sp === 'rabbit' ? 0.06 : 0.11) * hR / 0.23 * 0.23, 0.06 * hR / 0.23 * 0.23, 0.06 * hR / 0.23 * 0.23);
-      hm.add(nose);
+      var nose = mesh(SPH(), noseCol), nk = FX.nose == null ? 1 : FX.nose;
+      at(nose, 0, snout.position.y + sn[1] * hR * 0.45, snoutZ - 0.01 * S, (sp === 'cat' || sp === 'rabbit' ? 0.06 : 0.11) * hR * nk, 0.06 * hR * nk, 0.06 * hR * nk);
+      if (nk > 0.05) hm.add(nose);
       mouthY = (snout.position.y - sn[1] * hR * 0.35) / ry;
       f.mouthZ = snoutZ - 0.035 * S;
     }
@@ -466,11 +475,14 @@
       else if (kind === 'horn') { e = mesh(CONE(), c.accent); at(e, 0, 0.18 * hR, 0, 0.11 * hR, 0.38 * hR, 0.11 * hR); g.position.set(side * rx * 0.52, ry * 0.78, 0); g.rotation.z = -side * 22 * D2R; }
       else if (kind === 'antenna') { e = mesh(CYL(1, 8), INK, { outline: false }); at(e, 0, 0.22 * hR, 0, 0.012 * S, 0.45 * hR, 0.012 * S); var ball = mesh(SPH(), c.accent); at(ball, 0, 0.47 * hR, 0, 0.07 * hR); g.add(ball); g.position.set(side * rx * 0.35, ry * 0.92, 0); g.rotation.z = -side * 20 * D2R; }
       if (e) g.add(e);
+      g.scale.multiplyScalar(FX.earSize || 1);
       return g;
     }
     var earKind = { human: 'human', dog: 'flop', cat: 'point', bear: 'round', rabbit: 'long', fox: 'point', ogre: 'horn', alien: 'antenna' }[sp];
-    if (earKind && !(sp === 'human' && (d.hat === 'space' || d.hat === 'knight' || d.hair === 'long' || d.hair === 'bob'))) { ear(-1, earKind); ear(1, earKind); }
-    if (sp === 'ogre') { ear(-1, 'human'); ear(1, 'human'); }
+    if (FX.ears && FX.ears !== 'auto') earKind = FX.ears === 'none' ? null : FX.ears;
+    var hidden = (sp === 'human' && (d.hat === 'space' || d.hat === 'knight')) || (earKind === 'human' && sp === 'human' && (d.hair === 'long' || d.hair === 'bob'));
+    if (earKind && !hidden) { ear(-1, earKind); ear(1, earKind); }
+    if (sp === 'ogre' && (!FX.ears || FX.ears === 'auto')) { ear(-1, 'human'); ear(1, 'human'); }
     if (sp === 'robot') {
       var ant = grp('antenna', hm); ant.position.y = hR * 0.85;
       var stick = mesh(CYL(1, 8), INK, { outline: false }); at(stick, 0, 0.1 * hR, 0, 0.012 * S, 0.22 * hR, 0.012 * S); ant.add(stick);
@@ -489,6 +501,7 @@
     var eyePitch = sp === 'frog' ? 48 : sp === 'robot' ? 10 : sp === 'alien' ? 6 : ['dog', 'bear', 'fox', 'dino', 'cat', 'rabbit', 'ogre'].indexOf(sp) >= 0 ? 18 : 8;
     var eyeR = (sp === 'alien' ? 0.27 : sp === 'frog' ? 0.25 : sp === 'robot' ? 0.26 : sp === 'ghost' ? 0.2 : 0.205) * hR;
     var eyeTall = sp === 'alien' ? 1.35 : sp === 'ghost' ? 1.4 : 1.12;
+    eyeR *= FX.eyes || 1; eyeYaw *= FX.spread || 1; eyePitch += (FX.lift || 0) * 10; eyeTall *= FX.tall || 1;
     f.eyes = [];
     [-1, 1].forEach(function (side) {
       var pos = onFace(side * eyeYaw, eyePitch, sp === 'frog' ? 1.02 : 0.94);
@@ -515,12 +528,22 @@
       var lm = mesh(DOME(), sp === 'robot' ? shade(skin, -0.15) : sp === 'penguin' ? skin : skin, { ow: 0.0026 });
       at(lm, 0, 0, 0, eyeR * 1.1, eyeR * eyeTall * 1.1, eyeR * 0.9);
       lid.add(lm);
+      if (FX.lashes) {  // three lashes on the lid's rim, outer side longest (they blink with the lid)
+        for (var li = 0; li < 3; li++) {
+          var la = (side * (10 + li * 26)) * D2R;
+          var lash = mesh(CAPS(0.0045 * S, eyeR * (0.22 + li * 0.08)), INK, { outline: false, basic: true });
+          lash.position.set(Math.sin(la) * eyeR * 1.08, eyeR * 0.06, Math.cos(la) * eyeR * 0.88);
+          lash.rotation.set(-35 * D2R, 0, -side * (20 + li * 22) * D2R);
+          lid.add(lash);
+        }
+      }
       // brow
       var brow = grp('brow', hm);
       var bp = onFace(side * eyeYaw * 0.95, eyePitch + (sp === 'frog' ? 18 : 24), 1.0);
       brow.position.copy(bp);
       brow.lookAt(new V3(bp.x * 0.3, bp.y, bp.z + 4));
-      var bm = mesh(CAPS(0.024 * hR / 0.23 * (sp === 'human' ? 1 : 0.85), eyeR * 0.95), sp === 'human' ? c.hair : shade(skin, -0.28), { outline: false });
+      var bm = mesh(CAPS(0.024 * hR / 0.23 * (sp === 'human' ? 1 : 0.85) * (FX.brows == null ? 1 : FX.brows), eyeR * 0.95), sp === 'human' ? c.hair : shade(skin, -0.28), { outline: false });
+      if (FX.brows != null && FX.brows < 0.15) bm.visible = false;
       bm.rotation.z = Math.PI / 2; bm.scale.set(1, 1, 0.6);
       var bpiv = grp('', brow); bpiv.add(bm);
       f.eyes.push({ side: side, g: eg, ball: ball, pupil: pupil, iris: iris, lid: lid, brow: brow, bpiv: bpiv, browY0: 0, eyeR: eyeR, tall: eyeTall });
@@ -539,7 +562,7 @@
     if (sp === 'ghost' || sp === 'alien' || sp === 'human') { my = (sp === 'human' ? -0.43 : -0.38) * ry; mz = Math.sqrt(Math.max(0.0001, 1 - (my * my) / (ry * ry))) * rz * 0.97; }
     var mg = this.mouth = grp('mouth', hm);
     mg.position.set(0, my, mz);
-    var mw = (sp === 'frog' ? 0.52 : sp === 'ogre' ? 0.42 : sp === 'robot' ? 0.4 : 0.3) * hR;
+    var mw = (sp === 'frog' ? 0.52 : sp === 'ogre' ? 0.42 : sp === 'robot' ? 0.4 : 0.3) * hR * (FX.mouth || 1);
     var hole = mesh(SPH(), sp === 'robot' ? '#0d2a30' : '#5a1420', { outline: false });
     at(hole, 0, 0, -0.012 * S, mw, 0.001, 0.04 * S);
     mg.add(hole);
@@ -557,7 +580,17 @@
       var np = onFace(0, -8, 0.98);
       at(nose2, 0, np.y, np.z, 0.075 * hR, 0.08 * hR, 0.09 * hR);
       if (sp === 'ogre') nose2.scale.multiplyScalar(1.6);
-      hm.add(nose2);
+      var nk2 = FX.nose == null ? 1 : FX.nose;
+      nose2.scale.multiplyScalar(nk2);
+      if (nk2 > 0.05) hm.add(nose2);
+    }
+    if (FX.freckles) {  // a few dots across each cheek
+      [-1, 1].forEach(function (side) {
+        [[34, -12], [42, -6], [46, -17], [38, -21], [50, -10]].forEach(function (yp) {
+          var fp = onFace(side * yp[0], yp[1], 1.0), dot = mesh(SPH(), shade(skin, -0.2), { outline: false });
+          at(dot, fp.x, fp.y, fp.z, 0.016 * hR, 0.016 * hR, 0.008 * hR); dot.lookAt(fp.clone().multiplyScalar(2)); hm.add(dot);
+        });
+      });
     }
     // blush, tear, sweat (shown by emotions)
     f.blush = [];
@@ -624,49 +657,50 @@
 
   Actor.prototype._buildHat = function (hm, d, hR, rx, ry, rz, S) {
     var h = d.hat, c = d.colors, g = grp('hat', hm), m;
+    var hc = function (dflt) { return c.hat || dflt; };  // the editor's hat colour, else the hat's own
     var top = ry * 0.95;
     if (h === 'top') {
-      m = mesh(CYL(1), '#151214'); at(m, 0, top + 0.32 * hR, -0.04 * hR, 0.58 * hR, 0.7 * hR, 0.58 * hR); g.add(m);
-      m = mesh(CYL(1), '#151214'); at(m, 0, top - 0.02 * hR, -0.04 * hR, 0.95 * hR, 0.05 * hR, 0.95 * hR); g.add(m);
+      m = mesh(CYL(1), hc('#151214')); at(m, 0, top + 0.32 * hR, -0.04 * hR, 0.58 * hR, 0.7 * hR, 0.58 * hR); g.add(m);
+      m = mesh(CYL(1), hc('#151214')); at(m, 0, top - 0.02 * hR, -0.04 * hR, 0.95 * hR, 0.05 * hR, 0.95 * hR); g.add(m);
       m = mesh(CYL(1), c.accent, { outline: false }); at(m, 0, top + 0.06 * hR, -0.04 * hR, 0.595 * hR, 0.1 * hR, 0.595 * hR); g.add(m);
       g.rotation.z = -6 * D2R;
     } else if (h === 'fedora') {
-      m = mesh(CYL(0.85), '#5b5560'); at(m, 0, top + 0.16 * hR, 0, 0.72 * hR, 0.42 * hR, 0.72 * hR); g.add(m);
-      m = mesh(CYL(1), '#5b5560'); at(m, 0, top - 0.04 * hR, 0, 1.18 * hR, 0.04 * hR, 1.18 * hR); g.add(m);
+      m = mesh(CYL(0.85), hc('#5b5560')); at(m, 0, top + 0.16 * hR, 0, 0.72 * hR, 0.42 * hR, 0.72 * hR); g.add(m);
+      m = mesh(CYL(1), hc('#5b5560')); at(m, 0, top - 0.04 * hR, 0, 1.18 * hR, 0.04 * hR, 1.18 * hR); g.add(m);
       m = mesh(CYL(1), '#1d1416', { outline: false }); at(m, 0, top + 0.03 * hR, 0, 0.705 * hR, 0.09 * hR, 0.705 * hR); g.add(m);
       g.rotation.set(-8 * D2R, 0, 8 * D2R);
     } else if (h === 'cowboy') {
-      m = mesh(CYL(0.85), '#8a5a2b'); at(m, 0, top + 0.18 * hR, 0, 0.66 * hR, 0.42 * hR, 0.7 * hR); g.add(m);
-      m = mesh(TOR(1.0 * hR, 0.1 * hR), '#8a5a2b'); at(m, 0, top - 0.02 * hR, 0); m.rotation.x = Math.PI / 2; m.scale.set(1.15, 1, 2.2); g.add(m);
-      m = mesh(CYL(1), '#8a5a2b'); at(m, 0, top - 0.04 * hR, 0, 1.15 * hR, 0.035 * hR, 1.15 * hR); g.add(m);
+      m = mesh(CYL(0.85), hc('#8a5a2b')); at(m, 0, top + 0.18 * hR, 0, 0.66 * hR, 0.42 * hR, 0.7 * hR); g.add(m);
+      m = mesh(TOR(1.0 * hR, 0.1 * hR), hc('#8a5a2b')); at(m, 0, top - 0.02 * hR, 0); m.rotation.x = Math.PI / 2; m.scale.set(1.15, 1, 2.2); g.add(m);
+      m = mesh(CYL(1), hc('#8a5a2b')); at(m, 0, top - 0.04 * hR, 0, 1.15 * hR, 0.035 * hR, 1.15 * hR); g.add(m);
       m = mesh(CYL(1), '#3a2414', { outline: false }); at(m, 0, top + 0.03 * hR, 0, 0.665 * hR, 0.08 * hR, 0.705 * hR); g.add(m);
     } else if (h === 'beret') {
       m = mesh(SPH(), c.accent); at(m, 0.1 * hR, top + 0.08 * hR, -0.04 * hR, 0.95 * hR, 0.26 * hR, 0.92 * hR); m.rotation.z = -14 * D2R; g.add(m);
       m = mesh(CYL(1, 8), c.accent); at(m, 0.12 * hR, top + 0.34 * hR, -0.04 * hR, 0.04 * hR, 0.1 * hR, 0.04 * hR); g.add(m);
     } else if (h === 'crown') {
-      m = mesh(CYL(1, 24), '#f2c14e'); at(m, 0, top + 0.1 * hR, 0, 0.55 * hR, 0.22 * hR, 0.55 * hR); g.add(m);
-      for (var i = 0; i < 6; i++) { var a = i / 6 * Math.PI * 2; var p = mesh(CONE(), '#f2c14e'); at(p, Math.sin(a) * 0.48 * hR, top + 0.3 * hR, Math.cos(a) * 0.48 * hR, 0.1 * hR, 0.22 * hR, 0.1 * hR); g.add(p); }
+      m = mesh(CYL(1, 24), hc('#f2c14e')); at(m, 0, top + 0.1 * hR, 0, 0.55 * hR, 0.22 * hR, 0.55 * hR); g.add(m);
+      for (var i = 0; i < 6; i++) { var a = i / 6 * Math.PI * 2; var p = mesh(CONE(), hc('#f2c14e')); at(p, Math.sin(a) * 0.48 * hR, top + 0.3 * hR, Math.cos(a) * 0.48 * hR, 0.1 * hR, 0.22 * hR, 0.1 * hR); g.add(p); }
       m = mesh(SPH(), '#d7263d', { outline: false }); at(m, 0, top + 0.12 * hR, 0.55 * hR, 0.07 * hR); g.add(m);
     } else if (h === 'space') {
       m = mesh(SPH(), '#bfe6ff', { opacity: 0.28 }); at(m, 0, 0.04 * hR, 0, rx * 1.38, ry * 1.38, rz * 1.38); g.add(m);
       m = mesh(TOR(rx * 1.18, 0.08 * hR), c.shirt); at(m, 0, -ry * 0.98, 0); m.rotation.x = Math.PI / 2; g.add(m);
       m = mesh(SPH(), c.accent); at(m, rx * 1.2, 0.2 * hR, 0, 0.1 * hR); g.add(m);
     } else if (h === 'witch') {
-      m = mesh(CONE(), '#2d1b3d'); at(m, 0, top + 0.5 * hR, -0.06 * hR, 0.62 * hR, 1.15 * hR, 0.62 * hR); m.rotation.set(-12 * D2R, 0, 10 * D2R); g.add(m);
-      m = mesh(CYL(1), '#2d1b3d'); at(m, 0, top - 0.02 * hR, -0.02 * hR, 1.25 * hR, 0.035 * hR, 1.25 * hR); g.add(m);
+      m = mesh(CONE(), hc('#2d1b3d')); at(m, 0, top + 0.5 * hR, -0.06 * hR, 0.62 * hR, 1.15 * hR, 0.62 * hR); m.rotation.set(-12 * D2R, 0, 10 * D2R); g.add(m);
+      m = mesh(CYL(1), hc('#2d1b3d')); at(m, 0, top - 0.02 * hR, -0.02 * hR, 1.25 * hR, 0.035 * hR, 1.25 * hR); g.add(m);
       m = mesh(CYL(1), c.accent, { outline: false }); at(m, 0, top + 0.05 * hR, -0.02 * hR, 0.6 * hR, 0.08 * hR, 0.6 * hR); g.add(m);
     } else if (h === 'chef') {
-      m = mesh(CYL(1), '#ffffff'); at(m, 0, top + 0.18 * hR, -0.02 * hR, 0.7 * hR, 0.42 * hR, 0.7 * hR); g.add(m);
-      [-0.32, 0, 0.32].forEach(function (x) { var p = mesh(SPH(), '#ffffff'); at(p, x * hR, top + 0.52 * hR, -0.02 * hR, 0.38 * hR); g.add(p); });
+      m = mesh(CYL(1), hc('#ffffff')); at(m, 0, top + 0.18 * hR, -0.02 * hR, 0.7 * hR, 0.42 * hR, 0.7 * hR); g.add(m);
+      [-0.32, 0, 0.32].forEach(function (x) { var p = mesh(SPH(), hc('#ffffff')); at(p, x * hR, top + 0.52 * hR, -0.02 * hR, 0.38 * hR); g.add(p); });
     } else if (h === 'cap') {
       m = mesh(DOME(), c.accent); at(m, 0, top - 0.12 * hR, -0.02 * hR, rx * 1.06, ry * 0.62, rz * 1.06); g.add(m);
       m = mesh(CYL(1), c.accent); at(m, 0, top - 0.1 * hR, -rz * 1.1, 0.5 * hR, 0.035 * hR, 0.52 * hR); m.scale.x *= 1.2; g.add(m);
     } else if (h === 'police') {
-      m = mesh(CYL(1.15), '#1d2f5a'); at(m, 0, top + 0.06 * hR, 0, 0.8 * hR, 0.3 * hR, 0.8 * hR); g.add(m);
+      m = mesh(CYL(1.15), hc('#1d2f5a')); at(m, 0, top + 0.06 * hR, 0, 0.8 * hR, 0.3 * hR, 0.8 * hR); g.add(m);
       m = mesh(CYL(1), '#111111'); at(m, 0, top - 0.06 * hR, 0.42 * hR, 0.5 * hR, 0.035 * hR, 0.42 * hR); g.add(m);
       m = mesh(SPH(), '#e8b54a', { outline: false }); at(m, 0, top + 0.08 * hR, 0.78 * hR, 0.1 * hR, 0.1 * hR, 0.04 * hR); g.add(m);
     } else if (h === 'knight') {
-      m = mesh(SPH(), '#b9c2cc'); at(m, 0, 0.06 * hR, -0.02 * hR, rx * 1.12, ry * 1.12, rz * 1.12); g.add(m);
+      m = mesh(SPH(), hc('#b9c2cc')); at(m, 0, 0.06 * hR, -0.02 * hR, rx * 1.12, ry * 1.12, rz * 1.12); g.add(m);
       m = mesh(VT.roundedBox(1.6 * hR, 0.14 * hR, 0.3 * hR, 0.05 * hR), '#6b7480'); at(m, 0, 0.18 * hR, rz * 0.92); g.add(m);
       m = mesh(SPH(), d.colors.accent); at(m, 0, ry * 1.2, -0.25 * hR, 0.16 * hR, 0.4 * hR, 0.45 * hR); m.rotation.x = -30 * D2R; g.add(m);
       this._visor = true;
@@ -675,7 +709,7 @@
       m = mesh(SPH(), c.accent); at(m, 0, top + 0.1 * hR, 0.1 * hR, 0.07 * hR); g.add(m);
       g.rotation.z = -25 * D2R;
     } else if (h === 'headphones') {
-      m = mesh(TOR(rx * 1.05, 0.05 * hR, Math.PI), '#222222'); at(m, 0, 0.1 * hR, 0); g.add(m);
+      m = mesh(TOR(rx * 1.05, 0.05 * hR, Math.PI), hc('#222222')); at(m, 0, 0.1 * hR, 0); g.add(m);
       [-1, 1].forEach(function (s) { var e = mesh(CYL(1), c.accent); at(e, s * rx * 1.05, 0.05 * hR, 0, 0.25 * hR, 0.14 * hR, 0.25 * hR); e.rotation.z = Math.PI / 2; g.add(e); });
     }
   };
@@ -737,31 +771,79 @@
     }
   };
 
-  /* ---- mitten hands: palm, thumb, fingers block, index. Built hanging down (-Y), palm facing the body side (+X for the left) */
-  Actor.prototype._buildHand = function (hand, col, S, side, sp) {
-    var H = {};
-    var palm = mesh(SPH(), col); at(palm, 0, -0.045 * S, 0, 0.042 * S, 0.048 * S, 0.026 * S); hand.add(palm);
-    var fing = grp('fingers', hand); fing.position.set(0, -0.08 * S, -0.004 * S);
-    var fm = mesh(SPH(), col); at(fm, 0, -0.03 * S, 0, 0.036 * S, 0.04 * S, 0.022 * S); fing.add(fm);
-    var idx = grp('index', hand); idx.position.set(0, -0.08 * S, 0.014 * S);
-    var im = mesh(CAPS(0.011 * S, 0.04 * S), col); im.position.y = -0.03 * S; idx.add(im);
-    var th = grp('thumb', hand); th.position.set(0, -0.04 * S, 0.026 * S);
-    var tm = mesh(CAPS(0.012 * S, 0.028 * S), col); tm.position.y = -0.02 * S; th.add(tm);
-    th.rotation.x = -35 * D2R;
-    if (sp === 'robot') { palm.scale.multiplyScalar(1.1); }
-    H.fing = fing; H.idx = idx; H.th = th;
+  /* ---- hand shapes. A shape is four curls, 0 straight .. 1 curled: [thumb, index, middle, ring]. Recordings store the
+     curls per frame (hand tracking or controller touch sensors); the first four ids are the old shape numbers 0-3. */
+  VT.HAND_SHAPES = [
+    { id: 'open', label: 'Open hand', emoji: '🖐️', c: [0.05, 0.04, 0.04, 0.06] },
+    { id: 'fist', label: 'Fist', emoji: '✊', c: [0.85, 1, 1, 1] },
+    { id: 'point', label: 'Point', emoji: '👉', c: [0.75, 0, 1, 1] },
+    { id: 'thumbs', label: 'Thumbs up', emoji: '👍', c: [0, 1, 1, 1] },
+    { id: 'peace', label: 'Peace', emoji: '✌️', c: [0.85, 0, 0, 1] },
+    { id: 'okay', label: 'OK', emoji: '👌', c: [0.62, 0.66, 0.08, 0.12] },
+    { id: 'rock', label: 'Rock on', emoji: '🤘', c: [0.75, 0, 1, 0] },
+    { id: 'relaxed', label: 'Relaxed', emoji: '🫳', c: [0.25, 0.2, 0.3, 0.4] }
+  ];
+  VT.HAND_BY = {};
+  VT.HAND_SHAPES.forEach(function (h, i) { h.n = i; VT.HAND_BY[h.id] = h; });
+  VT.handCurls = function (g) {
+    var s = VT.HAND_SHAPES[Math.max(0, Math.min(VT.HAND_SHAPES.length - 1, Math.round(g || 0)))];
+    return s.c.slice();
+  };
+  // the nearest named shape to a set of curls (old players read the shape number)
+  VT.nearestShape = function (c) {
+    var best = 0, bd = 1e9;
+    VT.HAND_SHAPES.forEach(function (h, i) { var d = 0; for (var k = 0; k < 4; k++) d += Math.abs(h.c[k] - (c[k] || 0)); if (d < bd) { bd = d; best = i; } });
+    return best;
+  };
+  /* a hand's rotation (actor space) from where the fingers point and where the palm faces: easier to author than angles */
+  VT.handQ = function (fx, fy, fz, px, py, pz) {
+    var y = new V3(-fx, -fy, -fz).normalize(), z = new V3(-px, -py, -pz);
+    z.sub(y.clone().multiplyScalar(z.dot(y))).normalize();
+    var x = new V3().crossVectors(y, z);
+    var q = new Q().setFromRotationMatrix(new T.Matrix4().makeBasis(x, y, z));
+    return [q.x, q.y, q.z, q.w];
+  };
+
+  /* ---- toon hands: a palm, a thumb and three fingers (index, middle, ring), two joints each. Built hanging down (-Y),
+     the palm towards -Z, the back of the hand +Z, the thumb towards the body's middle (-side x). WebXR's hand space maps
+     onto it with one fixed turn (vt-xr.js HAND_OFF: the XR fingers point -Z, the back of the hand +Y). */
+  Actor.prototype._buildHand = function (hand, col, S, side, sp, gloves) {
+    var H = { side: side, f: [] };
+    var palm = mesh(SPH(), col); at(palm, 0, -0.042 * S, -0.002 * S, 0.04 * S, 0.044 * S, 0.024 * S); hand.add(palm);
+    if (sp === 'robot') palm.scale.multiplyScalar(1.1);
+    if (gloves) { var cuff = mesh(TOR(0.034 * S, 0.012 * S), col); cuff.rotation.x = Math.PI / 2; cuff.position.y = -0.006 * S; hand.add(cuff); }
+    var R = 0.0108 * S;
+    var LEN = [[0.03, 0.024], [0.034, 0.026], [0.029, 0.022]];
+    for (var i = 0; i < 3; i++) {
+      var root = grp('finger_' + ['index', 'middle', 'ring'][i], hand);
+      root.position.set(-(1 - i) * side * 0.022 * S, -0.074 * S, -0.002 * S);
+      var a = LEN[i][0] * S, b = LEN[i][1] * S;
+      var s1 = grp('', root); var m1 = mesh(CAPS(R, Math.max(0.001, a - R)), col); m1.position.y = -a / 2; s1.add(m1);
+      var s2 = grp('', s1); s2.position.y = -a; var m2 = mesh(CAPS(R * 0.94, Math.max(0.001, b - R)), col); m2.position.y = -b / 2; s2.add(m2);
+      H.f.push({ root: root, a: s1, b: s2, splay: (i - 1) * side * 7 * D2R });
+    }
+    var th = grp('thumb', hand); th.position.set(-side * 0.032 * S, -0.03 * S, -0.008 * S);
+    var ta = 0.026 * S, tb = 0.022 * S;
+    var t1 = grp('', th); var tm1 = mesh(CAPS(R * 1.1, Math.max(0.001, ta - R)), col); tm1.position.y = -ta / 2; t1.add(tm1);
+    var t2 = grp('', t1); t2.position.y = -ta; var tm2 = mesh(CAPS(R, Math.max(0.001, tb - R)), col); tm2.position.y = -tb / 2; t2.add(tm2);
+    H.th = { root: th, a: t1, b: t2 };
     this._handShape(H, 0);
     return H;
   };
-  // 0 open, 1 fist, 2 point, 3 thumbs up
-  Actor.prototype._handShape = function (H, g) {
-    var curl = g === 1 || g === 2 || g === 3;
-    H.fing.rotation.x = curl ? 105 * D2R : 8 * D2R;
-    H.fing.scale.set(1, curl ? 0.7 : 1, 1);
-    H.idx.visible = g === 2 || !curl;
-    H.idx.rotation.x = g === 2 ? -8 * D2R : 10 * D2R;
-    H.idx.visible = g === 2;
-    H.th.rotation.x = g === 3 ? -170 * D2R : curl ? 30 * D2R : -35 * D2R;
+  // g = a shape number (VT.HAND_SHAPES), c = curls [thumb, index, middle, ring] (wins when given)
+  Actor.prototype._handShape = function (H, g, c) {
+    if (!H.f) return;
+    c = c && c.length >= 4 ? c : VT.handCurls(g);
+    for (var i = 0; i < 3; i++) {
+      var F = H.f[i], k = Math.max(0, Math.min(1, c[i + 1] || 0));
+      F.root.rotation.set(0, 0, F.splay * (1 - k));
+      F.a.rotation.x = k * 88 * D2R;
+      F.b.rotation.x = k * 100 * D2R;
+    }
+    var t = Math.max(0, Math.min(1, c[0] || 0)), s = H.side;
+    // open: out to the side and down; curled: folded across the front of the palm
+    H.th.root.rotation.set((18 + t * 62) * D2R, 0, -s * (58 - t * 70) * D2R, 'XZY');
+    H.th.b.rotation.x = t * 55 * D2R;
   };
 
   /* ------------------------------------------------------------------ posing */
@@ -806,7 +888,7 @@
       var tp = h && h.p ? new V3(h.p[0], h.p[1], h.p[2]) : self.handRest[k].clone().add(self.hips.position).sub(new V3(0, P.hipY, 0));
       var tq2 = h && h.q ? new Q(h.q[0], h.q[1], h.q[2], h.q[3]) : null;
       self._reach(A, tp, tq2, torsoInRoot);
-      self._handShape(A.H, h && h.g != null ? h.g : 0);
+      self._handShape(A.H, h && h.g != null ? h.g : 0, h && h.c);
     });
     // legs: walk cycle or crouch
     var ka = crouch > 0 ? Math.acos(Math.max(-1, Math.min(1, 1 - crouch / legL))) : 0;
@@ -887,7 +969,8 @@
     M.line.scale.set(w / M.w, cy, 1);
     M.line.rotation.z = curve >= 0 ? Math.PI : 0;
     M.line.position.y = curve >= 0 ? M.w * 0.62 * cy * 0.5 : -M.w * 0.62 * cy * 0.5;
-    F.blush.forEach(function (b) { b.visible = (f.blush || 0) > 0.4; });
+    var rosy = this.def.face && this.def.face.cheeks;
+    F.blush.forEach(function (b) { b.visible = rosy || (f.blush || 0) > 0.4; });
     F.tear.visible = (f.tear || 0) > 0.4;
     if (F.tear.visible) F.tear.position.y = F.tearY - (((p.time || 0) * 0.6) % 1) * this.headR * 0.4;
     F.sweat.visible = (f.sweat || 0) > 0.4;
@@ -911,7 +994,11 @@
     { id: 'think', label: 'Chin scratch', emoji: '🤔', len: 2.4 }, { id: 'nod', label: 'Nod', emoji: '🙂', len: 1.1 },
     { id: 'shake', label: 'Head shake', emoji: '🙅', len: 1.2 }, { id: 'clap', label: 'Clap', emoji: '👏', len: 1.6 },
     { id: 'thumbs', label: 'Thumbs up', emoji: '👍', len: 1.4 }, { id: 'armsup', label: 'Hands up', emoji: '😱', len: 1.5 },
-    { id: 'cross', label: 'Arms crossed', emoji: '😤', len: 2.5 }
+    { id: 'cross', label: 'Arms crossed', emoji: '😤', len: 2.5 },
+    // finger work (the toon hands have real fingers since Nov 2026)
+    { id: 'peace', label: 'Peace sign', emoji: '✌️', len: 1.8 }, { id: 'okay', label: 'OK sign', emoji: '👌', len: 1.6 },
+    { id: 'rock', label: 'Rock on', emoji: '🤘', len: 1.8 }, { id: 'count', label: 'Count to three', emoji: '🔢', len: 2.6 },
+    { id: 'beckon', label: 'Come here', emoji: '🫴', len: 2.0 }, { id: 'shush', label: 'Shush', emoji: '🤫', len: 1.8 }
   ];
   VT.GEST = {};
   VT.GESTURES.forEach(function (g) { VT.GEST[g.id] = g; });
@@ -933,7 +1020,7 @@
     }
     var L = actor.handRest.l.clone(), R = actor.handRest.r.clone();
     L.y += br * 1.5; R.y += br * 1.5;
-    var Lq = null, Rq = null, Lg = 0, Rg = 0;
+    var Lq = null, Rq = null, Lg = 7, Rg = 7, Lc = null, Rc = null;  // 7 = relaxed fingers
     if (ctx.speaking) {  // talking hands: beats follow the voice
       var k = Math.min(1, (ctx.talk || 0) * 1.6), beat = Math.sin(t * 5.5 + s) * 0.5 + 0.5;
       var side = Math.sin(t * 0.9 + s) > 0 ? 1 : -1;
@@ -949,7 +1036,7 @@
       var tw = actor.P.torsoW;
       switch (g.id) {
         case 'wave': lerp3(R, tw * 2.2, hh + 0.08 * h, 0.08 * h, inout); R.x += Math.sin(tt * 14) * 0.06 * h * inout; Rq = quatYXZ(180, 0, Math.sin(tt * 14) * 25); break;
-        case 'point': lerp3(R, tw * 1.4, sh + 0.02 * h, 0.5 * h, inout); Rg = 2; Rq = quatYXZ(90, 0, 0); yaw += 10 * inout; break;
+        case 'point': lerp3(R, tw * 1.4, sh + 0.02 * h, 0.5 * h, inout); Rg = 2; Rq = VT.handQ(0.12, 0.08, 1, -1, 0, 0); yaw += 10 * inout; break;
         case 'shrug': lerp3(L, -tw * 2.4, sh - 0.12 * h, 0.12 * h, inout); lerp3(R, tw * 2.4, sh - 0.12 * h, 0.12 * h, inout); roll += 9 * inout; head[1] -= 0.03 * h * inout; Lq = quatYXZ(-60, 0, 80); Rq = quatYXZ(-60, 0, -80); break;
         case 'cheer': lerp3(L, -tw * 1.8, hh + 0.32 * h, 0.05 * h, inout); lerp3(R, tw * 1.8, hh + 0.32 * h, 0.05 * h, inout); Lg = Rg = 1; head[1] += Math.abs(Math.sin(tt * 9)) * 0.03 * h * inout; pitch -= 12 * inout; break;
         case 'facepalm': lerp3(R, 0.03 * h, hh + 0.02 * h, actor.headR * 1.05, inout); pitch += 18 * inout; head[2] += 0.03 * h * inout; Rq = quatYXZ(150, 0, 0); break;
@@ -959,15 +1046,55 @@
         case 'think': lerp3(R, 0.02 * h, hh - actor.headR * 0.85, actor.headR * 1.05, inout); Rg = 1; lerp3(L, 0, sh - 0.12 * h, 0.15 * h, inout); pitch -= 8 * inout; yaw += 12 * inout; roll -= 6 * inout; break;
         case 'nod': pitch += Math.sin(tt * 11) * 12 * inout; break;
         case 'shake': yaw += Math.sin(tt * 12) * 18 * inout; break;
-        case 'clap': var cl = Math.abs(Math.sin(tt * 9)); lerp3(L, -0.03 * h - cl * 0.08 * h, sh - 0.05 * h, 0.28 * h, inout); lerp3(R, 0.03 * h + cl * 0.08 * h, sh - 0.05 * h, 0.28 * h, inout); Lq = quatYXZ(90, 0, 90); Rq = quatYXZ(90, 0, -90); break;
-        case 'thumbs': lerp3(R, tw * 1.3, sh, 0.32 * h, inout); Rg = 3; Rq = quatYXZ(90, 0, -90); break;
+        case 'clap': var cl = Math.abs(Math.sin(tt * 9)); lerp3(L, -0.03 * h - cl * 0.08 * h, sh - 0.05 * h, 0.28 * h, inout); lerp3(R, 0.03 * h + cl * 0.08 * h, sh - 0.05 * h, 0.28 * h, inout); Lq = VT.handQ(0, 0.5, 1, 1, 0, 0); Rq = VT.handQ(0, 0.5, 1, -1, 0, 0); Lg = Rg = 0; break;
+        case 'thumbs': lerp3(R, tw * 1.3, sh, 0.32 * h, inout); Rg = 3; Rq = VT.handQ(0, 0, 1, -1, 0, 0); break;
+        case 'peace': lerp3(R, tw * 1.7, hh + 0.02 * h, 0.14 * h, inout); Rg = 4; Rq = VT.handQ(0.15, 1, -0.1, -0.15, 0, 1); roll -= 6 * inout; break;
+        case 'okay': lerp3(R, tw * 1.5, sh + 0.06 * h, 0.3 * h, inout); Rg = 5; Rq = VT.handQ(0.1, 1, 0.1, -0.35, 0, 1); break;
+        case 'rock': lerp3(R, tw * 1.9, hh + 0.14 * h, 0.1 * h, inout); Rg = 6; Rq = VT.handQ(0.2, 1, -0.1, 0, 0, 1); head[1] += Math.abs(Math.sin(tt * 8)) * 0.02 * h * inout; pitch += Math.sin(tt * 8) * 6 * inout; break;
+        case 'count':
+          lerp3(R, tw * 1.6, sh + 0.08 * h, 0.26 * h, inout); Rq = VT.handQ(0.05, 1, -0.1, -0.1, 0, 1);
+          var n3 = u < 0.36 ? 1 : u < 0.66 ? 2 : 3; Rc = [0.85, 0, n3 >= 2 ? 0 : 1, n3 >= 3 ? 0 : 1]; Rg = n3 === 1 ? 2 : n3 === 2 ? 4 : 0; break;
+        case 'beckon':
+          lerp3(R, tw * 1.3, sh - 0.04 * h, 0.34 * h, inout); Rq = VT.handQ(-0.1, 0.25, 1, 0, 1, 0);
+          var bk = 0.5 + 0.5 * Math.sin(tt * 9); Rc = [0.6, bk, 0.55 + bk * 0.45, 0.7 + bk * 0.3]; Rg = 2; pitch -= 5 * inout; break;
+        case 'shush': lerp3(R, 0.03 * h, hh - actor.headR * 0.42, actor.headR * 1.25, inout); Rg = 2; Rq = VT.handQ(0, 1, 0.05, -1, 0, -0.3); pitch += 6 * inout; break;
         case 'armsup': lerp3(L, -tw * 2.2, hh + 0.2 * h, 0.12 * h, inout); lerp3(R, tw * 2.2, hh + 0.2 * h, 0.12 * h, inout); head[2] -= 0.05 * h * inout; break;
         case 'cross': lerp3(L, tw * 0.7, sh - 0.12 * h, 0.2 * h, inout); lerp3(R, -tw * 0.7, sh - 0.1 * h, 0.22 * h, inout); Lq = quatYXZ(0, 0, -100); Rq = quatYXZ(0, 0, 100); pitch -= 5 * inout; break;
       }
     }
+    // gestures blend the fingers in and out with the arm (inout), from relaxed
+    if (g && VT.GEST[g.id]) {
+      var wIn = ease(g.u / 0.18) * ease((1 - g.u) / 0.2), rel = VT.HAND_SHAPES[7].c;
+      var mix = function (cur, n) { var to = cur || VT.handCurls(n); return rel.map(function (v, i) { return v + (to[i] - v) * wIn; }); };
+      Rc = mix(Rc, Rg); Lc = mix(Lc, Lg);
+    }
     return {
       head: { p: head, q: quatYXZ(pitch, yaw, roll) },
-      l: { p: [L.x, L.y, L.z], q: Lq, g: Lg }, r: { p: [R.x, R.y, R.z], q: Rq, g: Rg }
+      l: { p: [L.x, L.y, L.z], q: Lq, g: Lg, c: Lc }, r: { p: [R.x, R.y, R.z], q: Rq, g: Rg, c: Rc }
+    };
+  };
+
+  /* ------------------------------------------------------------------ "Surprise me" (the character editor) */
+  var PAL = ['#d7263d', '#b3182b', '#ff7a1a', '#ffc23d', '#e8b54a', '#7ee0c4', '#39b54a', '#5fb8b2', '#4d8fd6', '#2b2d42', '#6a3fd1', '#4b2a6b', '#ff8fab', '#e58fae', '#f7f4ee', '#b9c2cc', '#5b5560', '#8a5a36', '#151214'];
+  var FUR = { dog: ['#d9a05b', '#8a5a36', '#f4efe9', '#2a2628'], cat: ['#2a2628', '#e8762d', '#b9c2cc', '#f4efe9'], bear: ['#8a5a36', '#4a2c17', '#f4efe9'],
+    rabbit: ['#f4efe9', '#b9a08a', '#5b5560'], fox: ['#e8762d', '#c2410c', '#f4efe9'], frog: ['#5fbf4a', '#2f9e77', '#c0d84a'], robot: ['#5fb8b2', '#b9c2cc', '#ffc23d', '#d7263d'],
+    ghost: ['#f4f6ff', '#d9f2ff', '#f4e1ff'], alien: ['#7ee0c4', '#9be564', '#c8a2ff'], ogre: ['#7cb342', '#8d6e63', '#78909c'], penguin: ['#1f2430', '#2b2d42'], dino: ['#4fa3a5', '#9be564', '#ff8f3d', '#6a3fd1'] };
+  var SKINS = ['#eadfd6', '#f6cfae', '#e8b48c', '#c98c5e', '#9a6440', '#6e4429'];
+  VT.randomDef = function (seed) {
+    var s = (seed || Math.floor(Math.random() * 1e9)) % 2147483646 + 1, rnd = function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+    var pick = function (a) { return a[Math.floor(rnd() * a.length)]; }, rng = function (a, b) { return Math.round((a + rnd() * (b - a)) * 100) / 100; };
+    var sp = rnd() < 0.45 ? 'human' : pick(VT.SPECIES.slice(1));
+    var human = sp === 'human', skin = human ? pick(SKINS) : pick(FUR[sp]);
+    var accs = VT.ACCS.slice(), acc = [];
+    for (var i = 0, n = Math.floor(rnd() * 3); i < n; i++) { var a = accs.splice(Math.floor(rnd() * accs.length), 1)[0]; if (a !== 'beard' || human) acc.push(a); }
+    return {
+      species: sp, hair: human ? pick(VT.HAIRS.slice(1)) : 'none', hat: rnd() < 0.45 ? pick(VT.HATS.slice(1)) : 'none', acc: acc,
+      colors: { skin: skin, fur2: human ? '#ffffff' : pick(['#f7f4ee', '#ffe2c6', '#ffc6d3', '#d6f0a8']), hair: pick(['#151012', '#3b1f14', '#6b3a1e', '#c9a14a', '#d9d9dc', '#e8762d', '#6a3fd1', '#ff8fab']),
+        shirt: pick(PAL), pants: pick(PAL), shoes: pick(['#151214', '#3a2414', '#f7f4ee', '#d7263d', '#2b2d42']), accent: pick(PAL), eyes: pick(['#2a1a10', '#2b4a2b', '#2a3a5a', '#6a1b9a', '#1a1210']) },
+      build: { h: rng(0.8, 1.12), girth: rng(0.85, 1.3), head: rng(0.92, 1.18), legs: rng(0.9, 1.1), arms: 1, hand: rng(0.95, 1.2), torso: human ? pick(VT.TORSOS) : 'round' },
+      face: { eyes: rng(0.85, 1.3), spread: rng(0.9, 1.12), lift: rng(-0.4, 0.4), tall: rng(0.9, 1.2), brows: rng(0.7, 1.5), nose: rng(0.6, 1.4), mouth: rng(0.85, 1.2),
+        ears: 'auto', earSize: rng(0.85, 1.25), freckles: rnd() < 0.2 ? 1 : 0, lashes: rnd() < 0.3 ? 1 : 0, cheeks: rnd() < 0.3 ? 1 : 0 },
+      voice: pick(VT.VOICES)
     };
   };
 

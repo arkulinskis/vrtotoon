@@ -67,6 +67,10 @@ class Edit(EditTemplate):
         self.stage_view.add_event_handler("select", self._stage_select)
         self.stage_view.add_event_handler("place", self._stage_place)
         self.timeline_view.add_event_handler("select", self._tl_select)
+        self.live_monitor.add_event_handler("closed", self._live_closed)
+
+    def _live_closed(self, **event_args):
+        self.watch_button.visible = bool((getattr(self, "link_status", None) or {}).get("online"))
 
     # ------------------------------------------------------------------ start-up
     @handle("", "show")
@@ -93,6 +97,7 @@ class Edit(EditTemplate):
         if self.save_timer.interval:
             self._save()
         self.link_timer.interval = 0
+        self.live_monitor.stop()
         if self.doc is not None and self._booted:
             window.document.removeEventListener("keydown", self._keys)
         self.timeline_view.unload()
@@ -716,8 +721,14 @@ class Edit(EditTemplate):
     def headset_button_click(self, **event_args):
         self._save()
         from ...Dialogs.HeadsetLink import HeadsetLink
-        alert(HeadsetLink(page=self), buttons=[], role="app-dialog", large=True)
+        r = alert(HeadsetLink(page=self), buttons=[], role="app-dialog", large=True)
         self._start_link()
+        if r == "watch":
+            self.live_monitor.start(self.pid)
+
+    @handle("watch_button", "click")
+    def watch_button_click(self, **event_args):
+        self.live_monitor.start(self.pid)
 
     def _start_link(self):
         self.link_since = self.link_since if getattr(self, "link_since", None) else self.synced
@@ -732,6 +743,7 @@ class Edit(EditTemplate):
             return
         self.link_status = r
         self.headset_button.text = "Headset ●" if r["online"] else "Headset"
+        self.watch_button.visible = bool(r["online"]) and not self.live_monitor.visible
         if r["takes"]:
             vt.takes(r["takes"], self.takes)
             self.takes.loadAll()

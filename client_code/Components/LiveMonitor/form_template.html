@@ -1,0 +1,37 @@
+---
+custom_component: true
+events:
+  - name: closed
+    description: The director closed the live view
+toolbox_item:
+  title: Headset live view
+  group: VRtoToon
+help_text: |
+  A floating window with the paired headset's live picture and sound (theme/assets/vt-live.js, WebRTC, peer to peer).
+  start(pid) rings the headset; stop() hangs up.
+---
+<div class="vt-live-wrap">
+  <div class="vt-live" anvil:name="box">
+    <div class="lv-head">
+      <i class="lv-dot" anvil:name="dot"></i>
+      <anvil-component type="Label" name="status_label" prop:role='["lv-status"]' prop:text="Headset view"></anvil-component>
+      <span class="ui-spacer"></span>
+      <anvil-component type="Button" name="sound_button" prop:text="" prop:tooltip="Hear the headset's microphone" prop:role='["btn", "btn-sm", "btn-ghost", "ic-volume", "lv-icon"]'></anvil-component>
+      <anvil-component type="Button" name="big_button" prop:text="" prop:tooltip="Bigger / smaller" prop:role='["btn", "btn-sm", "btn-ghost", "ic-grid", "lv-icon"]'></anvil-component>
+      <anvil-component type="Button" name="close_button" prop:text="" prop:tooltip="Stop watching" prop:role='["btn", "btn-sm", "btn-ghost", "ic-x", "lv-icon"]'></anvil-component>
+    </div>
+    <div class="lv-screen">
+      <video class="lv-video" anvil:dom-node="video" playsinline muted autoplay></video>
+      <div class="lv-wait" anvil:name="wait_box">
+        <anvil-component type="Label" name="wait_label" prop:role='["lv-wait-text"]' prop:text="Ringing the headset..."></anvil-component>
+        <anvil-component type="Button" name="retry_button" prop:text="Try again" prop:role='["btn", "btn-sm", "btn-gold", "ic-refresh"]' prop:visible="false"></anvil-component>
+      </div>
+      <anvil-component type="Label" name="caption_label" prop:role='["lv-caption"]' prop:visible="false"></anvil-component>
+    </div>
+    <div class="lv-foot">
+      <anvil-component type="Button" name="eyes_button" prop:text="Their eyes" prop:role='["tab", "on"]' prop:tooltip="What the performer sees in the headset"></anvil-component>
+      <anvil-component type="Button" name="film_button" prop:text="Film camera" prop:role='["tab"]' prop:tooltip="The director's monitor: the film camera"></anvil-component>
+    </div>
+  </div>
+  <anvil-component type="Timer" name="poll_timer" prop:interval="0"></anvil-component>
+</div>

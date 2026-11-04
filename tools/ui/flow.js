@@ -81,6 +81,49 @@
     await until(() => location.hash === '#profile' && window.UI_READY && $('.pf-grid'), 'back on the page they wanted', 40000);
     ok(true, 'sign-up: signed in and sent on to the page they asked for');
 
+    // ---- the character editor (#wardrobe): from a character sheet, a full edit, undo/redo, saved, opened again
+    ok(VT.buildActor(VT.CAST[0]).arms.r.H.f.length === 3 && VT.HAND_SHAPES.length === 8, 'hands: a thumb and three fingers, eight hand shapes');
+    await page('#casting', () => $$('.page-casting .cast-card').length >= 25, 'casting (member)');
+    $('.page-casting .cast-card').click();
+    await until(() => $('.char-sheet .vt-stage canvas'), 'character sheet (member)');
+    await click('.char-sheet', 'Make my own version');
+    await until(() => /^#wardrobe\/new\//.test(location.hash) && window.UI_READY && $('.page-wardrobe .vt-stage canvas'), 'character editor', 30000);
+    ok(/my cut/.test($('.anvil-role-wdp-name').textContent), 'wardrobe: a new character starts from the actor ("my cut")');
+    const onChips = () => $$('.page-wardrobe .anvil-role-chip.anvil-role-on button').map((b) => b.textContent);
+    await click('.page-wardrobe', '\u{1F431} Cat');
+    await until(() => onChips().some((t) => /Cat/.test(t)), 'species: cat');
+    const rng = $$('.page-wardrobe .sl-input').filter(vis)[0];
+    rng.value = '1.2'; rng.dispatchEvent(new Event('input', { bubbles: true })); rng.dispatchEvent(new Event('change', { bubbles: true }));
+    await until(() => /120%/.test($$('.page-wardrobe .anvil-role-sl-value').filter(vis)[0].textContent), 'height 120%');
+    ok(true, 'wardrobe: species chips and body sliders');
+    await click('.wdp-tabs', 'Face');
+    $$('.page-wardrobe .wdp-checks input[type=checkbox]').filter(vis)[0].click();
+    await click('.page-wardrobe', 'Floppy');
+    await until(() => onChips().some((t) => /Floppy/.test(t)), 'ears: floppy');
+    await click('.wdp-tabs', 'Extras');
+    await click('.page-wardrobe', 'Cartoon gloves');
+    await until(() => onChips().some((t) => /Cartoon gloves/.test(t)), 'gloves on');
+    $('.wdp-tools .anvil-role-ic-undo button').click();
+    await until(() => !onChips().some((t) => /Cartoon gloves/.test(t)), 'undo takes the gloves off');
+    $('.wdp-tools .anvil-role-ic-redo button').click();
+    await until(() => onChips().some((t) => /Cartoon gloves/.test(t)), 'redo puts them back');
+    ok(true, 'wardrobe: face switches, ears, accessories, undo and redo');
+    await click('.wdp-tabs', 'Colours');
+    $$('.page-wardrobe .anvil-role-swatch button').filter(vis)[4].click();
+    await until(() => $$('.page-wardrobe .anvil-role-swatch.anvil-role-on').filter(vis).length >= 3, 'a swatch picked');
+    await click('.wdp-tabs', 'Name & voice');
+    const nb2 = $$('.page-wardrobe .wdp-part input').filter(vis)[0];
+    type(nb2, 'Whiskers Marquee'); nb2.dispatchEvent(new Event('blur')); nb2.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+    await until(() => /Whiskers Marquee/.test($('.anvil-role-wdp-name').textContent), 'name');
+    await click('.wdp-foot', 'Hang it in the wardrobe');
+    await until(() => location.hash === '#casting/wardrobe' && window.UI_READY && $$('.page-casting .cast-card').length === 1, 'saved to the wardrobe', 30000);
+    ok(/Whiskers Marquee/.test($('.page-casting .cast-card').textContent), 'wardrobe: the new character is in My wardrobe');
+    $('.page-casting .cast-card').click();
+    await until(() => $('.char-sheet .vt-stage canvas'), 'sheet of my character');
+    await click('.char-sheet', 'Edit in the wardrobe');
+    await until(() => /^#wardrobe\/c_/.test(location.hash) && window.UI_READY && $('.page-wardrobe .vt-stage canvas'), 'editor with my character', 30000);
+    ok(btn('.wdp-foot', 'Delete') && /Whiskers/.test($('.anvil-role-wdp-name').textContent) && onChips().some((t) => /Cat/.test(t)), 'wardrobe: a saved character opens again as it was');
+
     // ---- the Lot + a new picture
     await page('#home', () => $('.lot-head .anvil-role-ic-clapper button'), 'the Lot');
     ok($('.lot-empty') && vis($('.lot-empty')), 'lot: the empty state for a new member');
@@ -179,9 +222,16 @@
     ok(/Ready/.test($('.anvil-role-st-state').textContent), 'stage: ready, desk-puppet mode');
     const P = window.VT_PERFORM;
     P.setRange(D().beats[0].id, D().beats[2].id);
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Digit5', key: '5' }));  // the desk puppet's hand: peace sign
     await click('.st-bar', 'Action!');
     await until(() => P.state === 'review', 'the pass ends in playback', 60000);
     ok(P.pass && P.pass.clips.length === 3, 'stage: the pass is cut into one clip per beat');
+    const mo = P.pass.motion, mid = Math.floor(mo.n / 2) * mo.k;
+    ok(mo.k === 31 && mo.f.length === mo.n * 31, 'fingers: a take records 31 numbers per frame (4 finger curls per hand)');
+    ok(Math.abs(mo.f[mid + 27] - 0.85) < 0.01 && mo.f[mid + 28] === 0 && mo.f[mid + 29] === 0 && mo.f[mid + 30] === 1, 'fingers: key 5 records a peace sign');
+    const smp = VT.sampleMotion(mo, mo.n / 2 / mo.fps);
+    ok(smp.r.c && smp.r.c[1] === 0 && smp.r.c[3] === 1, 'fingers: playback reads the curls back');
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Digit5', key: '5' }));  // back to relaxed
     await click('.st-bar', 'Print it');
     await until(() => /Printed/.test(toastText()), 'saved toast', 30000);
     ok(true, 'stage: Print it saves the take');
@@ -196,7 +246,33 @@
     ok(/^[A-Z ]+$/.test(code.trim()), 'headset: a 4-letter stage door code');
     await click('.headset-link', 'Send to the headset');
     await until(() => /Called/.test(toastText()), 'call sent');
-    await click('.headset-link', 'Done');
+
+    // ---- the live view: a second window plays the headset (types the stage door code), the editor watches it over WebRTC.
+    // (A popup, not an iframe: Anvil sends frame-ancestors 'none'. drive.mjs runs Chrome with --disable-popup-blocking.)
+    await click('.headset-link', 'Watch the headset live');
+    await until(() => vis($('.vt-live')) && window.VT_LIVE, 'live window rings');
+    ok(/Ringing|Connecting/.test($('.vt-live').textContent), 'live view: the editor rings the headset');
+    const hw = window.open(location.href.split('#')[0] + '#door', 'vtheadset', 'width=700,height=520');
+    ok(hw, 'live view: a second window opens (the headset)');
+    const fr = { remove: () => hw.close() };
+    const fw = () => hw, fdoc = () => hw.document;
+    await until(() => fw().UI_READY && fdoc().querySelectorAll('.anvil-role-door-key button').length >= 23, 'headset window: stage door', 90000);
+    for (const ch of code.replace(/\s/g, '')) Array.from(fdoc().querySelectorAll('.door button')).find((b) => b.textContent.trim() === ch).click();
+    await until(() => /^#stage\//.test(fw().location.hash) && fw().VT_PERFORM && fdoc().querySelector('.vt-perform canvas'), 'headset window: the stage opens', 90000);
+    ok(true, 'live view: the headset window opened the stage with the code');
+    await until(() => { const s = window.VT_LIVE.stats(); return s.state === 'live' && s.w > 0; }, 'the live picture arrives', 90000);
+    const t1 = window.VT_LIVE.stats().t;
+    await until(() => window.VT_LIVE.stats().t > t1 + 0.5, 'the picture keeps moving', 20000);
+    ok(/Live from the headset/.test($('.vt-live').textContent) && fw().VT_PERFORM.previewFrames() > 5, 'live view: the headset picture plays in the editor (WebRTC)');
+    await click('.vt-live', 'Film camera');
+    await until(() => fw().VT_PERFORM._pv && fw().VT_PERFORM._pv.view === 'film', 'the headset switches to the film camera', 15000);
+    ok(true, 'live view: switching to the film camera reaches the headset');
+    await until(() => vis(fdoc().querySelector('.anvil-role-st-live')), 'the headset shows "Director watching"', 15000);
+    ok(true, 'live view: the headset shows that the director is watching');
+    $('.vt-live .anvil-role-ic-x button').click();
+    await until(() => !vis($('.vt-live')), 'live window closed');
+    fr.remove();
+    ok(true, 'live view: closes');
     await click('.ed-actions', 'Export');
     await until(() => $('.export-dlg'), 'export dialog');
     await click('.export-dlg', 'Just the .glb');
