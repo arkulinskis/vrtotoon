@@ -41,7 +41,10 @@ class Share(ShareTemplate):
 
     @handle("poster_button", "click")
     def poster_button_click(self, **event_args):
-        if self.stage is not None and state.call("production_poster", self.p["id"], self.stage.snapshot(640, 360)) is not None:
+        if self.stage is None:
+            return
+        w, h = vt.snap_size(self.stage.aspectId())
+        if state.call("production_poster", self.p["id"], self.stage.snapshot(w, h)) is not None:
             self.p["poster"] = "set"
             state.toast("Poster saved", "ok")
             self._draw()

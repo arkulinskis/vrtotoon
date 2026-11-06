@@ -1,0 +1,33 @@
+---
+custom_component: true
+properties:
+  - name: value
+    type: string
+    default_value: "16:9"
+    default_binding_prop: true
+    description: The canvas id (VT.ASPECTS), e.g. 16:9, 9:16, 1:1, 4:5
+  - name: enabled
+    type: boolean
+    default_value: true
+  - name: describe
+    type: boolean
+    default_value: true
+    description: Show what the chosen canvas is for, under the tiles
+events:
+  - name: change
+    default_event: true
+    parameters:
+      - name: value
+toolbox_item:
+  title: Canvas picker
+  group: VRtoToon
+help_text: |
+  The film's canvas: one tile per shape (widescreen, reel, Instagram square and portrait, CinemaScope, Academy), drawn to
+  scale, with what each one is for under the row.
+---
+<div class="cv-pick-wrap">
+  <div class="cv-pick" role="group" aria-label="Canvas">
+    <anvil-component type="RepeatingPanel" name="tile_panel" prop:item_template="VRtoToon.Items.CanvasTile" prop:role='["cv-row"]'></anvil-component>
+    <anvil-component type="Label" name="use_label" prop:role='["fine-print", "cv-use"]'></anvil-component>
+  </div>
+</div>

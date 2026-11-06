@@ -2,7 +2,8 @@
    Resolves to {ok, log}. Keep log lines ASCII (the Windows console).
    Visitor: landing (the 3D hero plays), premieres, the screening room, casting + a screen test. Member: sign up, a new
    picture, the editor (script, cast, direct, camera, takes, look, autosave), the voice booth, the performance stage
-   (a desk-puppet pass, kept and saved), the headset link, exports, sharing, the stage door, profile, theme, sign out. */
+   (a desk-puppet pass, kept and saved), the headset link, exports, sharing, the stage door, profile, theme, sign out.
+   Canvases: the picture starts as a Reel, the Look tab switches it (undo too), Export as another shape. */
 (async function () {
   const log = [], t0 = Date.now();
   const say = (m) => log.push(((Date.now() - t0) / 1000).toFixed(1) + 's ' + m);
@@ -132,11 +133,22 @@
     pick($$('.new-prod select')[0], 'Showdown');
     await sleep(400);
     ok($$('.new-prod .cast-card').length === 2, 'new picture: the template shows its cast');
+    const tile = (scope, name) => $$(scope + ' .cv-tile').find((b) => vis(b) && b.querySelector('.cv-name').textContent === name);
+    const pressed = (scope) => $$(scope + ' .cv-tile[aria-pressed=true] .cv-name').map((n) => n.textContent).join();
+    ok($$('.new-prod .cv-tile').length === 6 && pressed('.new-prod') === 'Widescreen', 'new picture: six canvases, widescreen first');
+    tile('.new-prod', 'Reel').click();
+    await until(() => pressed('.new-prod') === 'Reel' && /Instagram Reels/.test($('.new-prod .anvil-role-cv-use').textContent), 'reel picked');
+    ok(true, 'new picture: pick the Reel canvas');
     await click('.new-prod', 'Roll camera');
     await until(() => /^#edit\//.test(location.hash) && window.UI_READY && window.VT_EDITOR && $('.ed-stage-wrap canvas'), 'editor', 60000);
     const E = window.VT_EDITOR, D = () => E.doc.d;
     const pid = location.hash.split('/')[1];
     ok(D().set === 'western' && D().cast.length === 2, 'editor: the showdown template (western set, two actors)');
+    const wrapBox = () => $('.ed-stage-wrap').getBoundingClientRect();
+    await until(() => wrapBox().height > wrapBox().width * 1.5, 'tall stage box');
+    ok(D().look.aspect === '9:16' && /Reel 9:16/.test($('.ed-canvasbar').textContent), 'canvas: a reel picture opens in a tall stage box with a Reel badge');
+    const camW = E.stage.film.camera(2, E.stage.actors, 16 / 9), camR = E.stage.film.camera(2, E.stage.actors, 9 / 16);
+    ok(camR.pos.distanceTo(camR.look) > camW.pos.distanceTo(camW.look) * 1.1, 'canvas: the camera steps back for a narrow frame');
     ok($$('.beat-row').length === D().beats.length, 'script: one row per beat');
 
     // script: add a line, write it
@@ -178,8 +190,18 @@
     await until(() => D().shots.length >= 3 && D().shots[0].id !== firstShot && $$('.shot-row').length === D().shots.length, 'new shots');
     ok(D().shots.length === $$('.shot-row').length, 'camera: the auto-director cuts the scene');
 
-    // look: grade + aspect
+    // look: canvas (with undo) + grade
     await click('.ed-tabs', 'Look');
+    ok(pressed('.ed-part') === 'Reel', 'look: the canvas picker shows the reel');
+    tile('.ed-part', 'Square').click();
+    await until(() => D().look.aspect === '1:1' && Math.abs(wrapBox().height - wrapBox().width) < 4 && /square/.test($('.ed-canvasbar').textContent), 'square canvas');
+    ok(true, 'look: switching to Instagram square reshapes the stage');
+    $('.anvil-role-ic-undo button').click();
+    await until(() => D().look.aspect === '9:16' && wrapBox().height > wrapBox().width * 1.5 && pressed('.ed-part') === 'Reel', 'undo canvas');
+    ok(true, 'look: undo brings the reel back');
+    tile('.ed-part', 'Widescreen').click();
+    await until(() => D().look.aspect === '16:9' && wrapBox().width > wrapBox().height * 1.6, 'widescreen canvas');
+    ok(true, 'look: back to widescreen');
     pick($$('.ed-part select').filter(vis)[1], 'Film noir');
     await until(() => D().look.grade === 'noir', 'grade');
     ok(true, 'look: film look changes');
@@ -337,9 +359,16 @@
     ok(true, 'live view: closes');
     await click('.ed-actions', 'Export');
     await until(() => $('.export-dlg'), 'export dialog');
+    ok(pressed('.export-dlg') === 'Widescreen' && /1280 x 720/.test($('.export-dlg select').textContent), 'export: starts on the canvas of the picture');
+    tile('.export-dlg', 'Reel').click();
+    await until(() => /1080 x 1920/.test($('.export-dlg select').selectedOptions[0].textContent) && /only this export is reframed/.test($('.export-dlg').textContent), 'reel sizes');
+    ok(true, 'export: Export as Reel offers 1080 x 1920');
+    const glb0 = VT.exportGLB; let glbShape = '';
+    VT.exportGLB = function (st) { glbShape = st.aspectId(); return glb0.apply(this, arguments); };
     await click('.export-dlg', 'Just the .glb');
     await until(() => /Done: .*\.glb/.test($('.export-dlg').textContent), 'glb export', 60000);
-    ok(true, 'export: a .glb for Blender');
+    VT.exportGLB = glb0;
+    ok(glbShape === '9:16' && E.stage.aspectId() === '16:9' && D().look.aspect === '16:9', 'export: a .glb for Blender, reframed as a reel; the picture stays widescreen');
     await click('.export-dlg', 'Close');
     await click('.ed-actions', 'Share');
     const chk = await until(() => $('.share-dlg input[type=checkbox]'), 'share dialog');

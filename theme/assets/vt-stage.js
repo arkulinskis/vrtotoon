@@ -220,7 +220,9 @@
     }
     if (this.hooks.afterPose) this.hooks.afterPose(t);
   };
-  Stage.prototype._frameAspect = function () { var a = VT.ASPECT_BY[this.doc.d.look.aspect] || VT.ASPECTS[0]; return a.r; };
+  // the canvas in use: the picture's own (look.aspect), or aspectOverride while exporting in another shape
+  Stage.prototype.aspectId = function () { return VT.aspectOf(this.aspectOverride || this.doc.d.look.aspect).id; };
+  Stage.prototype._frameAspect = function () { return VT.aspectOf(this.aspectId()).r; };
   // the letterboxed film frame inside a w x h canvas
   Stage.prototype._frameRect = function (w, h) {
     if (this.mode === 'hero') return { x: 0, y: 0, w: w, h: h };  // the hero fills its screen (no letterbox)
@@ -275,14 +277,37 @@
       if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
       c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
     }
-    VT.drawTitles(c, fr, t, this.doc, this.film, { subs: this.o.subs != null ? this.o.subs : this.doc.d.look.subs, mode: this.mode, titles: this.o.titles });
+    var asp = VT.aspectOf(this.aspectId());
+    if (this.mode === 'edit' && asp.safe && this.o.safeGuide !== false) VT.drawSafeZone(c, fr, asp.safe);
+    VT.drawTitles(c, fr, t, this.doc, this.film, { subs: this.o.subs != null ? this.o.subs : this.doc.d.look.subs, mode: this.mode, titles: this.o.titles, aspect: asp.id });
     if (this.hooks.overlay) this.hooks.overlay(c, fr, t);
+  };
+  /* the editor's guide on reels: the strips an app's buttons and captions cover, lightly shaded */
+  VT.drawSafeZone = function (c, fr, z) {
+    var top = fr.h * z.t, bot = fr.h * z.b, rt = fr.w * z.r, lf = fr.w * z.l;
+    c.save();
+    c.fillStyle = 'rgba(10, 6, 8, .32)';
+    c.fillRect(fr.x, fr.y, fr.w, top);
+    c.fillRect(fr.x, fr.y + fr.h - bot, fr.w, bot);
+    c.fillRect(fr.x + fr.w - rt, fr.y + top, rt, fr.h - top - bot);
+    c.fillRect(fr.x, fr.y + top, lf, fr.h - top - bot);
+    c.strokeStyle = 'rgba(240, 192, 96, .7)'; c.lineWidth = 1; c.setLineDash([5, 4]);
+    c.strokeRect(fr.x + lf + 0.5, fr.y + top + 0.5, fr.w - lf - rt - 1, fr.h - top - bot - 1);
+    c.setLineDash([]);
+    var fs = Math.max(10, Math.round(Math.min(13, fr.w / 26)));
+    c.font = '600 ' + fs + 'px "DM Sans", sans-serif'; c.fillStyle = 'rgba(255, 248, 236, .85)'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText((z.who || 'The app') + '’s buttons and caption cover this', fr.x + fr.w / 2, fr.y + fr.h - bot / 2, fr.w - 16);
+    c.restore();
   };
   VT.drawTitles = function (c, fr, t, doc, film, o) {
     o = o || {};
-    var d = doc.d, total = film.total, s = fr.h / 360;
+    // s = 1 on a 360 px tall widescreen frame; tall canvases scale by their width so titles fit side to side
+    var d = doc.d, total = film.total, s = Math.min(fr.w, fr.h) / 360;
+    var asp = VT.aspectOf(o.aspect || d.look.aspect), safe = asp.safe || null;
     function txt(str, x, y, size, font, color, alpha, spacing) {
       c.save(); c.globalAlpha = alpha; c.fillStyle = color; c.font = font.replace('#', Math.round(size * s) + 'px'); c.textAlign = 'center'; c.textBaseline = 'middle';
+      var wide = c.measureText(str).width;
+      if (wide > fr.w * 0.86) c.font = font.replace('#', Math.max(8, Math.floor(size * s * fr.w * 0.86 / wide)) + 'px');  // shrink to fit
       if (spacing) { try { c.letterSpacing = Math.round(spacing * s) + 'px'; } catch (e) {} }
       c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = 8 * s; c.fillText(str, x, y); c.restore();
     }
@@ -299,15 +324,19 @@
       var b = film.L.beatAt(t);
       if (b && b.kind === 'line' && b.text && t < b.end + 0.15) {
         var who = doc.actor(b.who), line = (who ? who.name + ': ' : '') + b.text;
-        c.save(); c.font = '600 ' + Math.round(13 * s) + 'px "DM Sans", sans-serif'; c.textAlign = 'center';
-        var words = line.split(' '), rows = [], cur = '', maxW = fr.w * 0.82;
+        var tall = fr.h > fr.w * 1.1, u = s * (tall ? 1.2 : 1);  // phones held upright: bigger words, up to three rows
+        c.save(); c.font = '600 ' + Math.round(13 * u) + 'px "DM Sans", sans-serif'; c.textAlign = 'center';
+        // reels: keep subtitles inside the safe area (above the caption, left of the buttons)
+        var sx0 = fr.x + (safe ? fr.w * safe.l : 0), sx1 = fr.x + fr.w - (safe ? fr.w * safe.r : 0), cx = (sx0 + sx1) / 2;
+        var base = fr.y + fr.h - (safe ? fr.h * safe.b : 0);
+        var words = line.split(' '), rows = [], cur = '', maxW = (sx1 - sx0) * 0.86;
         words.forEach(function (w) { var test = cur ? cur + ' ' + w : w; if (c.measureText(test).width > maxW && cur) { rows.push(cur); cur = w; } else cur = test; });
         if (cur) rows.push(cur);
-        rows = rows.slice(-2);
+        rows = rows.slice(tall ? -3 : -2);
         rows.forEach(function (row, i) {
-          var y = fr.y + fr.h - (rows.length - i) * 18 * s - 8 * s, tw = c.measureText(row).width;
-          c.fillStyle = 'rgba(10,6,8,.62)'; c.fillRect(fr.x + fr.w / 2 - tw / 2 - 8 * s, y - 11 * s, tw + 16 * s, 18 * s);
-          c.fillStyle = '#fff8ec'; c.textBaseline = 'middle'; c.fillText(row, fr.x + fr.w / 2, y - 2 * s);
+          var y = base - (rows.length - i) * 18 * u - 8 * u, tw = c.measureText(row).width;
+          c.fillStyle = 'rgba(10,6,8,.62)'; c.fillRect(cx - tw / 2 - 8 * u, y - 11 * u, tw + 16 * u, 18 * u);
+          c.fillStyle = '#fff8ec'; c.textBaseline = 'middle'; c.fillText(row, cx, y - 2 * u);
         });
         c.restore();
       }
@@ -325,7 +354,7 @@
     var savedMode = this.mode; if (opts.final) this.mode = 'film';
     this._renderGraded(w, h, 0, 0, null);
     ctx2.drawImage(this.canvas, 0, 0, w, h);
-    if (opts.titles !== false) VT.drawTitles(ctx2, { x: 0, y: 0, w: w, h: h }, t, this.doc, this.film, { subs: opts.subs, mode: this.mode });
+    if (opts.titles !== false) VT.drawTitles(ctx2, { x: 0, y: 0, w: w, h: h }, t, this.doc, this.film, { subs: opts.subs, mode: this.mode, aspect: this.aspectId() });
     this.mode = savedMode;
     r.setPixelRatio(prevDpr); r.setSize(prevSize.x, prevSize.y, false);
     this.time = prevT; this._drawT = prevD; this._dirty = true;

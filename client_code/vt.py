@@ -63,8 +63,35 @@ def grades():
     return py(VT.GRADES)
 
 
+_ASPECTS = []
+
+
 def aspects():
-    return [{"id": a["id"], "label": a["label"]} for a in py(VT.ASPECTS)]
+    """The canvases (VT.ASPECTS): {id, name, label, use, r, sizes [[w, h]], safe?}. Ids are stored in productions."""
+    if not _ASPECTS:
+        _ASPECTS.extend(py(VT.ASPECTS))
+    return _ASPECTS
+
+
+def aspect(aspect_id):
+    """One canvas by id (unknown ids: widescreen, like the engine)."""
+    found = [a for a in aspects() if a["id"] == aspect_id]
+    return found[0] if found else aspects()[0]
+
+
+def doc_aspect(data):
+    """The canvas id of a production document (JSON text or dict)."""
+    try:
+        d = json.loads(data) if isinstance(data, str) else (data or {})
+    except ValueError:
+        d = {}
+    return aspect((d.get("look") or {}).get("aspect"))["id"]
+
+
+def snap_size(aspect_id, longest=640):
+    """(w, h) of a poster frame in this canvas, the longest side `longest` pixels."""
+    r = aspect(aspect_id)["r"]
+    return (longest, int(round(longest / r))) if r >= 1 else (int(round(longest * r)), longest)
 
 
 def music():
@@ -134,9 +161,13 @@ def uid(prefix):
 
 
 # ---------------------------------------------------------------- productions
-def new_doc_json(title, template_id, set_id=None, cast=None):
-    """A new production document (JSON) from a template; cast = premade ids to use instead of the template's."""
-    d = VT.newDoc(title, template_id, {"set": set_id} if set_id else {})
+def new_doc_json(title, template_id, set_id=None, cast=None, aspect_id=None):
+    """A new production document (JSON) from a template; cast = premade ids to use instead of the template's;
+    aspect_id = the canvas (VT.ASPECTS id, default widescreen)."""
+    opts = {"set": set_id} if set_id else {}
+    if aspect_id:
+        opts["aspect"] = aspect_id
+    d = VT.newDoc(title, template_id, opts)
     if cast:
         for i, ref in enumerate(cast[:len(d.d.cast)]):
             if ref and ref != d.d.cast[i].char:

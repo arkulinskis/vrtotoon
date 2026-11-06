@@ -562,7 +562,9 @@
       var toB = new T.Vector3(B.x - A.x, 0, B.z - A.z).normalize();
       camDir = toB.multiplyScalar(0.75).add(new T.Vector3(0, 0, 0.85)).normalize();
     }
+    var framedAll = false;
     function frameAll() {
+      framedAll = true;
       var xs = [], zs = [], ys = [];
       ids.forEach(function (id) { var h = headOf(id); xs.push(h.x); zs.push(h.z); ys.push(h.h); });
       if (!xs.length) { xs = [0]; zs = [0]; ys = [1.4]; }
@@ -603,6 +605,16 @@
         look.set(A.x, A.y - A.hr * 1.2, A.z); pos.set(A.x + Math.sin(base) * r, A.y + 0.2, A.z + Math.cos(base) * r); fov = 34; break;
       case 'top': look.set(A.x, 0, A.z); pos.set(A.x, 6.5, A.z + 0.05); fov = 40; break;
       default: frameAll();
+    }
+    // tall canvases (reels, square, portrait) are narrow: step back so faces and two-shots still fit side to side
+    var arr = aspect || 16 / 9;
+    if (arr < 1.3 && !framedAll && type !== 'top') {
+      var back = pos.clone().sub(look), dNow = back.length(), dNeed = dNow * Math.pow(1.3 / arr, 0.75);
+      if (type === 'two' && B) {  // fit both actors exactly: half the gap plus a body width either side
+        var halfH = Math.atan(Math.tan(fov * D2R / 2) * arr);
+        dNeed = Math.max(dNow, (Math.hypot(A.x - B.x, A.z - B.z) / 2 + 0.6) / Math.tan(halfH));
+      }
+      if (dNow > 1e-3) pos.copy(look).addScaledVector(back, dNeed / dNow);
     }
     // camera moves
     var e = ease(u), off = pos.clone().sub(look);
@@ -734,7 +746,7 @@
   VT.newDoc = function (title, templateId, opts) {
     opts = opts || {};
     var tp = VT.TEMPLATES.filter(function (x) { return x.id === templateId; })[0] || VT.TEMPLATES[0];
-    var doc = new Doc({ title: title || tp.label, set: opts.set || tp.set, look: { grade: tp.grade || 'technicolor', aspect: '16:9', fps: 24 }, music: { id: tp.music || 'none', vol: 0.3 } });
+    var doc = new Doc({ title: title || tp.label, set: opts.set || tp.set, look: { grade: tp.grade || 'technicolor', aspect: VT.ASPECT_BY && VT.ASPECT_BY[opts.aspect] ? opts.aspect : '16:9', fps: 24 }, music: { id: tp.music || 'none', vol: 0.3 } });
     var names = [];
     tp.cast.forEach(function (c) { var id = doc.addCast(c); names.push(doc.actor(id).name); });
     var script = tp.script;

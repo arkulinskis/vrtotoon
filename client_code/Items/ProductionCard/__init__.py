@@ -34,6 +34,9 @@ class ProductionCard(ProductionCardTemplate):
         else:
             self.meta.text = "%s · %s · %s · %s" % (sets.get(it.get("set"), "Stage 7"), state.plural(it.get("lines") or 0, "line"),
                                                          state.plural(it.get("takes") or 0, "take"), state.ago(it.get("updated")))
+        canvas = vt.aspect(it.get("aspect") or "16:9")
+        if canvas["id"] != "16:9":
+            self.meta.text += " · " + canvas["label"]
         self.badge.visible = bool(it.get("shared") or it.get("demo"))
         self.badge.text = "Featured" if it.get("featured") and premiere else "Premiered" if it.get("shared") else "Demo"
         state.set_attr(self.open_link, "href", edit_href)

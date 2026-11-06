@@ -53,7 +53,7 @@
 .vt-stage canvas { position: absolute; left: 0; top: 0; display: block; }
 .vt-stage .vt-over { z-index: 2; }
 .vt-nogl-msg { position: absolute; inset: 0; display: grid; place-items: center; color: #fff8ec; font: 600 1rem var(--font-body); }
-.vt-player { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 6px; overflow: hidden; }
+.vt-player { position: relative; width: 100%; aspect-ratio: var(--ar, 16 / 9); background: #000; border-radius: 6px; overflow: hidden; }
 .vt-player-mount { position: absolute; inset: 0; }
 .vt-bar { position: absolute; z-index: 5; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 8px; padding: 10px 12px 10px;
   background: linear-gradient(transparent, rgba(0, 0, 0, .72)); color: #fff8ec; opacity: 0; transition: opacity .2s; }
@@ -100,7 +100,7 @@
 .lp-hero .lp-proof { color: rgba(255, 248, 236, .72); }
 .lp-hero .lp-proof .ic { color: #f0c060; }
 .lp-sign { position: relative; margin: 14px auto 0; width: max-content; max-width: 92%; text-align: center; padding: 8px 26px 10px; border-radius: 10px;
-  background: #1a0d10; border: 2px solid #f0c060; color: #fff8ec; box-shadow: 0 0 0 4px #1a0d10, 0 0 30px rgba(240, 192, 96, .25); }
+  background: #1a0d10; border: 2px solid #f0c060; color: #fff8ec; box-shadow: 0 0 0 4px #1a0d10, 0 10px 28px rgba(0, 0, 0, .45); }
 .lp-sign span { display: block; font: 400 1.9rem/1 var(--font-display); letter-spacing: .12em; color: #f0c060; }
 .lp-sign small { display: block; font: 500 .76rem/1.4 var(--font-body); color: rgba(255, 248, 236, .7); letter-spacing: .04em; }
 .lp-section { padding: 64px 0; }
@@ -129,12 +129,12 @@
 .lp-list li { display: flex; gap: 10px; align-items: center; }
 .lp-list .ic { color: #f0c060; }
 .lp-door { display: grid; gap: 12px; }
-.door-card { background: #1d1417; border: 2px solid #f0c060; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 0 40px rgba(240, 192, 96, .12); }
+.door-card { background: #1d1417; border: 2px solid #f0c060; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 14px 36px rgba(0, 0, 0, .45); }
 .door-label, .door-note { display: block; font: 600 .78rem/1.3 var(--font-body); letter-spacing: .14em; text-transform: uppercase; color: rgba(246, 236, 221, .6); }
 .door-code { display: flex; justify-content: center; gap: 10px; margin: 12px 0; }
 .door-code b { width: 58px; height: 70px; display: grid; place-items: center; background: #fff8ec; color: #1d1417; border-radius: 10px; font: 400 2.6rem/1 var(--font-display); }
-.door-call { display: flex; gap: 12px; align-items: center; background: #261a1e; border-radius: 12px; padding: 14px 16px; border-left: 4px solid #e0384b; }
-.door-call.note { border-left-color: #7ff9ff; }
+.door-call { display: flex; gap: 12px; align-items: center; background: #261a1e; border-radius: 12px; padding: 14px 16px; border: 1px solid rgba(224, 56, 75, .7); }
+.door-call.note { border-color: rgba(127, 249, 255, .6); }
 .door-call b { display: block; color: #fff8ec; }
 .door-call span { color: rgba(246, 236, 221, .7); font-size: .92rem; }
 .door-call .ic { width: 24px; height: 24px; color: #f0c060; }
@@ -232,9 +232,15 @@
 .ed-actions { gap: 6px; }
 .ed-banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; margin-bottom: 10px; border-radius: 12px; background: var(--c-brand-soft); }
 .ed-main { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(320px, 1fr); gap: 14px; align-items: start; }
-.ed-stage-wrap { position: relative; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 0 0 1px #3a2a2f, var(--shadow); }
+/* the stage box takes the picture's canvas (--ar from Edit._sync_canvas); tall ones stay within the screen height */
+.ed-stage-wrap { position: relative; aspect-ratio: var(--ar, 16 / 9); width: min(100%, calc(min(68vh, 780px) * var(--ar, 1.7778))); margin-inline: auto;
+  transition: width var(--dur-base) var(--ease-out); border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 0 0 1px #3a2a2f, var(--shadow); }
 .vt-edstage, .vt-edstage-mount { position: absolute; inset: 0; }
-.ed-viewbar { position: absolute; z-index: 4; left: 10px; bottom: 10px; display: flex; gap: 6px; }
+.ed-viewbar { position: absolute; z-index: 4; left: 10px; bottom: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+.ed-canvasbar { position: absolute; z-index: 4; right: 10px; top: 10px; }
+.ed-canvas { margin-bottom: 16px; }
+.ed-canvas > b, .ex-canvas > b { display: block; margin-bottom: 6px; }
+.ex-canvas { margin: 14px 0 16px; }
 .anvil-role-btn-glass > button { background: rgba(20, 12, 14, .6); color: #fff8ec; border-color: rgba(255, 248, 236, .3); backdrop-filter: blur(4px); }
 .anvil-role-ed-hint { display: block; font-size: .85rem; color: var(--c-muted); min-height: 1.4em; margin-top: 8px; }
 .ed-panel { background: var(--c-surface); border: 1px solid var(--c-line); border-radius: 14px; display: flex; flex-direction: column; max-height: calc(100vh - 150px); min-height: 360px; }
@@ -263,7 +269,7 @@
 .vt-tl canvas { display: block; }
 .anvil-role-beat-list > div { display: grid; gap: 8px; }
 .beat-row { border: 1px solid var(--c-line); border-radius: 12px; padding: 8px 10px; background: var(--c-surface); }
-.beat-row.recorded { border-left: 4px solid var(--c-good); }
+.beat-row.recorded { border-color: color-mix(in srgb, var(--c-good) 55%, var(--c-line)); }
 .beat-row.action { background: var(--c-surface-2); }
 .beat-row.picked { border-color: var(--c-gold); box-shadow: 0 0 0 2px color-mix(in srgb, var(--c-gold) 40%, transparent); }
 .beat-top { display: flex; align-items: center; gap: 6px; }
@@ -305,7 +311,7 @@
 .anvil-role-st-title { font: 400 1.7rem/1 var(--font-display); letter-spacing: .05em; color: #fff8ec; display: block; }
 .anvil-role-st-state { font-size: .82rem; color: #f0c060; display: block; }
 .st-pick { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-.st-pick label { display: grid; gap: 3px; font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: rgba(246, 236, 221, .6); }
+.st-pick label { display: grid; gap: 3px; font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: rgba(246, 236, 221, .6); }
 .st-pick select { min-height: 36px; padding: 5px 9px; font-size: .88rem; background: #261a1e; color: #f6ecdd; border-color: #3a2a2f; max-width: 220px; }
 .st-pick .anvil-checkbox, .st-pick label.anvil-checkbox { color: #f6ecdd; text-transform: none; letter-spacing: 0; font-size: .88rem; }
 .st-call { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: #3a1419; border-bottom: 1px solid #e0384b; }
@@ -375,7 +381,7 @@
 .screen-curtain { position: absolute; top: 0; bottom: 0; width: 13%; background: repeating-linear-gradient(90deg, #7a0f1c 0 14px, #a5182b 14px 26px, #5e0b16 26px 34px); box-shadow: inset -20px 0 40px rgba(0, 0, 0, .5); }
 .screen-curtain.l { left: 0; border-radius: 0 0 60% 0 / 0 0 10% 0; }
 .screen-curtain.r { right: 0; transform: scaleX(-1); border-radius: 0 0 60% 0 / 0 0 10% 0; }
-.screen-frame { position: relative; z-index: 2; max-width: 1080px; margin: 0 auto; border: 6px solid #1a0d10; border-radius: 10px; box-shadow: 0 0 0 2px #f0c060, 0 30px 80px rgba(0, 0, 0, .7); }
+.screen-frame { position: relative; z-index: 2; width: min(1080px, 100%, calc(76vh * var(--ar, 1.7778))); margin: 0 auto; border: 6px solid #1a0d10; border-radius: 10px; box-shadow: 0 0 0 2px #f0c060, 0 30px 80px rgba(0, 0, 0, .7); }
 .screen-info { padding-top: 26px; }
 .anvil-role-screen-logline { display: block; font: italic 500 1.2rem/1.4 var(--font-serif); color: var(--c-muted); margin: 6px 0; }
 .screen-actions { margin-top: 18px; gap: 8px; }
@@ -480,7 +486,7 @@
 .anvil-role-swatch > button { width: 28px; height: 28px; min-height: 0; min-width: 28px; padding: 0; border-radius: 50%; border: 2px solid var(--c-surface);
   box-shadow: 0 0 0 1px var(--c-line); cursor: pointer; margin: 0; flex: none; }
 .anvil-role-swatch.anvil-role-on > button { box-shadow: 0 0 0 2px var(--c-ink); transform: scale(1.08); }
-.anvil-role-swatch.anvil-role-swatch-auto > button { width: auto; border-radius: 999px; padding: 0 9px; font: 700 .7rem/1 var(--font-body);
+.anvil-role-swatch.anvil-role-swatch-auto > button { width: auto; border-radius: 999px; padding: 0 9px; font: 700 .75rem/1 var(--font-body);
   background: repeating-linear-gradient(45deg, var(--c-surface-2) 0 5px, var(--c-surface) 5px 10px); color: var(--c-ink); }
 
 /* the live view from the headset (editor) */
@@ -547,3 +553,22 @@
 .prod-actions a.anvil-role-btn, .prod-actions .anvil-role-btn { display: inline-flex !important; width: auto !important; }
 .ed-main > *, .ed-left, .ed-panel { min-width: 0; }
 .ui-shell.no-chrome .ui-tabbar, .ui-shell.no-chrome.signed-in .ui-tabbar { display: none !important; }
+
+/* ---------- canvas picker (Components/CanvasPicker + Items/CanvasTile): each shape drawn to scale */
+.cv-pick { container-type: inline-size; }
+.anvil-role-cv-row > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@container (min-width: 560px) { .anvil-role-cv-row > div { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.cv-tile { display: grid; justify-items: center; align-content: start; gap: 4px; width: 100%; min-height: 98px; margin: 0; padding: 10px 6px 8px;
+  border: 1px solid var(--c-line); border-radius: 10px; background: var(--c-surface); color: var(--c-ink); font: inherit; cursor: pointer;
+  transition: transform var(--dur-press) var(--ease-out), border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out); }
+.cv-tile:hover { border-color: var(--c-brand); }
+.cv-tile:active:not(:disabled) { transform: scale(.97); }
+.cv-tile.on { background: var(--c-ink); border-color: var(--c-ink); color: var(--c-bg); }
+.cv-tile:disabled { opacity: .55; cursor: not-allowed; }
+.cv-shape-box { display: grid; place-items: center; width: 44px; height: 44px; }
+.cv-shape { display: block; width: min(44px, calc(44px * var(--r, 1.7778))); aspect-ratio: var(--r, 1.7778); border: 2px solid currentColor; border-radius: 3px; }
+.cv-tile.on .cv-shape { background: color-mix(in srgb, var(--c-gold) 55%, transparent); border-color: var(--c-gold); }
+.cv-name { font: 600 .82rem/1.15 var(--font-body); text-align: center; overflow-wrap: anywhere; }
+.cv-ratio { font: 500 .75rem/1 var(--font-body); color: var(--c-muted); font-variant-numeric: tabular-nums; }
+.cv-tile.on .cv-ratio { color: inherit; opacity: .8; }
+.anvil-role-cv-use { display: block; margin-top: 8px; }

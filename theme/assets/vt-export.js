@@ -249,7 +249,7 @@
       var castIdx = G.j.nodes.length - 1;
       stage.doc.d.cast.forEach(function (c) { var a = stage.actors[c.id]; if (a) { a.root.name = c.name; add(a.root, castIdx, true); } });
       // the film camera
-      var cam = stage.cam, ar = (VT.ASPECT_BY[stage.doc.d.look.aspect] || VT.ASPECTS[0]).r;
+      var cam = stage.cam, ar = VT.aspectOf(stage.aspectId()).r;
       G.j.cameras.push({ type: 'perspective', name: 'FilmCam', perspective: { yfov: 38 * Math.PI / 180, aspectRatio: ar, znear: 0.05, zfar: 200 } });
       G.j.nodes.push({ name: 'FilmCam', camera: 0 });
       var camIdx = G.j.nodes.length - 1; G.j.scenes[0].nodes.push(camIdx);
@@ -297,7 +297,7 @@
       if (anim.channels.length) G.j.animations.push(anim);
       ['textures', 'images', 'samplers', 'cameras', 'animations'].forEach(function (k) { if (!G.j[k].length) delete G.j[k]; });
       G.j.buffers = [{ byteLength: G.len + ((4 - G.len % 4) % 4) }];
-      G.j.scenes[0].extras = { vrtotoon: { title: stage.doc.d.title, fps: fps, frames: N, fov: fovKeys.filter(function (k, i) { return i === 0 || k[1] !== fovKeys[i - 1][1]; }), cuts: cuts, set: stage.doc.d.set, grade: stage.doc.d.look.grade, aspect: stage.doc.d.look.aspect } };
+      G.j.scenes[0].extras = { vrtotoon: { title: stage.doc.d.title, fps: fps, frames: N, fov: fovKeys.filter(function (k, i) { return i === 0 || k[1] !== fovKeys[i - 1][1]; }), cuts: cuts, set: stage.doc.d.set, grade: stage.doc.d.look.grade, aspect: stage.aspectId() } };
       stage.pose(stage.time); stage._dirty = true;
       var bytes = G.glb();
       return { blob: new Blob([bytes], { type: 'model/gltf-binary' }), info: { frames: N, nodes: G.j.nodes.length, meshes: G.j.meshes.length, channels: anim.channels.length, bytes: bytes.length, cuts: cuts.length } };
@@ -343,7 +343,7 @@
     '        m = scene.timeline_markers.new(str(kind), frame=int(frame))',
     '        m.camera = cam',
     'aspect = info.get("aspect", "16:9")',
-    'w, h = {"16:9": (1920, 1080), "2.39:1": (1920, 804), "4:3": (1440, 1080), "9:16": (1080, 1920), "1:1": (1080, 1080)}.get(aspect, (1920, 1080))',
+    'w, h = {"16:9": (1920, 1080), "2.39:1": (1920, 804), "4:3": (1440, 1080), "9:16": (1080, 1920), "1:1": (1080, 1080), "4:5": (1080, 1350)}.get(aspect, (1920, 1080))',
     'scene.render.resolution_x, scene.render.resolution_y = w, h',
     'wav = os.path.join(HERE, "dialogue.wav")',
     'if os.path.exists(wav):',

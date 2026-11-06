@@ -1,16 +1,27 @@
 import anvil.server
 from anvil import *
+from anvil.js import window
 
 from ._anvil_designer import NewProductionTemplate
 from ... import vt
+
+CANVAS_KEY = "vrtotoon.canvas"  # the last canvas picked in this browser
+
+
+def _last_canvas():
+    try:
+        return window.localStorage.getItem(CANVAS_KEY) or "16:9"
+    except Exception:
+        return "16:9"
+
 
 TEMPLATE_CAST = {"blank": ["max", "rosie"], "meet": ["max", "rosie"], "showdown": ["duke", "baron"], "mystery": ["vera", "lou"],
                  "space": ["nova", "bolt"], "spooky": ["boo", "pip"]}
 
 
 class NewProduction(NewProductionTemplate):
-    """Title + a template (a short script, a set, a look and music) + the set. star = a premade id to cast first.
-    Closes with the new production's id, or None."""
+    """Title + a template (a short script, a set, a look and music) + the set + the canvas (widescreen, reel, Instagram
+    square ...). star = a premade id to cast first. Closes with the new production's id, or None."""
 
     def __init__(self, star=None, **properties):
         super().__init__(**properties)
@@ -20,6 +31,7 @@ class NewProduction(NewProductionTemplate):
         self.template_dd.items = [(t["label"], t["id"]) for t in self._templates]
         self.template_dd.selected_value = "meet" if not star else "blank"
         self.set_dd.items = [(s["name"], s["id"]) for s in self._sets]
+        self.canvas_pick.value = _last_canvas()
         self._sync()
 
     def _cast(self):
@@ -66,7 +78,12 @@ class NewProduction(NewProductionTemplate):
         if not title:
             self.message.text, self.message.visible = "Every picture needs a title (you can change it later).", True
             return
-        data = vt.new_doc_json(title, self.template_dd.selected_value, self.set_dd.selected_value, self._cast())
+        canvas = self.canvas_pick.value
+        try:
+            window.localStorage.setItem(CANVAS_KEY, canvas)
+        except Exception:
+            pass
+        data = vt.new_doc_json(title, self.template_dd.selected_value, self.set_dd.selected_value, self._cast(), canvas)
         self.create_button.enabled = False
         try:
             r = anvil.server.call("production_new", title, data)

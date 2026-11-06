@@ -435,12 +435,21 @@
   ];
   VT.GRADE_BY = {};
   VT.GRADES.forEach(function (g) { VT.GRADE_BY[g.id] = g; });
+  /* canvases: the shape of the film. ids are stored in productions (look.aspect): never rename. sizes[0] = the export
+     default (pixels, even numbers). safe = the parts of the frame an app's buttons and captions cover (fractions):
+     subtitles stay inside it and the editor shades it. */
   VT.ASPECTS = [
-    { id: '16:9', label: 'Widescreen 16:9', r: 16 / 9 }, { id: '2.39:1', label: 'CinemaScope 2.39:1', r: 2.39 },
-    { id: '4:3', label: 'Academy 4:3', r: 4 / 3 }, { id: '9:16', label: 'Vertical 9:16 (Reels, Shorts)', r: 9 / 16 }, { id: '1:1', label: 'Square 1:1', r: 1 }
+    { id: '16:9', name: 'Widescreen', label: 'Widescreen 16:9', use: 'YouTube, TV and laptops', r: 16 / 9, sizes: [[1280, 720], [1920, 1080]] },
+    { id: '9:16', name: 'Reel', label: 'Reel 9:16', use: 'Instagram Reels and Stories, TikTok, YouTube Shorts', r: 9 / 16, sizes: [[1080, 1920], [720, 1280]],
+      safe: { t: 0.14, b: 0.35, l: 0.06, r: 0.12, who: 'Instagram' } },
+    { id: '1:1', name: 'Square', label: 'Instagram square 1:1', use: 'Instagram and Facebook feed posts', r: 1, sizes: [[1080, 1080], [720, 720]] },
+    { id: '4:5', name: 'Portrait', label: 'Instagram portrait 4:5', use: 'The tallest feed post: fills more of a phone', r: 4 / 5, sizes: [[1080, 1350], [720, 900]] },
+    { id: '2.39:1', name: 'CinemaScope', label: 'CinemaScope 2.39:1', use: 'The big-screen movie look', r: 2.39, sizes: [[1280, 536], [1920, 804]] },
+    { id: '4:3', name: 'Academy', label: 'Academy 4:3', use: 'Classic cartoon shorts', r: 4 / 3, sizes: [[960, 720], [1440, 1080]] }
   ];
   VT.ASPECT_BY = {};
   VT.ASPECTS.forEach(function (a) { VT.ASPECT_BY[a.id] = a; });
+  VT.aspectOf = function (id) { return VT.ASPECT_BY[id] || VT.ASPECTS[0]; };
 
   /* ------------------------------------------------------------------ sound: effects + music, synthesised once and cached */
   var RATE = 44100;

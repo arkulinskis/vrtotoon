@@ -24,6 +24,7 @@ class Screen(ScreenTemplate):
             self.missing_label.text = r.get("error") or ""
             return
         p = self.p = r["production"]
+        self.dom_nodes["frame"].style.setProperty("--ar", str(vt.aspect(vt.doc_aspect(p.get("data")))["r"]))
         self.player.production = p
         self.title_label.text = p["title"]
         window.document.title = p["title"] + " · VRtoToon"

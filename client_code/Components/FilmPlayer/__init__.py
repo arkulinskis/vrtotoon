@@ -18,6 +18,9 @@ class FilmPlayer(FilmPlayerTemplate):
         if not self._ready or not self._production or self._stage is not None:
             return
         p = self._production
+        if self._mode != "hero":  # the box takes the film's shape (the hero fills its screen)
+            a = vt.aspect(vt.doc_aspect(p.get("data")))
+            self.dom_nodes["box"].style.setProperty("--ar", str(a["r"]))
         doc = vt.doc(p.get("data"))
         takes = vt.takes(p.get("takes") or [])
         opts = {"mode": self._mode, "doc": doc, "takes": takes, "autoplay": self._autoplay, "loop": self._mode == "hero",

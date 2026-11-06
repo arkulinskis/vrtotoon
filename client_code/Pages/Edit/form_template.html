@@ -28,8 +28,11 @@
         </div>
         <div class="ed-main">
           <div class="ed-left">
-            <div class="ed-stage-wrap">
+            <div class="ed-stage-wrap" anvil:dom-node="stage_wrap">
               <anvil-component type="VRtoToon.Components.StageView" name="stage_view"></anvil-component>
+              <div class="ed-canvasbar">
+                <anvil-component type="Button" name="canvas_button" prop:text="Widescreen 16:9" prop:role='["btn", "btn-sm", "btn-glass", "ic-grid"]' prop:tooltip="Change the canvas: widescreen, reel, Instagram square or portrait"></anvil-component>
+              </div>
               <div class="ed-viewbar">
                 <anvil-component type="Button" name="play_button" prop:text="Play" prop:role='["btn", "btn-sm", "btn-solid-dark", "ic-play"]'></anvil-component>
                 <anvil-component type="Button" name="view_button" prop:text="Director's view" prop:role='["btn", "btn-sm", "btn-glass", "ic-eye"]' prop:tooltip="Switch between the film camera and a free view of the set"></anvil-component>
@@ -126,10 +129,14 @@
               <div class="ui-empty" anvil:name="no_takes"><i class="ic ic-mic"></i><h3>Nothing recorded yet</h3><p>Perform a role from the Cast tab, or use Record line in the Script tab.</p></div>
             </div>
             <div class="ed-part" anvil:name="part_look">
+              <div class="ed-canvas">
+                <b class="small">Canvas</b>
+                <anvil-component type="VRtoToon.Components.CanvasPicker" name="canvas_pick"></anvil-component>
+                <p class="small muted ed-tip">The camera reframes every shot for the new shape. Export can also make other shapes from this same picture.</p>
+              </div>
               <div class="ed-grid2">
                 <label class="ui-field"><span>Set</span><anvil-component type="DropDown" name="set_dd"></anvil-component></label>
                 <label class="ui-field"><span>Film look</span><anvil-component type="DropDown" name="grade_dd"></anvil-component></label>
-                <label class="ui-field"><span>Frame</span><anvil-component type="DropDown" name="aspect_dd"></anvil-component></label>
                 <label class="ui-field"><span>Score</span><anvil-component type="DropDown" name="music_dd"></anvil-component></label>
                 <label class="ui-field"><span>Score volume</span><anvil-component type="DropDown" name="vol_dd"></anvil-component></label>
               </div>

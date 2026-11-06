@@ -87,6 +87,7 @@ class Edit(EditTemplate):
         self._keys = anvil.js.report_exceptions(self._key)
         window.document.addEventListener("keydown", self._keys)
         window.VT_EDITOR = {"doc": self.doc, "stage": self.stage, "takes": self.takes, "pid": self.pid}  # for the UI tests
+        self._sync_canvas()
         self._refresh_all()
         self._show_tab(self.tab, False)
         self.takes.loadAll()
@@ -118,7 +119,6 @@ class Edit(EditTemplate):
         self.sfx_dd.items = self.sfx_items
         self.set_dd.items = [(s["name"], s["id"]) for s in vt.set_list()]
         self.grade_dd.items = [(g["label"] + " · " + g["note"], g["id"]) for g in vt.grades()]
-        self.aspect_dd.items = [(a["label"], a["id"]) for a in vt.aspects()]
         self.music_dd.items = [(m["label"], m["id"]) for m in vt.music()]
         self.vol_dd.items = VOLS
 
@@ -129,6 +129,7 @@ class Edit(EditTemplate):
             self.save_timer.interval = 1.5
             self.status_label.text = "Unsaved changes"
         self._stats()
+        self._sync_canvas()
         self.undo_button.enabled = bool(self.doc.canUndo())
         self.redo_button.enabled = bool(self.doc.canRedo())
         if self._quiet:
@@ -606,7 +607,7 @@ class Edit(EditTemplate):
         look, music = d.get("look") or {}, d.get("music") or {}
         self.set_dd.selected_value = d.get("set")
         self.grade_dd.selected_value = look.get("grade")
-        self.aspect_dd.selected_value = look.get("aspect")
+        self.canvas_pick.value = look.get("aspect") or "16:9"
         self.music_dd.selected_value = music.get("id") or "none"
         vol = music.get("vol", 0.2)
         if vol not in [v for _, v in VOLS]:
@@ -628,9 +629,25 @@ class Edit(EditTemplate):
     def grade_dd_change(self, **event_args):
         self.doc.set("look.grade", self.grade_dd.selected_value)
 
-    @handle("aspect_dd", "change")
-    def aspect_dd_change(self, **event_args):
-        self.doc.set("look.aspect", self.aspect_dd.selected_value)
+    @handle("canvas_pick", "change")
+    def canvas_pick_change(self, value=None, **event_args):
+        self.doc.set("look.aspect", value or "16:9")
+        a = vt.aspect(value)
+        state.toast("Canvas: %s. Every shot is reframed for it." % a["label"], "ok")
+
+    @handle("canvas_button", "click")
+    def canvas_button_click(self, **event_args):
+        self._show_tab("look")
+
+    def _sync_canvas(self):
+        """The stage box and its badge follow the picture's canvas (after any change, undo included)."""
+        a = vt.aspect(str(self.doc.d.look.aspect or "16:9"))
+        if a["id"] == getattr(self, "_canvas", None):
+            return
+        self._canvas = a["id"]
+        self.dom_nodes["stage_wrap"].style.setProperty("--ar", str(a["r"]))
+        self.dom_nodes["stage_wrap"].classList.toggle("tall", a["r"] < 1.3)
+        self.canvas_button.text = a["label"]
 
     @handle("music_dd", "change")
     def music_dd_change(self, **event_args):
@@ -656,7 +673,8 @@ class Edit(EditTemplate):
 
     @handle("poster_button", "click")
     def poster_button_click(self, **event_args):
-        url = self.stage.snapshot(640, 360)
+        w, h = vt.snap_size(self.stage.aspectId())
+        url = self.stage.snapshot(w, h)
         if state.call("production_poster", self.pid, url) is not None:
             state.toast("Poster saved. It shows on the Lot and in Premieres.", "ok")
 

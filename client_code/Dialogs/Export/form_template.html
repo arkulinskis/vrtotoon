@@ -1,6 +1,11 @@
 <div class="ui export-dlg">
   <h2 class="dlg-h">Take it to the world</h2>
   <p class="muted small">Everything is made right here in your browser: nothing is uploaded, nothing to wait for on a server.</p>
+  <div class="ex-canvas">
+    <b class="small">Export as</b>
+    <anvil-component type="VRtoToon.Components.CanvasPicker" name="canvas_pick" prop:describe="false"></anvil-component>
+    <anvil-component type="Label" name="canvas_note" prop:role='["fine-print"]'></anvil-component>
+  </div>
   <div class="ex-grid">
     <div class="ex-card">
       <i class="ic ic-film"></i>

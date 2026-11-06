@@ -5,25 +5,46 @@ from anvil.js import window
 from ._anvil_designer import ExportTemplate
 from ... import vt
 
-SIZES = [("720p widescreen (1280 x 720)", "1280x720"), ("1080p widescreen (1920 x 1080)", "1920x1080"),
-         ("Vertical for Reels and Shorts (1080 x 1920)", "1080x1920"), ("Square (1080 x 1080)", "1080x1080")]
-
 
 class Export(ExportTemplate):
-    """Exports of the picture on `stage` (the editor's JS stage): video, Blender kit, .glb, subtitles, sound, script."""
+    """Exports of the picture on `stage` (the editor's JS stage): video, Blender kit, .glb, subtitles, sound, script.
+    "Export as" picks the canvas for the video and the Blender kit: the picture's own, or any other shape (the stage's
+    aspectOverride while exporting: the camera reframes every shot), so one picture becomes a reel, a square and a
+    widescreen film without changing it."""
 
     def __init__(self, stage, title="film", **properties):
         super().__init__(**properties)
         self.stage = stage
         self.name = vt.slug(title)
-        self.size_dd.items = SIZES
-        aspect = vt.py(stage.doc.d.look.aspect)
-        self.size_dd.selected_value = "1080x1920" if aspect == "9:16" else "1080x1080" if aspect == "1:1" else "1280x720"
+        self.own = vt.aspect(str(stage.doc.d.look.aspect or "16:9"))["id"]
+        self.canvas_pick.value = self.own
+        self._sizes()
         self.subs_check.checked = bool(vt.py(stage.doc.d.look.subs))
         self.progress.visible = False
         if not vt.VT.videoMime():
             self.video_button.enabled = False
             self.video_button.text = "This browser can't record video"
+
+    def _sizes(self):
+        a = vt.aspect(self.canvas_pick.value)
+        biggest = max(w * h for w, h in a["sizes"])
+        self.size_dd.items = [("%d x %d (%s)" % (w, h, "full HD" if w * h == biggest else "smaller file, quicker"), "%dx%d" % (w, h))
+                              for w, h in a["sizes"]]
+        self.size_dd.selected_value = "%dx%d" % tuple(a["sizes"][0])
+        if a["id"] == self.own:
+            self.canvas_note.text = "The picture's own canvas: %s (%s)." % (a["label"], a["use"])
+        else:
+            self.canvas_note.text = "%s (%s). The picture stays %s: only this export is reframed." % (a["label"], a["use"], vt.aspect(self.own)["label"])
+
+    @handle("canvas_pick", "change")
+    def canvas_pick_change(self, value=None, **event_args):
+        self._sizes()
+
+    def _shape(self, on):
+        """Export in the chosen canvas (on) or go back to the picture's own (off)."""
+        pick = self.canvas_pick.value
+        self.stage.aspectOverride = pick if on and pick != self.own else vt.NULL
+        self.canvas_pick.enabled = not on
 
     def _say(self, text):
         self.message.text, self.message.visible = text, bool(text)
@@ -39,6 +60,7 @@ class Export(ExportTemplate):
         self.progress.visible = True
         self.cancel_video_button.visible = True
         self._say("Rolling... the film plays through once while it records (%s)." % vt.fmt(self.stage.total))
+        self._shape(True)
         try:
             r = vt.VT.ed.exportVideo(self.stage, {"w": w, "h": h, "subs": bool(self.subs_check.checked), "fps": 30}, self.dom_nodes["bar"])
             vt.download(r.blob, "%s.%s" % (self.name, r.ext))
@@ -46,6 +68,7 @@ class Export(ExportTemplate):
         except Exception as e:
             self._say("The recording stopped: %s" % (str(e) if "cancel" not in str(e) else "cancelled."))
         finally:
+            self._shape(False)
             self._busy(False)
             self.cancel_video_button.visible = False
 
@@ -57,21 +80,25 @@ class Export(ExportTemplate):
     def blender_button_click(self, **event_args):
         self._busy(True)
         self._say("Baking every frame for Blender...")
+        self._shape(True)
         try:
             z = vt.VT.blenderKit(self.stage, {"fps": 24})
             vt.download(z, self.name + "-blender.zip")
             self._say("Done: %s-blender.zip. Unzip it, open import_vrtotoon.py in Blender's Scripting tab and press Run Script." % self.name)
         finally:
+            self._shape(False)
             self._busy(False)
 
     @handle("glb_button", "click")
     def glb_button_click(self, **event_args):
         self._busy(True)
+        self._shape(True)
         try:
             g = vt.VT.exportGLB(self.stage, {"fps": 24})
             vt.download(g.blob, self.name + ".glb")
             self._say("Done: %s.glb (%d frames, %d animated channels)." % (self.name, g.info.frames, g.info.channels))
         finally:
+            self._shape(False)
             self._busy(False)
 
     @handle("srt_button", "click")

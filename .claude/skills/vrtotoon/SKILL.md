@@ -65,8 +65,9 @@ client_code/
   Components/     Portrait (img from VT.portrait), FilmPlayer (VT.Stage film/hero + VT.controls), Turntable (VT.Stage
                   turntable), StageView (VT.Stage edit; events select/place), TimelineView (VT.Timeline; event select),
                   PerformView (VT.Perform; events state/kept), LiveMonitor (VT.LiveViewer: the floating headset view; event
-                  closed), Slider (range input; change(value, final)), ColorPick (swatches + native picker; change(value))
-  Items/          CastCard ProductionCard Chip BeatRow CastRow TakeRow ShotRow KeyButton FilmRow Swatch (+ template ones)
+                  closed), Slider (range input; change(value, final)), ColorPick (swatches + native picker; change(value)),
+                  CanvasPicker (canvas tiles drawn to scale + what each is for; value, enabled, describe; change(value))
+  Items/          CastCard ProductionCard Chip BeatRow CastRow TakeRow ShotRow KeyButton FilmRow Swatch CanvasTile (+ template ones)
   Dialogs/        NewProduction CharacterSheet CastPicker ImportScript HeadsetLink (Watch live) Export Share VoiceBooth
                   FaceBooth (webcam face pass for one take: VT.FaceBooth; take_face / take_face_remove)
 server_code/      Productions (lot_home, new/get/save(merge)/copy/share/poster/logline/delete), Takes (save_take shared with
@@ -77,7 +78,8 @@ server_code/      Productions (lot_home, new/get/save(merge)/copy/share/poster/l
 theme/assets/     vt-cast.js    characters: VT.CAST (25, ids never change), species builder, face rig (+ def.face sliders), IK
                                 arms, toon hands (thumb + 3 fingers, curls), VT.HAND_SHAPES (8), VT.handQ, legs,
                                 VT.EMOTIONS (12), VT.GESTURES (21), VT.proceduralPose, VT.portrait, VT.makeDef, VT.randomDef
-                  vt-sets.js    VT.SETS (10, ids never change), VT.buildSet, VT.GRADES (8), VT.ASPECTS, VT.SFX (14), VT.MUSIC (8)
+                  vt-sets.js    VT.SETS (10, ids never change), VT.buildSet, VT.GRADES (8), VT.ASPECTS (6 canvases) + VT.aspectOf,
+                                VT.SFX (14), VT.MUSIC (8)
                   vt-film.js    VT.Doc (undo/redo, ops), layout (ripple), VT.Film (place/walk, emotion, gesture, look, perform,
                                 mouth, camera shots), VT.autoDirect, VT.parseScript / applyScript, VT.TEMPLATES, voiceChain
                   vt-stage.js   VT.Stage (render loop, grade post pass, letterbox, titles/subtitles, audio mix, editor input,
@@ -125,6 +127,14 @@ tools/            make_demo_voices.py (Kokoro TTS -> theme/assets/dv-<film>-<bea
   the selected clip (cross-fade 0.3 s between sources) or VT.proceduralPose (idle, talking hands, gesture keys), face from
   emotion keys + the beat's emo, mouth from the take (or flapping to the words), blink, gaze at the look target.
 - Camera: the latest shot; framing from actor positions each frame; camDir keeps the 180-degree rule (audience side +Z).
+- **Canvases** (Nov 6 2026): `look.aspect` = a VT.ASPECTS id (16:9, 9:16 reel, 1:1, 4:5, 2.39:1, 4:3; ids never change).
+  Each has name, label, use, r, sizes (export pixels, [0] = default) and optional `safe` (fractions an app's UI covers:
+  the reel's t .14 b .35 l .06 r .12, Meta's Reels guidance). `stage.aspectId()` = `stage.aspectOverride` (set by the
+  Export dialog while exporting another shape) or the doc's. Film.camera(t, actors, aspect): wides fit by the aspect;
+  other shots step back by (1.3 / r)^0.75 when r < 1.3, two-shots by the exact horizontal fit. drawTitles scales by
+  min(w, h) / 360 (= the old h / 360 on wide frames), shrinks lines that don't fit, keeps subtitles inside `safe`
+  (x 1.2 and up to 3 rows on tall frames); VT.drawSafeZone shades `safe` in the editor. Not followed yet: the headset's
+  HUD monitor and the live view (both 16:9).
 
 ## How things are done here
 
@@ -163,6 +173,9 @@ dialogs = `alert(Form(...), buttons=[], role="app-dialog")`; server calls via `s
   sign/bulbs/lightCone/particles, `api.anim.push(fn(t))`). Keep the acting area x -3..3, z -2..2 clear.
 - **New shot type / move:** `VT.SHOTS` / `VT.MOVES` + a case in `Film.camera`; the auto-director is `VT.autoDirect`.
 - **New film look:** `VT.GRADES` (sat, con, exp, tint, vig, grain, bw).
+- **New canvas:** a row in `VT.ASPECTS` (vt-sets.js: id, name, label, use, r, sizes with even numbers, safe if an app
+  covers parts of it); the pickers, export sizes and stage follow. Add its resolution to the Blender script's map
+  (vt-export.js, `w, h = {...}`).
 - **New face control (face booth):** append to `VT.FACE_CH` (never reorder: stored tracks are positional; old tracks with a
   smaller k read REST for the new one), add its REST value, measure it in `faceMeasure` (key points in the head frame,
   units = outer eye corner distance), map it in `faceFromMeasures`, use it in `mixCamFace` + Actor._face, set
@@ -187,6 +200,8 @@ dialogs = `alert(Form(...), buttons=[], role="app-dialog")`; server calls via `s
 - Never write Anvil's theme-colour token pattern (percent, `color:`, name, percent) in theme.css.
 - The local App Server (1.18) lags hosted Anvil (attrs, notifications, `<anvil-dropzone>` wrappers): see the template notes.
 - Licensed music must never ship here (users export videos): all music and effects are synthesised (VT.MUSIC / VT.SFX).
+- Scratch screenshot/test scripts run in Anvil's page: never assign `window.$` (it's the runtime's jQuery; overwriting it
+  breaks every form built afterwards with "is not a valid selector"). flow.js keeps `$` local (const).
 - **Live view:** the headset renders the preview into its own 640x360 render target (sRGB, no MSAA) ~12 times a second,
   `readRenderTargetPixels` + a row flip into a 2D canvas, `captureStream(12)` -> WebRTC. readPixels stalls the GPU a little:
   keep it small. The canvas track is replaced with `sender.replaceTrack`, and the microphone joins the same way once the

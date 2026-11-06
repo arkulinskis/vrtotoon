@@ -70,7 +70,7 @@ def card(p, me=None):
     """A production for lists (no document)."""
     d = p["data"] or {}
     return {"id": p.get_id(), "title": p["title"] or "Untitled picture", "logline": p["logline"] or "", "set": d.get("set") or "soundstage",
-            "grade": (d.get("look") or {}).get("grade") or "technicolor",
+            "grade": (d.get("look") or {}).get("grade") or "technicolor", "aspect": (d.get("look") or {}).get("aspect") or "16:9",
             "cast": [c.get("char") for c in (d.get("cast") or [])][:6], "custom": d.get("custom") or {},
             "lines": len([b for b in (d.get("beats") or []) if b.get("kind") == "line"]),
             "takes": len(app_tables.takes.search(production=p)), "poster": p["poster"] or "",

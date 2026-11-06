@@ -430,9 +430,10 @@ db_schema:
     server: full
     title: Users
 metadata:
-  description: "Make 3D cartoons in your browser: perform every character yourself in a VR headset or with the mouse, direct on your computer, export video or Blender files."
-  logo_img: "asset:icon-512.png"
-  title: "VRtoToon: make cartoons in VR, playing every role yourself"
+  description: 'Make 3D cartoons in your browser: perform every character yourself in a VR headset or with the mouse, direct
+    on your computer, export video or Blender files.'
+  logo_img: asset:icon-512.png
+  title: 'VRtoToon: make cartoons in VR, playing every role yourself'
 name: VRtoToon
 native_deps:
   head_html: |
@@ -483,19 +484,19 @@ native_deps:
     <!-- Prepsto feedback panel: every "Submit feedback" link and button opens it (it is the only feedback channel). No floating button, no cookies, nothing loads until it is opened. Codes: APP_MAKER/prepsto-links.json -->
     <script src="https://prepsto.com/_/theme/widget.js" data-prepsto="nmbrrdm" data-button="false" data-label="Submit feedback" async></script>
     <link rel="stylesheet" href="_/theme/icons.css?v=c408c1671b">
-    <link rel="stylesheet" href="_/theme/app.css?v=5dc018e22c">
-    <link rel="stylesheet" href="_/theme/vt.css?v=992504c243">
+    <link rel="stylesheet" href="_/theme/app.css?v=bea06af824">
+    <link rel="stylesheet" href="_/theme/vt.css?v=b40fe8fdbf">
     <script src="_/theme/app-kit.js?v=3240841489"></script>
     <script src="_/theme/three.min.js?v=3bfa54fdd7"></script>
     <script src="_/theme/vt-cast.js?v=2cf8a8716f"></script>
-    <script src="_/theme/vt-sets.js?v=07f964753b"></script>
-    <script src="_/theme/vt-film.js?v=bfa5fe6641"></script>
-    <script src="_/theme/vt-stage.js?v=2785bb159b"></script>
+    <script src="_/theme/vt-sets.js?v=cbd182d8be"></script>
+    <script src="_/theme/vt-film.js?v=891dfbfff1"></script>
+    <script src="_/theme/vt-stage.js?v=3775eb13ce"></script>
     <script src="_/theme/vt-timeline.js?v=e75e34b3a3"></script>
     <script src="_/theme/vt-xr.js?v=e1ab1e1e62"></script>
     <script src="_/theme/vt-live.js?v=399965585f"></script>
     <script src="_/theme/vt-face.js?v=ba4cbf4113"></script>
-    <script src="_/theme/vt-export.js?v=0ff5d0f7b1"></script>
+    <script src="_/theme/vt-export.js?v=7278f99b97"></script>
     <script src="_/theme/vt-ui.js?v=73a70350cf"></script>
     <script src="_/theme/vt-ed.js?v=ba3fe7418e"></script>
 package_name: VRtoToon

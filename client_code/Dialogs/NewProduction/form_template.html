@@ -13,6 +13,9 @@
       </label>
     </div>
     <anvil-component type="Label" name="set_blurb" prop:role='["fine-print"]'></anvil-component>
+    <div class="ui-field np-canvas"><span>Canvas</span>
+      <anvil-component type="VRtoToon.Components.CanvasPicker" name="canvas_pick"></anvil-component>
+    </div>
     <div class="np-cast">
       <anvil-component type="Label" name="cast_title" prop:text="Starring" prop:role='["strong"]'></anvil-component>
       <anvil-component type="RepeatingPanel" name="cast_panel" prop:item_template="VRtoToon.Items.CastCard" prop:role='["cast-grid", "cast-tiny"]'></anvil-component>
