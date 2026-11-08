@@ -414,8 +414,24 @@
       group: g, preset: S, lights: lights, key: key,
       update: function (t) { api.anim.forEach(function (f) { f(t); }); },
       // passthrough (AR): hide everything but the actors' floor shadows
+      // .ar says whether it is on. Leaving puts back each part's own visibility and the floor's own material.
+      ar: false,
       setAR: function (on) {
-        g.traverse(function (o) { if (o.userData.backdrop || (o.isMesh && !o.userData.floor && o.parent !== lights)) o.visible = !on || o.userData.keepAR; if (o.userData.floor) { o.material = on ? new T.ShadowMaterial({ opacity: 0.35 }) : VT.mat('#5a4448'); } });
+        on = !!on;
+        if (on === this.ar) return;
+        this.ar = on;
+        g.traverse(function (o) {
+          var U = o.userData;
+          if (o === lights || o.parent === lights) return;
+          if (U.floor) {
+            if (on) { U.mat0 = o.material; o.material = U.shadowMat || (U.shadowMat = new T.ShadowMaterial({ opacity: 0.35 })); }
+            else if (U.mat0) { o.material = U.mat0; U.mat0 = null; }
+            return;
+          }
+          if (!(U.backdrop || o.isMesh || o.isPoints || o.isLine || o.isSprite)) return;  // dust, rain and signs go too
+          if (on) { U.vis0 = o.visible; o.visible = !!U.keepAR; }
+          else if (U.vis0 != null) { o.visible = U.vis0; U.vis0 = null; }
+        });
         scene.background = on ? null : new T.Color(L.bg); scene.fog = on ? null : (L.fog ? new T.Fog(L.fog[0], L.fog[1], L.fog[2]) : null);
       },
       dispose: function () { scene.remove(g); }

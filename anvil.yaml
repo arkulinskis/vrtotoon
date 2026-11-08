@@ -488,12 +488,12 @@ native_deps:
     <link rel="stylesheet" href="_/theme/vt.css?v=b40fe8fdbf">
     <script src="_/theme/app-kit.js?v=3240841489"></script>
     <script src="_/theme/three.min.js?v=3bfa54fdd7"></script>
-    <script src="_/theme/vt-cast.js?v=2cf8a8716f"></script>
-    <script src="_/theme/vt-sets.js?v=cbd182d8be"></script>
+    <script src="_/theme/vt-cast.js?v=84b207e3c3"></script>
+    <script src="_/theme/vt-sets.js?v=e193d0342a"></script>
     <script src="_/theme/vt-film.js?v=891dfbfff1"></script>
     <script src="_/theme/vt-stage.js?v=3775eb13ce"></script>
     <script src="_/theme/vt-timeline.js?v=e75e34b3a3"></script>
-    <script src="_/theme/vt-xr.js?v=e1ab1e1e62"></script>
+    <script src="_/theme/vt-xr.js?v=80a5931315"></script>
     <script src="_/theme/vt-live.js?v=399965585f"></script>
     <script src="_/theme/vt-face.js?v=ba4cbf4113"></script>
     <script src="_/theme/vt-export.js?v=7278f99b97"></script>

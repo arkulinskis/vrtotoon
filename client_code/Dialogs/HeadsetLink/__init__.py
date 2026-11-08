@@ -33,7 +33,10 @@ class HeadsetLink(HeadsetLinkTemplate):
 
     @handle("timer", "tick")
     def timer_tick(self, **event_args):
-        r = anvil.server.call_s("stage_status", self.page.pid, None)
+        try:
+            r = anvil.server.call_s("stage_status", self.page.pid, None)
+        except anvil.server.AppOfflineError:
+            return  # the connection blinked (a headset going in or out of VR does this): ask again next tick
         if r.get("ok"):
             self._status(r["online"], r["device"])
 

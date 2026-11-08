@@ -353,23 +353,25 @@
     this.arms = {};
     var self2 = this;
     [-1, 1].forEach(function (side) {
-      var key = side < 0 ? 'l' : 'r';  // l = the character's left (screen right when facing us)
+      // key = the pose data's slot: 'l' sits on -X. A character faces +Z, so -X is its RIGHT side (screen left when it
+      // faces us). The node names say the real side, so Blender shows arm_right on the right arm.
+      var key = side < 0 ? 'l' : 'r', nm = side < 0 ? 'right' : 'left';
       var sh = new V3(side * (tW * (sp === 'penguin' ? 0.98 : 1.05)), tH * (sp === 'penguin' ? 0.62 : 0.8), 0);
-      var upper = grp('arm_' + key + '_upper', torso); upper.position.copy(sh);
+      var upper = grp('arm_' + nm + '_upper', torso); upper.position.copy(sh);
       var armCol = sp === 'human' || sp === 'robot' ? c.shirt : sp === 'penguin' ? skin : (sp === 'alien' || sp === 'ogre' ? skin : skin);
       if (sp === 'human' && d.build.torso === 'dress') armCol = skin;
       var ar = P.armR;
       var u = mesh(sp === 'penguin' ? SPH() : CAPS(ar, Math.max(0.001, P.upper - ar)), armCol); u.position.y = -P.upper / 2;
       if (sp === 'penguin') u.scale.set(0.035 * S, P.upper * 0.6, 0.06 * S);
       upper.add(u);
-      var fore = grp('arm_' + key + '_fore', upper); fore.position.y = -P.upper;
+      var fore = grp('arm_' + nm + '_fore', upper); fore.position.y = -P.upper;
       var fc = sp === 'human' && d.build.torso !== 'dress' && sp !== 'robot' ? (d.hat === 'knight' ? c.shirt : skin) : armCol;
       if (sp === 'robot') fc = c.pants;
       var f = mesh(sp === 'penguin' ? SPH() : CAPS(ar * 0.92, Math.max(0.001, P.fore - ar)), sp === 'penguin' ? skin : fc);
       if (sp === 'penguin') f.scale.set(0.03 * S, P.fore * 0.6, 0.05 * S);
       f.position.y = -P.fore / 2; fore.add(f);
       if (sp !== 'penguin') { var el = mesh(SPH(), armCol, { outline: false }); at(el, 0, 0, 0, ar * 0.98); fore.add(el); }
-      var hand = grp('arm_' + key + '_hand', fore); hand.position.y = -P.fore;
+      var hand = grp('arm_' + nm + '_hand', fore); hand.position.y = -P.fore;
       var gloves = d.acc.indexOf('gloves') >= 0;
       var handCol = gloves ? (c.gloves || '#f7f4ee') : sp === 'robot' ? c.accent : sp === 'penguin' ? skin : (sp === 'human' && (d.acc.indexOf('cape') >= 0 && d.hat === 'top') ? '#f7f4ee' : skin);
       var H = self2._buildHand(hand, handCol, S * (sp === 'dino' ? 0.75 : sp === 'penguin' ? 0.6 : 1) * (d.build.hand || 1), side, sp, gloves);
@@ -379,10 +381,10 @@
     // ---- legs
     this.legs = {};
     [-1, 1].forEach(function (side) {
-      var key = side < 0 ? 'l' : 'r';
-      var thigh = grp('leg_' + key + '_thigh', hips); thigh.position.set(side * P.hipW, 0, 0);
-      var shin = grp('leg_' + key + '_shin', thigh); shin.position.y = -P.thigh;
-      var foot = grp('leg_' + key + '_foot', shin); foot.position.y = -P.shin;
+      var key = side < 0 ? 'l' : 'r', nm = side < 0 ? 'right' : 'left';  // see the arms
+      var thigh = grp('leg_' + nm + '_thigh', hips); thigh.position.set(side * P.hipW, 0, 0);
+      var shin = grp('leg_' + nm + '_shin', thigh); shin.position.y = -P.thigh;
+      var foot = grp('leg_' + nm + '_foot', shin); foot.position.y = -P.shin;
       var legCol = sp === 'human' || sp === 'robot' || sp === 'alien' ? c.pants : skin;
       if (sp === 'human' && d.build.torso === 'dress') legCol = skin;
       if (sp === 'ghost') {
@@ -505,7 +507,7 @@
     f.eyes = [];
     [-1, 1].forEach(function (side) {
       var pos = onFace(side * eyeYaw, eyePitch, sp === 'frog' ? 1.02 : 0.94);
-      var eg = grp('eye_' + (side < 0 ? 'l' : 'r'), hm);
+      var eg = grp('eye_' + (side < 0 ? 'right' : 'left'), hm);
       eg.position.copy(pos);
       eg.lookAt(new V3(pos.x * 0.35, pos.y, pos.z + 4));
       var sock = grp('', eg);  // eye at origin facing +Z

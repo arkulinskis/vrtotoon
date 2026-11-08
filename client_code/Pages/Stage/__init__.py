@@ -210,6 +210,12 @@ class Stage(StageTemplate):
     # ---------------------------------------------------------------- the director's calls
     @handle("poll_timer", "tick")
     def poll_timer_tick(self, **event_args):
+        try:
+            self._poll()
+        except anvil.server.AppOfflineError:
+            pass  # the headset's connection drops for a moment going in or out of VR: the next tick tries again
+
+    def _poll(self):
         r = anvil.server.call_s("stage_poll", self.pid, vt.VT.ed.device())
         if not r.get("ok"):
             return

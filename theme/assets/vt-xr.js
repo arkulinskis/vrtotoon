@@ -24,6 +24,13 @@
   if (!T) return;
   var D2R = Math.PI / 180, FPS = 30, PREROLL = 1.0;
   var HAND_OFF = new T.Quaternion(0, Math.SQRT1_2, Math.SQRT1_2, 0);  // the toon hand's fingers (-Y) along the XR -Z, its back (+Z) along XR +Y
+  /* A held controller: the toon fingers along the grip's -Z, the thumb up (+Y) and the back of the hand facing out, as
+     your own hand sits on a Quest controller (WebXR grip space: the right hand's back points +X, the left hand's -X).
+     side = the rig arm's side (+1 = 'r', worn by the left hand). Without this the toon palms faced the floor. */
+  function gripOff(side) {
+    return new T.Quaternion().setFromRotationMatrix(new T.Matrix4().makeBasis(new T.Vector3(0, -side, 0), new T.Vector3(0, 0, 1), new T.Vector3(-side, 0, 0)));
+  }
+  var GRIP_OFF = { r: gripOff(1), l: gripOff(-1) };
   // The rig names its arms by where they sit: 'r' is the arm on +X. A character faces +Z, so that is its LEFT arm, and the
   // performer's left hand (on their +X once calibrated) must drive it, or the arms cross.
   var RIG_KEY = { left: 'r', right: 'l' };
@@ -115,6 +122,7 @@
     st.live[aid] = function (a, t) { self._livePose(a, t); };
     if (this.mode !== 'flat' && st.actors[aid]) st.actors[aid].firstPerson(true);
     this._calib = null;
+    if (this.mode !== 'flat') this._needCalib = 6;  // stand on the new character's mark
     this._emit();
   };
   Perform.prototype.cycleRole = function (dir) {
@@ -136,10 +144,16 @@
   Perform.prototype.enterVR = function (ar) {
     var self = this, r = this.stage.renderer;
     if (!navigator.xr) return Promise.reject(new Error('No WebXR here. Open VRtoToon in your headset\'s browser.'));
+    if (this.session || this._entering) return Promise.resolve();  // already in (or on the way in)
+    this._entering = true;
     return navigator.xr.requestSession(ar ? 'immersive-ar' : 'immersive-vr', { optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking'] }).then(function (session) {
       r.xr.setReferenceSpaceType('local-floor');
       return r.xr.setSession(session).then(function () {
+        self._entering = false;
         self.mode = ar ? 'ar' : 'vr'; self.session = session;
+        // this session's own floor space. Every session has its own: one kept from an earlier session makes three.js
+        // throw "XRSpace and XRFrame sessions do not match" on every frame (leave VR, come back in).
+        self._baseSpace = r.xr.getReferenceSpace();
         self.stage.set.setAR && self.stage.set.setAR(!!ar);
         if (ar) { r.setClearColor(0x000000, 0); }
         if (self.stage.actors[self.actor]) self.stage.actors[self.actor].firstPerson(true);
@@ -148,16 +162,23 @@
         self._calib = null; self._needCalib = 6;  // calibrate once the headset pose arrives (a few frames)
         self._emit();
       });
-    });
+    }).catch(function (e) { self._entering = false; throw e; });
   };
   Perform.prototype.exitVR = function () { if (this.session) this.session.end(); };
   Perform.prototype._leaveXR = function () {
     var st = this.stage;
     if (this.state === 'rec' || this.state === 'countdown') this.cut();
-    this.mode = 'flat'; this.session = null;
+    this.mode = 'flat'; this.session = null; this._entering = false;
+    this._baseSpace = null; this._needCalib = 0; this._hudYaw = null;  // the next session starts from scratch
     st.set.setAR && st.set.setAR(false);
+    st.renderer.setClearColor(0x000000, 1);
     st.scene.scale.setScalar(1);
-    if (this.hud) { st.scene.remove(this.hud); this.hud = null; }
+    (this.ctrl || []).forEach(function (info) { info.off(); });
+    this.ctrl = null; this._hover = null;
+    if (this.hud) {
+      st.scene.remove(this.hud); this.hud = null;
+      [this.promptTex, this.menuTex, this.monRT].forEach(function (x) { if (x) x.dispose(); });
+    }
     if (st.actors[this.actor]) st.actors[this.actor].firstPerson(false);
     this._calib = null;
     this._emit();
@@ -185,9 +206,15 @@
       var dot = new T.Mesh(new T.SphereGeometry(0.008, 10, 8), new T.MeshBasicMaterial({ color: '#ffd166' }));
       hud.add(laser); hud.add(dot);
       var info = { c: c, g: g, hs: hs, laser: laser, dot: dot, hand: null, src: null, touch: false, curl: null };
-      c.addEventListener('connected', function (e) { info.src = e.data; info.hand = e.data.handedness; });
-      c.addEventListener('disconnected', function () { info.src = null; });
-      c.addEventListener('selectstart', function () { if (self._hover && self.state !== 'rec') self._hover.fn(); });
+      // three.js keeps the same controller objects for every session: take these off again when VR ends, or each
+      // visit adds another set and one trigger pull presses a menu button several times
+      var on = {
+        connected: function (e) { info.src = e.data; info.hand = e.data.handedness; },
+        disconnected: function () { info.src = null; },
+        selectstart: function () { if (self._hover && self.state !== 'rec') self._hover.fn(); }
+      };
+      Object.keys(on).forEach(function (k) { c.addEventListener(k, on[k]); });
+      info.off = function () { Object.keys(on).forEach(function (k) { c.removeEventListener(k, on[k]); }); };
       return info;
     });
     this._lastBtn = {};
@@ -210,7 +237,8 @@
       .multiply(new T.Matrix4().makeTranslation(-hp.x, 0, -hp.z));
     var inv = W.clone().invert(), p = new T.Vector3(), q = new T.Quaternion();
     inv.decompose(p, q, new T.Vector3());
-    var base = this._baseSpace || (this._baseSpace = r.xr.getReferenceSpace());
+    var base = this._baseSpace;
+    if (!base || !this.session || r.xr.getSession() !== this.session) return false;
     r.xr.setReferenceSpace(base.getOffsetReferenceSpace(new XRRigidTransform({ x: p.x, y: p.y, z: p.z, w: 1 }, { x: q.x, y: q.y, z: q.z, w: q.w })));
     this._calib = { k: k, x: pl.x, z: pl.z, f: pl.f, eye: hp.y };
     return true;
@@ -240,7 +268,7 @@
       if (hand) { out[key] = hand; return; }
       if (info.src.hand) return;  // a tracked hand that is out of view this frame: the arm rests
       var g = toLocal(info.g.matrix.clone());
-      var hq = g.q.clone().multiply(HAND_OFF);
+      var hq = g.q.clone().multiply(GRIP_OFF[key]);
       var wrist = g.p.clone().add(new T.Vector3(0, 0.055 * a.def.build.h, 0).applyQuaternion(hq));
       var gp = info.src.gamepad;
       if (gp && gp.buttons && !info.touch) info.touch = gp.buttons.some(function (b) { return b && b.touched && !b.pressed; });
@@ -526,6 +554,7 @@
   Perform.prototype._tick = function () {
     var st = this.stage, nowMs = performance.now();
     var dt = this._tickAt ? Math.min(0.5, (nowMs - this._tickAt) / 1000) : 0; this._tickAt = nowMs;  // real time: the voice recorder runs on the wall clock
+    if (this.mode === 'ar' && st.set.setAR && !st.set.ar) st.set.setAR(true);  // a new set arrived mid-session
     if (this.mode !== 'flat' && this._needCalib) { this._needCalib--; if (!this._needCalib && this._calibrate() === false) this._needCalib = 10; }
     var lv = this._listen();
     this._level = VT.clamp((lv.rms - (this._thresh || 0.012) * 0.6) * 18, 0, 1);
