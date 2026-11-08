@@ -437,7 +437,7 @@ metadata:
 name: VRtoToon
 native_deps:
   head_html: |
-    <script src="_/theme/legal-kit.js?v=57c0f1d2e4"></script>
+    <script src="_/theme/legal-kit.js?v=c544d03b8e"></script>
     <!-- seo:start (APP_MAKER/seo: edit seo/apps/vrtotoon.json and run seo.py, not here) -->
     <link rel="canonical" href="https://vrtotoon.anvil.app/">
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
