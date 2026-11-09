@@ -27,7 +27,7 @@ class Door(DoorTemplate):
         window.document.removeEventListener("keydown", self._typed)
 
     def _keydown(self, event):
-        k = (event.key or "").upper()
+        k = (getattr(event, "key", None) or "").upper()
         if k == "BACKSPACE":
             self._press("back")
         elif len(k) == 1 and k in LETTERS:

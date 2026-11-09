@@ -701,13 +701,13 @@ class Edit(EditTemplate):
         tag = getattr(event.target, "tagName", "") or ""
         if tag in ("INPUT", "TEXTAREA", "SELECT"):
             return
-        if (event.ctrlKey or event.metaKey) and event.key in ("z", "Z"):
+        if (getattr(event, "ctrlKey", False) or getattr(event, "metaKey", False)) and getattr(event, "key", None) in ("z", "Z"):
             event.preventDefault()
-            if event.shiftKey:
+            if getattr(event, "shiftKey", False):
                 self.doc.redo()
             else:
                 self.doc.undo()
-        elif event.key == " " and self.stage is not None:
+        elif getattr(event, "key", None) == " " and self.stage is not None:
             event.preventDefault()
             self.stage.toggle()
 
