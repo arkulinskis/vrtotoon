@@ -430,9 +430,10 @@ db_schema:
     server: full
     title: Users
 metadata:
-  description: "Make 3D cartoons in your browser: perform every character yourself in a VR headset or with the mouse, direct on your computer, export video or Blender files."
-  logo_img: "asset:icon-512.png"
-  title: "VRtoToon: make cartoons in VR, playing every role yourself"
+  description: 'Make 3D cartoons in your browser: perform every character yourself in a VR headset or with the mouse, direct
+    on your computer, export video or Blender files.'
+  logo_img: asset:icon-512.png
+  title: 'VRtoToon: make cartoons in VR, playing every role yourself'
 name: VRtoToon
 native_deps:
   head_html: |
@@ -492,7 +493,7 @@ native_deps:
     <script src="_/theme/vt-film.js?v=891dfbfff1"></script>
     <script src="_/theme/vt-stage.js?v=3775eb13ce"></script>
     <script src="_/theme/vt-timeline.js?v=e75e34b3a3"></script>
-    <script src="_/theme/vt-xr.js?v=80a5931315"></script>
+    <script src="_/theme/vt-xr.js?v=f56222a5c8"></script>
     <script src="_/theme/vt-live.js?v=399965585f"></script>
     <script src="_/theme/vt-face.js?v=ba4cbf4113"></script>
     <script src="_/theme/vt-export.js?v=7278f99b97"></script>

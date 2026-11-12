@@ -188,6 +188,11 @@ dialogs = `alert(Form(...), buttons=[], role="app-dialog")`; server calls via `s
 
 ## Gotchas
 
+- **No boundary in passthrough (2026-11-12, copied from WallTracer):** `enterVR(true)` asks for the `unbounded`
+  reference space first (vt-xr.js); Quest 3 then shows "This app has boundary disabled" and lets you walk past the
+  guardian. Quest 2 doesn't grant it and falls back to local-floor. Full VR keeps the boundary on purpose (you can't
+  see the room). If an unbounded origin isn't on the floor (head height ~0), `_calibrate` switches that session to
+  local-floor after ~1 s. `immersive-ar` alone does NOT turn the boundary off.
 - Headless Chrome needs SwiftShader for WebGL: tools/live/drive.mjs runs with `--use-angle=swiftshader
   --enable-unsafe-swiftshader` plus fake media flags (microphone tests). Never put `--disable-gpu` back.
 - WebXR can't be tested headless: the desk puppet runs the same pass code (`Perform._readPuppet` vs `_readXR`). Test VR on a

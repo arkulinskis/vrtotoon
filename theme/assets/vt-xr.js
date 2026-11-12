@@ -146,8 +146,16 @@
     if (!navigator.xr) return Promise.reject(new Error('No WebXR here. Open VRtoToon in your headset\'s browser.'));
     if (this.session || this._entering) return Promise.resolve();  // already in (or on the way in)
     this._entering = true;
-    return navigator.xr.requestSession(ar ? 'immersive-ar' : 'immersive-vr', { optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking'] }).then(function (session) {
-      r.xr.setReferenceSpaceType('local-floor');
+    var feats = ['local-floor', 'bounded-floor', 'hand-tracking'];
+    // Passthrough also asks for an "unbounded" space: on Quest 3 that turns the boundary off (the headset says
+    // "This app has boundary disabled"), so you can walk the whole room while you act. You see the real room, so
+    // it's safe; full VR keeps the boundary. Headsets without it (Quest 2) fall back to local-floor as before.
+    if (ar) feats.unshift('unbounded');
+    return navigator.xr.requestSession(ar ? 'immersive-ar' : 'immersive-vr', { optionalFeatures: feats }).then(function (session) {
+      var on = session.enabledFeatures;
+      self._unbounded = !!(ar && on && on.indexOf('unbounded') >= 0);
+      self._calibTries = 0;
+      r.xr.setReferenceSpaceType(self._unbounded ? 'unbounded' : 'local-floor');
       return r.xr.setSession(session).then(function () {
         self._entering = false;
         self.mode = ar ? 'ar' : 'vr'; self.session = session;
@@ -169,7 +177,7 @@
     var st = this.stage;
     if (this.state === 'rec' || this.state === 'countdown') this.cut();
     this.mode = 'flat'; this.session = null; this._entering = false;
-    this._baseSpace = null; this._needCalib = 0; this._hudYaw = null;  // the next session starts from scratch
+    this._baseSpace = null; this._needCalib = 0; this._hudYaw = null; this._unbounded = false;  // the next session starts from scratch
     st.set.setAR && st.set.setAR(false);
     st.renderer.setClearColor(0x000000, 1);
     st.scene.scale.setScalar(1);
@@ -225,7 +233,19 @@
     if (!a) return;
     var xc = r.xr.getCamera(); xc.updateMatrixWorld(true);
     var hp = new T.Vector3(), hq = new T.Quaternion(); xc.matrixWorld.decompose(hp, hq, new T.Vector3());
-    if (hp.y < 0.3) return false;
+    if (hp.y < 0.3) {
+      // an unbounded space whose origin isn't on the floor (head height reads ~0): after a second of that,
+      // switch this session to its local-floor space so the world scale still comes out right
+      if (this._unbounded && ++this._calibTries > 6 && this.session) {
+        var self = this, s = this.session;
+        this._unbounded = false;
+        s.requestReferenceSpace('local-floor').then(function (sp) {
+          if (self.session !== s) return;
+          self._baseSpace = sp; r.xr.setReferenceSpace(sp); self._needCalib = 6;
+        }).catch(function () {});
+      }
+      return false;
+    }
     var k = VT.clamp(hp.y / a.eyeY, 0.4, 3.0);  // world scale: performer eye height / character eye height
     st.scene.scale.setScalar(k);
     var fwd = new T.Vector3(0, 0, -1).applyQuaternion(hq), yaw0 = Math.atan2(-fwd.x, -fwd.z);
