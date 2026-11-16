@@ -461,10 +461,9 @@ db_schema:
     server: full
     title: Users
 metadata:
-  description: 'Make 3D cartoons in your browser: perform every character yourself in a VR headset or with the mouse, direct
-    on your computer, export video or Blender files.'
-  logo_img: asset:icon-512.png
-  title: 'VRtoToon: make cartoons in VR, playing every role yourself'
+  description: "Make 3D cartoons in your browser: perform every character yourself in a VR headset or with the mouse, direct on your computer, export video or Blender files."
+  logo_img: "asset:icon-512.png"
+  title: "VRtoToon: make cartoons in VR, playing every role yourself"
 name: VRtoToon
 native_deps:
   head_html: |
@@ -489,6 +488,16 @@ native_deps:
     <meta name="twitter:image" content="https://vrtotoon.anvil.app/_/theme/og-image.png">
     <link rel="alternate" type="text/plain" title="VRtoToon for AI assistants" href="https://vrtotoon.anvil.app/llms.txt">
     <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "Service", "@id": "https://vrtotoon.anvil.app/#app", "name": "VRtoToon", "url": "https://vrtotoon.anvil.app/", "description": "Make 3D cartoons in your browser: perform every character yourself in a VR headset or with the mouse, direct on your computer, export video or Blender files.", "image": "https://vrtotoon.anvil.app/_/theme/og-image.png", "serviceType": "One actor. Every role. Make cartoons with your VR headset", "provider": {"@id": "https://arkvital.com/#org"}, "areaServed": "Worldwide", "availableChannel": {"@type": "ServiceChannel", "serviceUrl": "https://vrtotoon.anvil.app/", "name": "Web browser", "availableLanguage": "en"}, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CAD"}, "audience": {"@type": "Audience", "audienceType": "Animators, storytellers, YouTubers and VR owners who want to make cartoons on their own (accounts 16+)"}}, {"@type": "WebSite", "@id": "https://vrtotoon.anvil.app/#site", "url": "https://vrtotoon.anvil.app/", "name": "VRtoToon", "publisher": {"@id": "https://arkvital.com/#org"}}, {"@type": "Organization", "@id": "https://arkvital.com/#org", "name": "Arkvital", "url": "https://arkvital.com", "email": "arkvital@outlook.com", "address": {"@type": "PostalAddress", "addressLocality": "Montreal", "addressRegion": "QC", "addressCountry": "CA"}}]}</script>
+    <noscript><div class="seo-noscript">
+    <h1>VRtoToon: make cartoons in VR, playing every role yourself</h1>
+    <p>Make 3D cartoons in your browser: perform every character yourself in a VR headset or with the mouse, direct on your computer, export video or Blender files.</p>
+    <p>VRtoToon is a Hollywood-themed cartoon studio that runs in the browser. Put on a VR headset (Meta Quest and other WebXR headsets) and your head, hands and voice drive a 3D toon character; the voice moves the mouth and a teleprompter floats in front of you.</p>
+    <p>It is built for one person playing every role: record one character, then play the next while the first plays back around you. Each line is its own clip, so retaking a line moves everything after it. On the computer you direct the scene: drag characters to make them walk, add feelings and gestures, let the auto-director cut the cameras, pick a film look, then share a screening link or export a video, subtitles or a Blender kit.</p>
+    <p>Who it's for: Animators, storytellers, YouTubers and VR owners who want to make cartoons on their own (accounts 16+)</p>
+    <h2>What it does</h2><ul><li>25 toon characters in 13 species, plus your own variants in the wardrobe</li><li>VR, passthrough and a no-headset desk puppet; voice-driven lip sync</li><li>A teleprompter that moves on when you stop talking, and the director&#x27;s monitor in the headset</li><li>Script-driven timeline: retakes ripple, everyone stays in sync</li><li>Blocking by dragging, 12 emotions, 15 gestures, an auto-director with 12 shot types</li><li>10 Hollywood sets, 8 film looks, music and sound effects made in code</li><li>Pair a headset with a 4-letter code; the computer calls takes and sends notes</li><li>Export video (up to 1080p, vertical too), subtitles and a Blender kit (glTF + dialogue + import script)</li></ul>
+    <h2>Questions</h2><h3>Which headsets work?</h3><p>Any headset with a WebXR browser, such as Meta Quest 2, 3, 3S and Pro in the Meta Quest Browser. Nothing to install.</p><h3>Can I make films without a headset?</h3><p>Yes. Perform with the mouse as a desk puppet, or record lines one by one in the voice booth; the microphone still moves the mouth.</p><h3>How does one person play several characters?</h3><p>Record one role at a time. Everyone already recorded plays back around you, and the others read their lines on your teleprompter.</p><h3>Can I finish my film in Blender?</h3><p>Yes. The Blender kit has the scene as glTF with animated characters, the camera cuts, the dialogue as WAV and a script that sets it all up.</p>
+    <p><a href="https://vrtotoon.anvil.app/about">About VRtoToon</a> &middot; <a href="https://vrtotoon.anvil.app/llms.txt">VRtoToon for AI assistants</a> &middot; Made by <a href="https://arkvital.com">Arkvital</a>, Montreal, Canada. VRtoToon needs JavaScript in your browser.</p>
+    </div></noscript>
     <!-- seo:end -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#120b0d">
