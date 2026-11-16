@@ -25,6 +25,8 @@ sys.path[:0] = [str(HERE / "mock"), str(_tmp)]
 import anvil  # noqa: E402
 import anvil.server  # noqa: E402
 import anvil.users  # noqa: E402
+import anvil.secrets  # noqa: E402
+anvil.secrets.SECRETS["admin_emails"] = "admin@example.com"  # the App Secret, faked
 from anvil.tables import app_tables as T  # noqa: E402
 
 M = {p.stem: importlib.import_module("app." + p.stem) for p in sorted((PROJECT / "server_code").glob("*.py"))}
@@ -65,7 +67,7 @@ def person(email, name=None, **kw):
 
 
 # ---------------------------------------------------------------------------------- accounts
-admin = person("arkulinskis@gmail.com", "The Admin")
+admin = person("admin@example.com", "The Admin")
 ana = person("ana@example.com", "Ana")
 bob = person("bob@example.com")
 
@@ -364,7 +366,7 @@ assert "email" in r["tables"]["users"] and "title" in r["tables"]["productions"]
 
 # ---------------------------------------------------------------------------------- every callable is covered by a permission check
 # A callable that changes data without require_user / a C.require_* check is a security hole. List the public ones here.
-PUBLIC = {"session_ping", "get_me", "submit_feedback", "legal_state", "legal_accept", "premieres_list", "screen_get", "screen_report",
+PUBLIC = {"log_client_error", "session_ping", "get_me", "submit_feedback", "legal_state", "legal_accept", "premieres_list", "screen_get", "screen_report",
           "production_get", "stage_join", "stage_get", "stage_poll", "stage_save_pass", "stage_rtc_reply"}
 for name, (f, need) in sorted(anvil.server.CALLABLES.items()):
     if name in PUBLIC:
