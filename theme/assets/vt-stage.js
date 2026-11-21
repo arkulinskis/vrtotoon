@@ -18,7 +18,7 @@
 
   var GRADE_VS = 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
   var GRADE_FS = [
-    'uniform sampler2D tDiffuse; uniform float sat, con, expo, vig, grain, bw, time, fade; uniform vec3 tint; varying vec2 vUv;',
+    'uniform sampler2D tDiffuse; uniform float sat, con, expo, vig, grain, bw, time, fade, keyOn; uniform vec3 tint, keyCol; varying vec2 vUv;',
     'float rnd(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233)) + time * 7.0) * 43758.5453); }',
     'void main() {',
     '  vec4 c = texture2D(tDiffuse, vUv); vec3 col = c.rgb * expo * tint;',
@@ -27,7 +27,9 @@
     '  col = (col - 0.5) * con + 0.5;',
     '  vec2 d = vUv - 0.5; col *= 1.0 - vig * smoothstep(0.25, 0.75, length(d * vec2(1.15, 1.0)));',
     '  col += (rnd(vUv * 731.0) - 0.5) * grain;',
-    '  gl_FragColor = vec4(clamp(col, 0.0, 1.0) * fade, 1.0);',
+    '  col = clamp(col, 0.0, 1.0) * fade;',
+    '  if (keyOn > 0.5) col = mix(keyCol, col, clamp(c.a, 0.0, 1.0));',  // green screen: empty background = the pure key colour
+    '  gl_FragColor = vec4(col, 1.0);',
     '}'].join('\n');
 
   function Stage(el, o) {
@@ -67,7 +69,7 @@
     this.rt = new T.WebGLRenderTarget(16, 16, { samples: 4 });
     this.rt.texture.colorSpace = T.SRGBColorSpace;
     this.post = new T.ShaderMaterial({ vertexShader: GRADE_VS, fragmentShader: GRADE_FS, depthTest: false, depthWrite: false,
-      uniforms: { tDiffuse: { value: this.rt.texture }, sat: { value: 1 }, con: { value: 1 }, expo: { value: 1 }, vig: { value: 0 }, grain: { value: 0 }, bw: { value: 0 }, time: { value: 0 }, fade: { value: 1 }, tint: { value: new T.Vector3(1, 1, 1) } } });
+      uniforms: { tDiffuse: { value: this.rt.texture }, sat: { value: 1 }, con: { value: 1 }, expo: { value: 1 }, vig: { value: 0 }, grain: { value: 0 }, bw: { value: 0 }, time: { value: 0 }, fade: { value: 1 }, tint: { value: new T.Vector3(1, 1, 1) }, keyOn: { value: 0 }, keyCol: { value: new T.Vector3(0, 0.69, 0.25) } } });
     this.postScene = new T.Scene(); this.postCam = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     this.postScene.add(new T.Mesh(new T.PlaneGeometry(2, 2), this.post));
     if (this.mode === 'turntable') this._turntable(o);
@@ -253,7 +255,29 @@
     // fade in from black at the very start and out at the end (titles)
     var total = this.total, fade = 1;
     if (this.doc.d.look.fades !== false && this.o.fades !== false && this.mode !== 'edit') fade = Math.min(1, t / 0.6 + 0.0001, (total - t) / 0.8 + 0.0001);
-    u.fade.value = Math.max(0, fade);
+    u.fade.value = this._key ? 1 : Math.max(0, fade);  // keyed video: no fade to black (it would tint the key)
+    u.keyOn.value = this._key ? 1 : 0;
+    if (this._key) {  // the exact key colour in the file (raw values: no colour-space conversion on this pass)
+      var hx = parseInt(this._key.slice(1), 16);
+      u.keyCol.value.set((hx >> 16 & 255) / 255, (hx >> 8 & 255) / 255, (hx & 255) / 255); u.vig.value = 0; u.grain.value = 0;
+    }
+  };
+  /* green screen (exports): hex = the key colour (the set, floor and fog go; the characters keep the film look), null = back */
+  Stage.prototype.setKey = function (hex) {
+    hex = hex || null;
+    if (hex === this._key || !this.set) return;
+    var set = this.set, on = !!hex, was = !!this._key;
+    if (on && !was) {
+      this._keyAR = !!set.ar;
+      if (set.setAR) set.setAR(true);
+      set.group.traverse(function (o) { if (o.userData.floor) { o.userData.kv0 = o.visible; o.visible = false; } });
+      this.scene.background = null;
+    } else if (!on && was) {
+      set.group.traverse(function (o) { if (o.userData.kv0 != null) { o.visible = o.userData.kv0; o.userData.kv0 = null; } });
+      if (set.setAR && !this._keyAR) set.setAR(false);
+      if (this._keyAR) this.scene.background = null;
+    }
+    this._key = hex; this._dirty = true;
   };
   Stage.prototype._renderGraded = function (fw, fh, vx, vy, target) {
     var r = this.renderer, dpr = r.getPixelRatio();
@@ -261,7 +285,7 @@
     if (this.rt.width !== pw || this.rt.height !== ph) this.rt.setSize(pw, ph);
     if (this.o.shift && fw > 700) this.cam.setViewOffset(fw, fh, -fw * this.o.shift, 0, fw, fh);  // push the picture right (hero copy sits left)
     else if (this.cam.view) this.cam.clearViewOffset();
-    r.setRenderTarget(this.rt); r.setClearColor(this.scene.background || new T.Color('#000'), 1); r.clear(); r.render(this.scene, this.cam);
+    r.setRenderTarget(this.rt); r.setClearColor(this.scene.background || new T.Color('#000'), this._key ? 0 : 1); r.clear(); r.render(this.scene, this.cam);
     r.setRenderTarget(target || null);
     this._applyGrade(this._drawT != null ? this._drawT : this.time);
     r.setViewport(vx, vy, fw, fh); r.setScissor(vx, vy, fw, fh); r.setScissorTest(true);
@@ -354,7 +378,7 @@
     var savedMode = this.mode; if (opts.final) this.mode = 'film';
     this._renderGraded(w, h, 0, 0, null);
     ctx2.drawImage(this.canvas, 0, 0, w, h);
-    if (opts.titles !== false) VT.drawTitles(ctx2, { x: 0, y: 0, w: w, h: h }, t, this.doc, this.film, { subs: opts.subs, mode: this.mode, aspect: this.aspectId() });
+    if (opts.titles !== false) VT.drawTitles(ctx2, { x: 0, y: 0, w: w, h: h }, t, this.doc, this.film, { subs: opts.subs, mode: this.mode, aspect: this.aspectId(), titles: this._key ? false : undefined });
     this.mode = savedMode;
     r.setPixelRatio(prevDpr); r.setSize(prevSize.x, prevSize.y, false);
     this.time = prevT; this._drawT = prevD; this._dirty = true;

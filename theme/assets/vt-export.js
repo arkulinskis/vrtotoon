@@ -1,6 +1,7 @@
 /* vt-export.js: getting films out of VRtoToon, all in the browser (nothing is uploaded to export).
-     VT.exportVideo(stage, {w, h, fps, subs, onProgress}) -> {done: Promise<{blob, mime, ext}>, cancel()}
-        real-time render of the finished film (grade, letterbox, titles, subtitles) + the full sound mix, via MediaRecorder
+     VT.exportVideo(stage, {w, h, fps, subs, key, onProgress}) -> {done: Promise<{blob, mime, ext}>, cancel()}
+        real-time render of the finished film (grade, letterbox, titles, subtitles) + the full sound mix, via MediaRecorder;
+        key = '#00b140' etc.: green screen (no set, no floor, no title cards; the characters keep the look; Stage.setKey)
      VT.exportGLB(stage, {fps}) -> Promise<{blob, info}>   glTF 2.0 binary: the set, every character as a jointed
         hierarchy with baked animation (head, hands, arms, legs, face: eyelids, brows, mouth), the film camera (cuts and
         lens changes in extras), the lights (KHR_lights_punctual). Blender imports it with File > Import > glTF.
@@ -41,6 +42,7 @@
       var mime = VT.videoMime();
       if (!mime) throw new Error('This browser can\'t record video. Try Chrome, Edge or Safari.');
       stage.pause(); stage.film.refresh();
+      if (o.key && stage.setKey) stage.setKey(o.key);  // green screen: the characters on a flat key colour
       var w = o.w || 1280, h = o.h || 720, fps = o.fps || 30, total = stage.total;
       var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
       var c2 = cv.getContext('2d');
@@ -74,7 +76,7 @@
         });
       });
     });
-    return { done: done.finally(function () { sources.forEach(function (s) { try { s.stop(); } catch (e) {} }); chains.forEach(function (c) { c.stop(); }); }),
+    return { done: done.finally(function () { if (stage.setKey) stage.setKey(null); sources.forEach(function (s) { try { s.stop(); } catch (e) {} }); chains.forEach(function (c) { c.stop(); }); }),
       cancel: function () { cancelled = true; } };
   };
 

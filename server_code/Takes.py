@@ -23,7 +23,8 @@ MAX_AUDIO = 12_000_000
 MAX_FACE = 1_500_000
 FACE_K = 11
 FACE_CHARS = set("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_")
-AUDIO_TYPES = ("audio/webm", "audio/ogg", "audio/mp4", "audio/mpeg", "audio/wav", "audio/x-wav", "video/webm")
+AUDIO_TYPES = ("audio/webm", "audio/ogg", "audio/mp4", "audio/mpeg", "audio/wav", "audio/x-wav", "audio/wave", "audio/x-m4a", "audio/aac",
+               "audio/flac", "audio/x-flac", "video/webm")
 
 
 def clean_clips(clips, beat_ids):
@@ -74,7 +75,7 @@ def save_take(p, owner, meta, motion_json, audio):
             return C.fail("That recording isn't an audio file we can keep.")
         if (getattr(audio, "length", 0) or len(audio.get_bytes() or b"")) > MAX_AUDIO:
             return C.fail("That recording is too long to save.")
-    source = meta.get("source") if meta.get("source") in ("vr", "desk", "voice", "ar") else "vr"
+    source = meta.get("source") if meta.get("source") in ("vr", "desk", "voice", "ar", "cam") else "vr"
     try:
         dur = min(3600.0, max(0.0, float(meta.get("dur") or 0)))
     except (TypeError, ValueError):

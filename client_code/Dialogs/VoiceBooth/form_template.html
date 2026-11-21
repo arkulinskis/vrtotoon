@@ -2,12 +2,14 @@
   <h2 class="dlg-h">The voice booth</h2>
   <anvil-component type="Label" name="who_label" prop:role='["eyebrow-label"]'></anvil-component>
   <anvil-component type="Label" name="line_label" prop:role='["booth-line"]'></anvil-component>
-  <anvil-component type="Label" name="status_label" prop:role='["fine-print"]' prop:text="Press Record, say the line, press Stop. The silence around it is trimmed."></anvil-component>
+  <anvil-component type="Label" name="status_label" prop:role='["fine-print"]' prop:text="Press Record, say the line, press Stop. Or use an audio file someone sent you. The silence around it is trimmed and the mouth follows the voice."></anvil-component>
   <div class="booth-light" anvil:name="light"><i class="ic ic-rec"></i><span>On air</span></div>
   <div class="ui-row booth-buttons">
     <anvil-component type="Button" name="rec_button" prop:text="Record" prop:role='["btn", "btn-primary", "btn-lg", "ic-mic"]'></anvil-component>
+    <anvil-component type="Button" name="file_button" prop:text="Use an audio file" prop:role='["btn", "btn-lg", "ic-music"]' prop:tooltip="MP3, WAV, M4A, OGG or FLAC, up to 12 MB: a friend's recording, a phone memo, a voice tool"></anvil-component>
     <anvil-component type="Button" name="play_button" prop:text="Listen" prop:role='["btn", "ic-play"]' prop:visible="false"></anvil-component>
   </div>
+  <input type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.opus,.flac,.aac,.webm" class="booth-file" anvil:dom-node="file_input" aria-label="Audio file for this line" tabindex="-1">
   <anvil-component type="Label" name="message" prop:role='["msg-error"]' prop:visible="false"></anvil-component>
   <div class="ui-row end">
     <anvil-component type="Button" name="cancel_button" prop:text="Cancel" prop:role='["btn", "btn-ghost"]'></anvil-component>

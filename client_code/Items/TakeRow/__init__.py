@@ -3,7 +3,7 @@ from anvil import *
 from ._anvil_designer import TakeRowTemplate
 from ... import state
 
-SOURCES = {"vr": ("VR", "vr"), "ar": ("Passthrough", "vr"), "desk": ("Desk puppet", "keyboard"), "voice": ("Voice", "mic")}
+SOURCES = {"vr": ("VR", "vr"), "ar": ("Passthrough", "vr"), "desk": ("Desk puppet", "keyboard"), "cam": ("Webcam", "camera"), "voice": ("Voice", "mic")}
 
 
 class TakeRow(TakeRowTemplate):

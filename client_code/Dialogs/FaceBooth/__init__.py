@@ -34,7 +34,7 @@ class FaceBooth(FaceBoothTemplate):
         self.st = {}
         self.has_face = False
         self._first = True
-        src = {"vr": "VR take", "ar": "Passthrough take", "desk": "Desk-puppet take", "voice": "Voice take"}.get(take.get("source"), "Take")
+        src = {"vr": "VR take", "ar": "Passthrough take", "desk": "Desk-puppet take", "cam": "Webcam take", "voice": "Voice take"}.get(take.get("source"), "Take")
         self.who_label.text = "%s · %s · %.1f s" % (take.get("name") or "", src, take.get("dur") or 0)
         self.remove_button.visible = bool(take.get("face")) and can_save
         self.gain_slider.add_event_handler("change", self._gain)

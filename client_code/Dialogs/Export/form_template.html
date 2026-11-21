@@ -14,7 +14,9 @@
       <div class="ui-grid two">
         <label class="ui-field"><span>Size</span><anvil-component type="DropDown" name="size_dd"></anvil-component></label>
         <label class="ui-field"><span>&nbsp;</span><anvil-component type="CheckBox" name="subs_check" prop:text="Burn in subtitles"></anvil-component></label>
+        <label class="ui-field"><span>Background</span><anvil-component type="DropDown" name="bg_dd"></anvil-component></label>
       </div>
+      <anvil-component type="Label" name="bg_note" prop:role='["fine-print"]' prop:visible="false"></anvil-component>
       <div class="ex-progress" anvil:name="progress"><div class="ex-bar" anvil:dom-node="bar"></div></div>
       <div class="ui-row">
         <anvil-component type="Button" name="video_button" prop:text="Record the video" prop:role='["btn", "btn-primary", "ic-rec"]'></anvil-component>

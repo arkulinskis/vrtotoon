@@ -88,6 +88,9 @@ theme/assets/     vt-cast.js    characters: VT.CAST (25, ids never change), spec
                                 hand tracking: VT.fingerCurls / VT.handFrameXR, controller fingers: VT.touchCurls,
                                 startPreview: the live picture)
                   vt-live.js    VT.LiveViewer (PC) + VT.liveAnswer / liveHangUp / liveActive (headset): WebRTC, no trickle
+                  vt-cam.js     the webcam puppet: VT.CamPuppet (camera window in the stage corner, MediaPipe Hand +
+                                Face Landmarker, mirror mapping, pose(actor, base)), VT.camJoints / camHead / camHeadAngles /
+                                camHandTarget (pure maths), VT.loadHandModel; Perform.camStart / camStop / camRecenter
                   vt-face.js    the face booth: VT.FACE_CH (11 controls), VT.FACE_POINTS (25 key points of MediaPipe's 478),
                                 faceMeasure / faceFromMeasures (calibrated to the performer's neutral face), pack/unpack/faceAt,
                                 mixCamFace (camera face over a feeling), loadFaceModel (MediaPipe tasks-vision 0.10.14 from
@@ -187,6 +190,20 @@ dialogs = `alert(Form(...), buttons=[], role="app-dialog")`; server calls via `s
   the top of app.css + vt.css, `python -I tools/make_icons.py --bg "#110a0c"`, `python tools/assets.py`).
 
 ## Gotchas
+
+- **Webcam puppet (2026-11-20):** a MIRROR. The performer's right hand (picture left, MediaPipe label "Left" because it
+  assumes a mirrored picture) drives the rig's 'r' arm (+X = the character's left = screen right). World landmarks are
+  mapped with x flipped (`VT.camJoints`), so `VT.handFrameXR(J, key === 'r')` gets left-hand geometry for 'r'. Hand
+  place = palm centre relative to the resting head in eye-distance units (shoulders ~3 to the side, 3.5 below, reach ~9),
+  depth from the palm's apparent size; head angles = nose offset against the eye line (yaw x110, pitch x120 degrees per
+  unit) minus the resting pose (8 face readings, or Centre me). Tuned on paper + the fake face only: the first real
+  session may need the constants in vt-cam.js retuned. Takes get `source: 'cam'` (Takes.py allows it).
+- **Green screen (2026-11-20):** `Stage.setKey(hex)` hides the set (set.setAR) and the floor; the render target is
+  cleared with alpha 0 and the grade shader mixes `keyCol` where alpha < 1 (raw values: that pass has no colour-space
+  conversion), no fades/vignette/grain/title cards. `VT.exportVideo(stage, {key})` sets and clears it.
+- **Voice from a file:** `VT.ed.recorder().pickFile(input, beat, who)` (hidden `<input type=file>` in Dialogs/VoiceBooth)
+  -> `fromFile` (type from the extension when the browser gives none; must be in Takes.AUDIO_TYPES) -> the same
+  `make()` as a microphone recording.
 
 - **No boundary in passthrough (2026-11-12, copied from WallTracer):** `enterVR(true)` asks for the `unbounded`
   reference space first (vt-xr.js); Quest 3 then shows "This app has boundary disabled" and lets you walk past the

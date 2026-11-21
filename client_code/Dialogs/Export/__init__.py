@@ -5,6 +5,7 @@ from anvil.js import window
 from ._anvil_designer import ExportTemplate
 from ... import vt
 
+KEYS = [("The set (the finished film)", ""), ("Green screen", "#00b140"), ("Blue screen", "#0047bb"), ("Magenta screen (for green characters)", "#ff00ff")]
 
 class Export(ExportTemplate):
     """Exports of the picture on `stage` (the editor's JS stage): video, Blender kit, .glb, subtitles, sound, script.
@@ -20,6 +21,8 @@ class Export(ExportTemplate):
         self.canvas_pick.value = self.own
         self._sizes()
         self.subs_check.checked = bool(vt.py(stage.doc.d.look.subs))
+        self.bg_dd.items = KEYS
+        self.bg_dd.selected_value = ""
         self.progress.visible = False
         if not vt.VT.videoMime():
             self.video_button.enabled = False
@@ -36,6 +39,14 @@ class Export(ExportTemplate):
         else:
             self.canvas_note.text = "%s (%s). The picture stays %s: only this export is reframed." % (a["label"], a["use"], vt.aspect(self.own)["label"])
 
+    @handle("bg_dd", "change")
+    def bg_dd_change(self, **event_args):
+        key = self.bg_dd.selected_value
+        self.bg_note.visible = bool(key)
+        self.bg_note.text = ("Just the characters on a flat colour, with the film look and the full sound: no set, floor or title "
+                             "cards. Key it out in OBS, CapCut, Premiere, DaVinci Resolve or Blender (Chroma Key) and put the "
+                             "toons over any footage. Pick blue or magenta when a character is green.")
+
     @handle("canvas_pick", "change")
     def canvas_pick_change(self, value=None, **event_args):
         self._sizes()
@@ -50,6 +61,7 @@ class Export(ExportTemplate):
         self.message.text, self.message.visible = text, bool(text)
 
     def _busy(self, on):
+        self.bg_dd.enabled = not on
         for b in (self.video_button, self.blender_button, self.glb_button, self.srt_button, self.wav_button, self.txt_button, self.close_button):
             b.enabled = not on
 
@@ -62,9 +74,14 @@ class Export(ExportTemplate):
         self._say("Rolling... the film plays through once while it records (%s)." % vt.fmt(self.stage.total))
         self._shape(True)
         try:
-            r = vt.VT.ed.exportVideo(self.stage, {"w": w, "h": h, "subs": bool(self.subs_check.checked), "fps": 30}, self.dom_nodes["bar"])
-            vt.download(r.blob, "%s.%s" % (self.name, r.ext))
-            self._say("Done: %s.%s (%.1f MB) is in your downloads." % (self.name, r.ext, r.blob.size / 1e6))
+            key = self.bg_dd.selected_value or ""
+            opts = {"w": w, "h": h, "subs": bool(self.subs_check.checked), "fps": 30}
+            if key:
+                opts["key"] = key
+            r = vt.VT.ed.exportVideo(self.stage, opts, self.dom_nodes["bar"])
+            name = self.name + ("-greenscreen" if key == "#00b140" else "-bluescreen" if key == "#0047bb" else "-magentascreen" if key else "")
+            vt.download(r.blob, "%s.%s" % (name, r.ext))
+            self._say("Done: %s.%s (%.1f MB) is in your downloads." % (name, r.ext, r.blob.size / 1e6))
         except Exception as e:
             self._say("The recording stopped: %s" % (str(e) if "cancel" not in str(e) else "cancelled."))
         finally:

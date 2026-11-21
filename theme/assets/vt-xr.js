@@ -81,7 +81,7 @@
 
   function Perform(el, o) {
     var self = this;
-    this.o = o || {};
+    this.o = o || {}; this.el = el;
     this.doc = o.doc; this.takes = o.takes || new VT.Takes();
     this.state = 'ready'; this.note = ''; this.mode = 'flat'; this.range = [];
     this._puppet = { mx: 0.4, my: 0.1, down: false, point: false, yaw: 0, pitch: 0, lean: 0 };
@@ -417,6 +417,7 @@
   Perform.prototype._startRec = function () {
     var self = this, d = this.doc.d, L = this.stage.film.L;
     this.state = 'rec'; this._tau = 0; this._frames = []; this._mouth = []; this._acc = 0;
+    this._camPass = this.mode === 'flat' && this._camLive();
     var nf = this._noise.length ? this._noise.slice().sort(function (a, b) { return a - b; })[Math.floor(this._noise.length * 0.6)] : 0.004;
     this._thresh = Math.max(0.012, nf * 3.2);
     // the run: each beat in the range with its planned length (others: their take or an estimate; mine: until I stop talking)
@@ -498,7 +499,7 @@
     var clips = this._run.filter(function (r) { return r.start != null && r.dur != null; }).map(function (r) {
       return { beat: r.id, off: Math.round(r.start * 1000) / 1000, dur: Math.round(r.dur * 1000) / 1000, line: !!r.mine };
     });
-    this.pass = { uid: VT.uid('t'), actor: this.actor, source: this.mode === 'flat' ? 'desk' : 'vr', clips: clips, dur: this._tau, motion: motion, mic: !!this._stream };
+    this.pass = { uid: VT.uid('t'), actor: this.actor, source: this.mode === 'flat' ? (this._camPass ? 'cam' : 'desk') : 'vr', clips: clips, dur: this._tau, motion: motion, mic: !!this._stream };
     var done = function () {
       self.pass.audio = self._chunks.length ? new Blob(self._chunks, { type: self._chunks[0].type || 'audio/webm' }) : null;
       self._previewPass();
@@ -613,7 +614,29 @@
     if (this.state !== 'review') { st.time = this._filmT(); st._dirty = true; }
     this._live = null;
   };
-  Perform.prototype._read = function () { return this.mode === 'flat' ? this._readPuppet() : this._readXR(); };
+  Perform.prototype._read = function () { return this.mode !== 'flat' ? this._readXR() : this._camLive() ? this._readCam() : this._readPuppet(); };
+
+  /* ------------------------------------------------------------------ the webcam puppet (vt-cam.js) */
+  Perform.prototype._camLive = function () { return !!(this._cam && this._cam.state === 'live'); };
+  Perform.prototype.camStart = function () {
+    if (this._cam || !VT.CamPuppet) return !!this._cam;
+    var self = this;
+    this._cam = new VT.CamPuppet({ host: this.el, onState: function () { self._emit(); } });
+    this._cam.begin();
+    this._emit();
+    return true;
+  };
+  Perform.prototype.camStop = function () {
+    if (this._cam) { this._cam.close(); this._cam = null; }
+    this._emit();
+    return true;
+  };
+  Perform.prototype.camRecenter = function () { return this._cam ? this._cam.recenter() : false; };
+  Perform.prototype._readCam = function () {
+    var a = this.stage.actors[this.actor]; if (!a) return null;
+    var base = VT.proceduralPose(a, { t: performance.now() / 1000, seed: 4, speaking: false, talk: 0 });  // your hands are your own
+    return this._cam.pose(a, base);
+  };
   Perform.prototype._push = function (fr) {
     var f = this._frames;
     function v(x, n) { for (var i = 0; i < n; i++) f.push(x && x[i] != null ? x[i] : 0); }
@@ -859,7 +882,8 @@
     this.o.onState({ state: this.state, mode: this.mode, role: this.actor, roleName: me ? me.name : '', head: v.head, line: v.line, next: v.next || '',
       sub: v.sub || '', count: this.state === 'countdown' ? Math.max(1, Math.ceil(this._count)) : 0, time: this._tau || 0,
       beat: this._ri == null ? -1 : this._ri, beats: this.range.length, lines: this.myLines(), mic: !!this._stream, micError: this._micError || '',
-      clips: this.pass ? this.pass.clips.length : 0 });
+      clips: this.pass ? this.pass.clips.length : 0, cam: this._cam ? this._cam.state : 'off', camMsg: this._cam ? this._cam.msg : '',
+      camHands: this._cam ? this._cam.info().hands : 0 });
   };
   Perform.prototype.setNote = function (text) { this.note = text || ''; };
   Perform.prototype.replaceDoc = function (data) {
@@ -868,6 +892,7 @@
   };
   Perform.prototype.destroy = function () {
     if (this.session) { try { this.session.end(); } catch (e) {} }
+    if (this._cam) { this._cam.close(); this._cam = null; }
     if (this._rec && this._rec.state !== 'inactive') { try { this._rec.stop(); } catch (e) {} }
     if (this._stream) this._stream.getTracks().forEach(function (t) { t.stop(); });
     this.stopPreview();

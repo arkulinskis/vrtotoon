@@ -318,6 +318,14 @@
 .st-call .ic { color: #f0c060; }
 .st-main { position: relative; flex: 1; min-height: 300px; }
 .vt-perform, .vt-perform-mount { position: absolute; inset: 0; }
+/* the webcam puppet's camera window (vt-cam.js): mirrored, so it reads like a mirror */
+.vt-cam { position: absolute; z-index: 5; left: 12px; bottom: 12px; width: min(220px, 34%); display: grid; gap: 6px; pointer-events: none; }
+.vt-cam-pic { position: relative; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #120a0c; border: 2px solid #3a2a2f; transform: scaleX(-1); transition: border-color var(--dur-base) var(--ease-out); }
+.vt-cam.on .vt-cam-pic { border-color: #f0c060; }
+.vt-cam-pic video, .vt-cam-pic canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.vt-cam-pic video { opacity: .85; }
+.vt-cam-msg { font-size: .76rem; line-height: 1.35; color: #f6ecdd; background: rgba(18, 10, 12, .78); border-radius: 8px; padding: 5px 8px; }
+@media (max-width: 600px) { .vt-cam { width: 132px; left: 8px; bottom: 8px; } .vt-cam-msg { font-size: .7rem; } }
 .st-count { position: absolute; z-index: 6; inset: 0; display: grid; place-items: center; pointer-events: none; }
 .anvil-role-st-count-n { font: 400 min(40vh, 280px)/1 var(--font-display); color: #fff8ec; text-shadow: 0 10px 60px rgba(0, 0, 0, .7); }
 .st-bar { padding: 10px 14px 14px; border-top: 1px solid #3a2a2f; display: grid; gap: 8px; }
@@ -369,7 +377,8 @@
 .anvil-role-booth-line { display: block; font: italic 600 1.35rem/1.35 var(--font-serif); margin: 6px 0 10px; color: var(--c-ink); }
 .booth-light { display: inline-flex; gap: 8px; align-items: center; padding: 6px 14px; border-radius: 999px; background: #c0262d; color: #fff; font: 700 .8rem/1 var(--font-body);
   letter-spacing: .12em; text-transform: uppercase; animation: hl-pulse 1.2s infinite; margin: 8px 0; }
-.booth-buttons { margin: 10px 0; }
+.booth-buttons { margin: 10px 0; flex-wrap: wrap; }
+.booth-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .anvil-role-script-box textarea, textarea.anvil-role-script-box { font-family: "Courier Prime", "Courier New", monospace !important; font-size: .95rem !important; line-height: 1.5 !important; }
 .new-prod .np-cast { margin-top: 6px; }
 

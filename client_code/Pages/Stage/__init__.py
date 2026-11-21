@@ -14,6 +14,9 @@ VR_HELP = ("In the headset: A (or X) = Action and next line, B (or Y) = cut or g
            "follow the controller (trigger = index finger, grip = the others, lift your thumb for thumbs up), or put the "
            "controllers down and use your hands: every finger is recorded, pinch to press menu buttons. Look down for the "
            "teleprompter, right for the director's monitor.")
+CAM_HELP = ("Webcam puppet: sit back so your head and both hands are in the camera window. The toon copies you like a "
+            "mirror: head turns, nods and tilts, both hands and every finger. Press Centre me while sitting naturally. "
+            "Space = Action, then next line. Your microphone moves the mouth. The camera picture never leaves this computer.")
 
 
 class Stage(StageTemplate):
@@ -32,6 +35,7 @@ class Stage(StageTemplate):
         self.call = {}
         self.loaded = False
         self.mode = "flat"
+        self.cam = "off"
         self.p = {}
         self.rev = 0
         self.doc = vt.NULL
@@ -115,6 +119,23 @@ class Stage(StageTemplate):
         for c in (self.role_dd, self.from_dd, self.to_dd, self.others_check):
             c.enabled = st == "ready"
         self.mode = info.get("mode") or "flat"
+        self._cam_state(info, st)
+
+    def _cam_state(self, info, st):
+        cam = info.get("cam") or "off"
+        flat = self.mode == "flat"
+        self.cam_button.visible = flat
+        self.cam_button.enabled = st in ("ready", "review") or cam == "off"
+        self.cam_button.text = "Webcam off" if cam != "off" else "Webcam"
+        self.recenter_button.visible = flat and cam == "live"
+        if cam != self.cam:
+            if cam == "nocam":
+                state.toast(info.get("camMsg") or "The camera didn't start.", "error")
+            if cam == "off":
+                self.help_label.text = DESK_HELP
+            elif cam == "live":
+                self.help_label.text = CAM_HELP
+            self.cam = cam
 
     def _kept(self, take=None, **event_args):
         self.pending = take
@@ -193,7 +214,22 @@ class Stage(StageTemplate):
     def discard_button_click(self, **event_args):
         self.pf.discard()
 
+    @handle("cam_button", "click")
+    def cam_button_click(self, **event_args):
+        if not self.loaded:
+            return
+        if self.cam == "off":
+            self.pf.camStart()
+        else:
+            self.pf.camStop()
+
+    @handle("recenter_button", "click")
+    def recenter_button_click(self, **event_args):
+        self.pf.camRecenter()
+
     def _enter(self, ar):
+        if self.cam != "off":
+            self.pf.camStop()
         try:
             self.pf.enterVR(ar)
         except Exception as e:

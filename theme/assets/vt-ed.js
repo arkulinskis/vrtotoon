@@ -91,17 +91,49 @@
         r.rec.onstop = function () {
           r.stream.getTracks().forEach(function (t) { t.stop(); });
           var blob = new Blob(r.chunks, { type: (r.chunks[0] && r.chunks[0].type) || 'audio/webm' });
-          blob.arrayBuffer().then(function (ab) { return new Promise(function (ok) { VT.audioCtx().decodeAudioData(ab, ok, function () { ok(null); }); }); }).then(function (buf) {
-            var dur = buf ? buf.duration : (performance.now() - r.t0) / 1000, m = buf ? VT.analyzeVoice(buf, 30) : '';
-            var span = VT.speechSpan(m, 30);
-            var s0 = span ? span.start : 0, s1 = span ? span.end : dur;
-            var off = Math.max(0, s0 - 0.08), len = Math.max(0.5, Math.min(dur - off, s1 - s0 + 0.25));
-            r.pass = { uid: VT.uid('t'), actor: actorId, source: 'voice', dur: dur, clips: [{ beat: beatId, off: Math.round(off * 1000) / 1000, dur: Math.round(len * 1000) / 1000, line: true }],
-              motion: { fps: 30, n: 0, f: new Float32Array(0), m: m }, audio: blob, buffer: buf, heard: !!span, len: Math.round(len * 10) / 10 };
-            res(r.pass);
-          });
+          r.decode(blob).then(function (buf) { res(r.make(buf, blob, beatId, actorId, (performance.now() - r.t0) / 1000)); });
         };
         r.rec.stop();
+      });
+    };
+    r.decode = function (blob) {
+      return blob.arrayBuffer().then(function (ab) { return new Promise(function (ok) { VT.audioCtx().decodeAudioData(ab, ok, function () { ok(null); }); }); });
+    };
+    // a voice pass from decoded audio: silence around the speech trimmed, lip sync from the loudness
+    r.make = function (buf, blob, beatId, actorId, fallbackDur) {
+      var dur = buf ? buf.duration : fallbackDur, m = buf ? VT.analyzeVoice(buf, 30) : '';
+      var span = VT.speechSpan(m, 30);
+      var s0 = span ? span.start : 0, s1 = span ? span.end : dur;
+      var off = Math.max(0, s0 - 0.08), len = Math.max(0.5, Math.min(dur - off, s1 - s0 + 0.25, 120));
+      r.pass = { uid: VT.uid('t'), actor: actorId, source: 'voice', dur: dur, clips: [{ beat: beatId, off: Math.round(off * 1000) / 1000, dur: Math.round(len * 1000) / 1000, line: true }],
+        motion: { fps: 30, n: 0, f: new Float32Array(0), m: m }, audio: blob, buffer: buf, heard: !!span, len: Math.round(len * 10) / 10 };
+      return r.pass;
+    };
+    /* a voice from an audio file (MP3, WAV, M4A, OGG, FLAC, WebM): a friend's recording, a phone memo, a voice tool.
+       Resolves with the pass, or null (r.error says why). */
+    var TYPES = { mp3: 'audio/mpeg', wav: 'audio/wav', m4a: 'audio/mp4', mp4: 'audio/mp4', aac: 'audio/aac', ogg: 'audio/ogg', oga: 'audio/ogg', opus: 'audio/ogg', flac: 'audio/flac', webm: 'audio/webm' };
+    var OK_TYPES = ['audio/webm', 'audio/ogg', 'audio/mp4', 'audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/wave', 'audio/x-m4a', 'audio/aac', 'audio/flac', 'audio/x-flac', 'video/webm'];
+    r.fromFile = function (file, beatId, actorId) {
+      r.error = '';
+      if (!file) return Promise.resolve(null);
+      if (file.size > 12e6) { r.error = 'That file is over 12 MB. Trim it to the line, or save it as an MP3.'; return Promise.resolve(null); }
+      var type = (file.type || '').split(';')[0], ext = (/\.([a-z0-9]+)$/i.exec(file.name || '') || [])[1];
+      if (OK_TYPES.indexOf(type) < 0) type = TYPES[(ext || '').toLowerCase()] || '';
+      if (!type) { r.error = "That isn't an audio file we can keep. Use MP3, WAV, M4A, OGG or FLAC."; return Promise.resolve(null); }
+      var blob = file.type === type ? file : new Blob([file], { type: type });
+      return r.decode(blob).then(function (buf) {
+        if (!buf) { r.error = "This browser can't play that file. Try saving it as an MP3 or WAV."; return null; }
+        return r.make(buf, blob, beatId, actorId, buf.duration);
+      }, function () { r.error = "That file couldn't be read."; return null; });
+    };
+    // open the file picker on `input` (a hidden <input type=file>); resolves with the pass, or null if nothing was picked
+    r.pickFile = function (input, beatId, actorId) {
+      return new Promise(function (res) {
+        var done = false;
+        input.value = '';
+        input.onchange = function () { done = true; res(input.files && input.files[0] ? r.fromFile(input.files[0], beatId, actorId) : null); };
+        input.oncancel = function () { if (!done) { done = true; res(null); } };
+        input.click();
       });
     };
     r.play = function () { if (!r.pass || !r.pass.buffer) return; var ctx = VT.audioCtx(), s = ctx.createBufferSource(); s.buffer = r.pass.buffer; s.connect(ctx.destination); s.start(0, r.pass.clips[0].off, r.pass.clips[0].dur); };

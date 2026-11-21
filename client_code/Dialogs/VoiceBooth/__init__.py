@@ -39,12 +39,39 @@ class VoiceBooth(VoiceBoothTemplate):
         self.rec_button.text = "Record again"
         self.rec_button.role = ["btn", "btn-lg", "ic-mic"]
         self.p = self.rec.stop(self.beat["id"], self.beat["who"])
+        self.file_button.text = "Use an audio file instead"
         if self.p is None:
             return
         if not self.p.heard:
             self.status_label.text = "That was very quiet. Listen back, or record again a little closer to the microphone."
         else:
             self.status_label.text = "Got it: %.1f seconds. Listen back, then print it." % self.p.len
+        self.play_button.visible = True
+        self.keep_button.enabled = True
+
+    @handle("file_button", "click")
+    def file_button_click(self, **event_args):
+        if self.recording:
+            return
+        self.message.visible = False
+        self.file_button.enabled = self.rec_button.enabled = False
+        self.status_label.text = "Pick an audio file..."
+        try:
+            p = self.rec.pickFile(self.dom_nodes["file_input"], self.beat["id"], self.beat["who"])
+        finally:
+            self.file_button.enabled = self.rec_button.enabled = True
+        if p is None:
+            err = self.rec.error
+            if err:
+                self.message.text, self.message.visible = err, True
+            self.status_label.text = "Press Record, say the line, press Stop. Or use an audio file."
+            return
+        self.p = p
+        if not p.heard:
+            self.status_label.text = "That file is very quiet: listen back before you print it."
+        else:
+            self.status_label.text = "Got it: %.1f seconds from the file (silence trimmed). Listen back, then print it." % p.len
+        self.rec_button.text = "Record instead"
         self.play_button.visible = True
         self.keep_button.enabled = True
 
